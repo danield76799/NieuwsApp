@@ -44,7 +44,6 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Nieuws'),
         actions: [
-          // Bookmarks button
           Stack(
             children: [
               IconButton(
@@ -81,12 +80,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
             ],
           ),
-          // Search button
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () => _showSearchDialog(),
           ),
-          // Settings button
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () => Navigator.push(
@@ -98,6 +95,9 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Consumer<NewsProvider>(
         builder: (context, provider, child) {
+          // DEBUG INFO
+          debugPrint('DEBUG: isLoading=${provider.isLoading}, articles=${provider.articles.length}, error=${provider.error}');
+          
           if (provider.isLoading && provider.articles.isEmpty) {
             return _buildLoadingWidget();
           }
@@ -111,11 +111,21 @@ class _HomeScreenState extends State<HomeScreen> {
             color: const Color(0xFF1E88E5),
             child: Column(
               children: [
-                // Filter chips
                 if (provider.hasFilters)
                   _buildFilterChips(provider),
                 
-                // Articles list
+                // DEBUG BANNER
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(8),
+                  color: Colors.amber[100],
+                  child: Text(
+                    'DEBUG: ${provider.articles.length} artikelen | _articles=${provider.allArticles.length}',
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                
                 Expanded(
                   child: provider.articles.isEmpty
                       ? _buildEmptyWidget()
@@ -231,7 +241,6 @@ class _HomeScreenState extends State<HomeScreen> {
         spacing: 8,
         runSpacing: 8,
         children: [
-          // Category chip
           if (provider.selectedCategory != 'all')
             Chip(
               label: Text(provider.selectedCategory),
@@ -240,8 +249,6 @@ class _HomeScreenState extends State<HomeScreen> {
               backgroundColor: const Color(0xFF1E88E5).withOpacity(0.1),
               side: BorderSide(color: const Color(0xFF1E88E5).withOpacity(0.3)),
             ),
-          
-          // Keyword chips
           ...provider.keywords.map((keyword) => Chip(
             label: Text(keyword),
             deleteIcon: const Icon(Icons.close, size: 18),
@@ -249,12 +256,10 @@ class _HomeScreenState extends State<HomeScreen> {
             backgroundColor: Colors.orange.withOpacity(0.1),
             side: BorderSide(color: Colors.orange.withOpacity(0.3)),
           )),
-          
-          // Clear all button
           ActionChip(
             label: const Text('Wis filters'),
             onPressed: provider.clearFilters,
-            avatar: const Icon(Icons.clear_all, size: 18),
+            avator: const Icon(Icons.clear_all, size: 18),
           ),
         ],
       ),
