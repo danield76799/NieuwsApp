@@ -5,10 +5,9 @@ import "../services/feed_service.dart";
 import "news_repository.dart";
 
 class RssNewsRepository implements NewsRepository {
-  final RssParserService _rssService;
   final StorageService _storage;
 
-  RssNewsRepository(this._rssService, this._storage);
+  RssNewsRepository(this._storage);
 
   @override
   Future<List<Article>> fetchNews() async {
@@ -20,7 +19,7 @@ class RssNewsRepository implements NewsRepository {
 
     for (final source in feeds) {
       try {
-        final articles = await _rssService.parseRssFeed(source["url"]!);
+        final articles = await RssParserService.parseRssFeed(source["url"]!);
         if (articles.isNotEmpty) {
           allArticles.addAll(articles);
         }
