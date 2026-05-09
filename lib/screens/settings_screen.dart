@@ -11,18 +11,61 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   late TextEditingController _controller;
+  bool _filterActive = false;
 
   @override
   void initState() {
     super.initState();
     final provider = context.read<NewsProvider>();
     _controller = TextEditingController(text: provider.keywords.join(', '));
+    _filterActive = provider.keywords.isNotEmpty;
   }
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  void _saveKeywords() {
+    final provider = context.read<NewsProvider>();
+    provider.setKeywords(_controller.text);
+    setState(() {
+      _filterActive = _controller.text.trim().isNotEmpty;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Keywords opgeslagen'),
+        backgroundColor: Color(0xFF007BC7),
+      ),
+    );
+  }
+
+  void _toggleFilter(bool active) {
+    setState(() {
+      _filterActive = active;
+    });
+    if (active) {
+      _saveKeywords();
+    } else {
+      // Filter uit - maar keywords bewaren!
+      final provider = context.read<NewsProvider>();
+      provider.clearKeywords();
+    }
+  }
+
+  void _clearKeywords() {
+    _controller.clear();
+    final provider = context.read<NewsProvider>();
+    provider.clearKeywords();
+    setState(() {
+      _filterActive = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Keywords gewist'),
+      ),
+    );
   }
 
   @override
@@ -46,14 +89,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       body: Consumer<NewsProvider>(
         builder: (context, provider, child) {
-          final filterEnabled = provider.keywords.isNotEmpty;
-          
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Filter status card
+                // Filter toggle
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -76,8 +117,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              filterEnabled
-                                  ? 'Filter actief met: ${provider.keywords.join(", ")}'
+                              _filterActive
+                                  ? 'Filter actief'
                                   : 'Filter uitgeschakeld',
                               style: TextStyle(
                                 fontSize: 14,
@@ -87,32 +128,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ],
                         ),
                       ),
-                      if (filterEnabled)
-                        IconButton(
-                          icon: const Icon(Icons.close, color: Colors.red),
-                          onPressed: () {
-                            provider.setKeywords('');
-                            _controller.clear();
-                          },
-                        )
-                      else
-                        ElevatedButton(
-                          onPressed: () {
-                            // Focus op het keyword veld
-                            _controller.text = 'Trump';
-                            provider.setKeywords('Trump');
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF007BC7),
-                            foregroundColor: Colors.white,
-                          ),
-                          child: const Text('Inschakelen'),
-                        ),
+                      Switch(
+                        value: _filterActive,
+                        activeColor: const Color(0xFF007BC7),
+                        onChanged: _toggleFilter,
+                      ),
                     ],
                   ),
                 ),
 
-                // Keywords input - ALTIJD zichtbaar zodat gebruiker kan typen
                 const SizedBox(height: 24),
                 const Text(
                   'Keywords',
@@ -124,7 +148,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Voer keywords in gescheiden door komma\'s. Alleen artikelen die deze woorden bevatten worden getoond.',
+                  'Voer keywords in gescheiden door komma\'s. Deze worden bewaard ook als het filter uit staat.',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[600],
@@ -151,70 +175,74 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   maxLines: 2,
                 ),
                 const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      provider.setKeywords(_controller.text);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Filter bijgewerkt'),
-                          backgroundColor: Color(0xFF007BC7),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _saveKeywords,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF007BC7),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF007BC7),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        child: const Text(
+                          'Opslaan',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ),
-                    child: const Text(
-                      'Filter bijwerken',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                    const SizedBox(width: 12),
+                    OutlinedButton(
+                      onPressed: _clearKeywords,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red[700],
+                        side: BorderSide(color: Colors.red[300]!),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
+                      child: const Text('Wis'),
                     ),
-                  ),
+                  ],
                 ),
 
                 const SizedBox(height: 32),
                 const Divider(),
                 const SizedBox(height: 16),
 
-                // Reset all button
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: () {
-                      _controller.clear();
-                      provider.setKeywords('');
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Alle filters gewist'),
-                        ),
-                      );
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.red[700],
-                      side: BorderSide(color: Colors.red[300]!),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text(
-                      'Reset alle filters',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                // Current saved keywords display
+                if (provider.keywords.isNotEmpty) ...[
+                  const Text(
+                    'Opgeslagen keywords:',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1A1A1A),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: provider.keywords.map((keyword) {
+                      return Chip(
+                        label: Text(keyword),
+                        backgroundColor: const Color(0xFF007BC7).withOpacity(0.1),
+                        labelStyle: const TextStyle(
+                          color: Color(0xFF007BC7),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
               ],
             ),
           );
