@@ -5,6 +5,7 @@ import 'repositories/rss_news_repository.dart';
 import 'screens/home_screen.dart';
 import 'services/rss_parser_service.dart';
 import 'services/storage_service.dart';
+import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,20 +34,9 @@ class PlusNewsApp extends StatelessWidget {
     return MaterialApp(
       title: 'PlusNews',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        scaffoldBackgroundColor: Colors.white,
-        appBarTheme: const AppBarTheme(
-          centerTitle: false,
-          backgroundColor: Color(0xFF007BC7),
-          foregroundColor: Colors.white,
-          elevation: 0,
-        ),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF007BC7),
-          brightness: Brightness.light,
-        ),
-      ),
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
       home: const HomeScreen(),
     );
   }
