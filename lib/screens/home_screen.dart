@@ -26,7 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadWeather() async {
     setState(() => _loadingWeather = true);
-    final weather = await WeatherService.getWeather('Amsterdam');
+    final weather = await WeatherService.getWeatherForLocation();
     setState(() {
       _weatherData = weather;
       _loadingWeather = false;
@@ -62,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Weer in Amsterdam',
+              'Weer in ${_weatherData!['location'] ?? 'Amsterdam'}',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
