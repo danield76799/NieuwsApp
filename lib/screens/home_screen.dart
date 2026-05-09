@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/news_provider.dart';
 import '../widgets/article_card_v2.dart';
 import '../widgets/empty_state.dart';
-import '../widgets/search_bar.dart';
+import '../widgets/search_bar.dart' as app_search;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,7 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Consumer<NewsProvider>(
       builder: (context, provider, child) {
-        final articles = provider.filteredArticles;
+        final articles = provider.articles;
         final filteredArticles = _searchQuery.isEmpty
             ? articles
             : articles.where((a) =>
@@ -28,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
         return Scaffold(
           body: RefreshIndicator(
-            onRefresh: () => provider.refreshNews(),
+            onRefresh: () => provider.loadNews(forceRefresh: true),
             color: Theme.of(context).colorScheme.primary,
             backgroundColor: Theme.of(context).colorScheme.surface,
             displacement: 40,
@@ -71,7 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             padding: EdgeInsets.only(
                               bottom: MediaQuery.of(context).viewInsets.bottom,
                             ),
-                            child: SearchBar(
+                            child: app_search.SearchBar(
                               onSearch: (query) {
                                 setState(() {
                                   _searchQuery = query;
@@ -88,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Icons.filter_list,
                         color: provider.filterActive ? Colors.amber : null,
                       ),
-                      onPressed: () => provider.toggleFilter(),
+                      onPressed: () => provider.toggleFilter(!provider.filterActive),
                       tooltip: provider.filterActive ? 'Filter uit' : 'Filter aan',
                     ),
                     const SizedBox(width: 8),
@@ -116,7 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 color: provider.filterActive ? Colors.green : Colors.grey,
                               ),
                             ),
-                            onPressed: () => provider.toggleFilter(),
+                            onPressed: () => provider.toggleFilter(!provider.filterActive),
                             backgroundColor: provider.filterActive
                                 ? Colors.green.withOpacity(0.1)
                                 : Colors.grey.withOpacity(0.1),
@@ -127,7 +127,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: const TextStyle(fontSize: 12),
                             ),
                             deleteIcon: const Icon(Icons.close, size: 18),
-                            onDeleted: () => provider.removeKeyword(keyword),
+                            onDeleted: () {
+                              final newKeywords = provider.keywords.where((k) => k != keyword).toList();
+                              provider.setKeywords(newKeywords.join(', '));
+                            },
                             backgroundColor: Theme.of(context).colorScheme.primaryContainer,
                           )),
                         ],
@@ -158,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: 'Oeps!',
                       subtitle: provider.error!,
                       action: ElevatedButton.icon(
-                        onPressed: () => provider.refreshNews(),
+                        onPressed: () => provider.loadNews(forceRefresh: true),
                         icon: const Icon(Icons.refresh),
                         label: const Text('Opnieuw proberen'),
                       ),
