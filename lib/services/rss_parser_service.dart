@@ -1,245 +1,175 @@
+import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:xml/xml.dart';
-import 'dart:convert' show utf8, latin1;
 import '../models/article.dart';
 
 class RssParserService {
-  Future<List<Article>> fetchArticles(String url, String sourceName) async {
+  static final _allowedSchemes = ['http', 'https'];
+  
+  static bool _isValidUrl(String? url) {
+    if (url == null || url.isEmpty) return false;
+    try {
+      final uri = Uri.parse(url);
+      return _allowedSchemes.contains(uri.scheme);
+    } catch (e) {
+      return false;
+    }
+  }
+  
+  static String _sanitizeHtml(String? text) {
+    if (text == null || text.isEmpty) return '';
+    return text
+      .replaceAll(RegExp(r'<script[^>]*>.*?</script>', caseSensitive: false, dotAll: true), '')
+      .replaceAll(RegExp(r'<style[^>]*>.*?</style>', caseSensitive: false, dotAll: true), '')
+      .replaceAll(RegExp(r'javascript:', caseSensitive: false), '')
+      .replaceAll(RegExp(r'on\w+\s*=', caseSensitive: false), '');
+  }
+
+  static Future<List<Article>> parseRssFeed(String feedUrl) async {
+    if (!_isValidUrl(feedUrl)) {
+      throw Exception('Invalid or unsafe URL: $feedUrl');
+    }
+
     try {
       final response = await http.get(
-        Uri.parse(url),
+        Uri.parse(feedUrl),
         headers: {
-          'Accept': 'application/rss+xml, application/xml, text/xml',
           'User-Agent': 'PlusNews/1.0',
+          'Accept': 'application/rss+xml, application/xml, text/xml',
         },
       );
 
-      if (response.statusCode == 200) {
-        String body;
-        try {
-          body = utf8.decode(response.bodyBytes);
-        } catch (_) {
-          body = latin1.decode(response.bodyBytes);
-        }
-        
-        final document = XmlDocument.parse(body);
-        final items = document.findAllElements('item');
-        
-        List<Article> articles = [];
-        
-        for (var item in items) {
-          try {
-            final title = item.findElements('title').firstOrNull?.text ?? '';
-            final link = item.findElements('link').firstOrNull?.text ?? '';
-            final description = item.findElements('description').firstOrNull?.text ?? '';
-            final pubDateStr = item.findElements('pubDate').firstOrNull?.text ?? '';
-            
-            if (title.isEmpty || link.isEmpty) continue;
-            
-            String? thumbnailUrl = _extractThumbnail(item);
-            
-            String articleCategory = sourceName.toLowerCase();
-            final categoryMatch = RegExp(r'https?://[^/]+/([^/]+)/').firstMatch(link);
-            if (categoryMatch != null) {
-              articleCategory = categoryMatch.group(1) ?? sourceName.toLowerCase();
-            }
-            
-            final pubDate = _parseDate(pubDateStr);
-            
-            articles.add(Article(
-              id: link.hashCode.toString(),
-              title: _cleanText(title),
-              description: _cleanText(description),
-              link: link,
-              pubDate: pubDate,
-              thumbnailUrl: thumbnailUrl,
-              source: sourceName,
-              category: articleCategory,
-            ));
-          } catch (e) {
-            continue;
-          }
-        }
-        
-        return articles;
-      } else {
+      if (response.statusCode != 200) {
         throw Exception('HTTP ${response.statusCode}');
       }
+
+      final body = _decodeBody(response.bodyBytes);
+      final document = XmlDocument.parse(body);
+      final items = document.findAllElements('item');
+      final source = _extractSource(document);
+
+      return items.map((item) => _parseItem(item, source)).toList();
     } catch (e) {
       throw Exception('RSS parse error: $e');
     }
   }
 
-  String? _extractThumbnail(XmlElement item) {
-    // 1. Try enclosure
+  static String _decodeBody(List<int> bodyBytes) {
+    try {
+      return utf8.decode(bodyBytes);
+    } catch (e) {
+      return latin1.decode(bodyBytes);
+    }
+  }
+
+  static String _extractSource(XmlDocument document) {
+    final titleElement = document.findAllElements('title').firstOrNull;
+    return titleElement?.text ?? 'Onbekende bron';
+  }
+
+  static Article _parseItem(XmlElement item, String source) {
+    final title = _sanitizeHtml(_getElementText(item, 'title'));
+    final description = _sanitizeHtml(_getElementText(item, 'description'));
+    final link = _sanitizeUrl(_getElementText(item, 'link'));
+    final pubDateStr = _getElementText(item, 'pubDate');
+    final thumbnailUrl = _extractThumbnail(item);
+
+    return Article(
+      id: link.hashCode.toString(),
+      title: title.isNotEmpty ? title : 'Geen titel',
+      description: description,
+      link: link,
+      pubDate: _parseDate(pubDateStr),
+      source: source,
+      thumbnailUrl: _isValidUrl(thumbnailUrl) ? thumbnailUrl : null,
+    );
+  }
+
+  static String _getElementText(XmlElement parent, String name) {
+    final element = parent.findElements(name).firstOrNull;
+    return element?.text ?? '';
+  }
+
+  static String? _extractThumbnail(XmlElement item) {
+    // Try media:content
+    final mediaContent = item.findElements('media:content').firstOrNull ??
+                        item.findElements('content').firstOrNull;
+    if (mediaContent != null) {
+      final url = mediaContent.getAttribute('url');
+      if (_isValidUrl(url)) return url;
+    }
+
+    // Try enclosure
     final enclosure = item.findElements('enclosure').firstOrNull;
     if (enclosure != null) {
+      final url = enclosure.getAttribute('url');
       final type = enclosure.getAttribute('type') ?? '';
-      if (type.startsWith('image/')) {
-        return enclosure.getAttribute('url');
-      }
+      if (type.startsWith('image/') && _isValidUrl(url)) return url;
     }
-    
-    // 2. Try media:content
-    final mediaContent = item.findElements('media:content').firstOrNull;
-    if (mediaContent != null) {
-      final medium = mediaContent.getAttribute('medium') ?? '';
-      if (medium == 'image') {
-        return mediaContent.getAttribute('url');
-      }
-      final url = mediaContent.getAttribute('url') ?? '';
-      if (url.contains('.jpg') || url.contains('.png')) {
-        return url;
-      }
-    }
-    
-    // 3. Try media:thumbnail
+
+    // Try media:thumbnail
     final mediaThumbnail = item.findElements('media:thumbnail').firstOrNull;
     if (mediaThumbnail != null) {
-      return mediaThumbnail.getAttribute('url');
+      final url = mediaThumbnail.getAttribute('url');
+      if (_isValidUrl(url)) return url;
     }
-    
-    // 4. Try content:encoded
-    final contentEncoded = item.findElements('content:encoded').firstOrNull;
-    if (contentEncoded != null) {
-      final url = _extractImgFromHtml(contentEncoded.text);
-      if (url != null) return url;
+
+    // Try to extract from description
+    final description = _getElementText(item, 'description');
+    final imgMatch = RegExp(r'<img[^>]+src=["\']([^"\']+)["\']').firstMatch(description);
+    if (imgMatch != null) {
+      final url = imgMatch.group(1);
+      if (_isValidUrl(url)) return url;
     }
-    
-    // 5. Try description
-    final description = item.findElements('description').firstOrNull;
-    if (description != null) {
-      return _extractImgFromHtml(description.text);
-    }
-    
-    return null;
-  }
-  
-  String? _extractImgFromHtml(String html) {
-    if (html.isEmpty) return null;
-    
-    // Simple regex for img src - use double quotes
-    final match1 = RegExp(r'src="([^"]+)"').firstMatch(html);
-    if (match1 != null) return match1.group(1);
-    
-    // Try single quotes
-    final match2 = RegExp(r"src='([^']+)'").firstMatch(html);
-    if (match2 != null) return match2.group(1);
-    
+
     return null;
   }
 
-  String _cleanText(String text) {
-    if (text.isEmpty) return '';
-    
-    text = text.replaceAll(RegExp(r'<\!\[CDATA\[(.*?)\]\]>', dotAll: true), r'$1');
-    text = text.replaceAll(RegExp(r'<img[^>]*>'), '');
-    text = text.replaceAll(RegExp(r'<[^>]*>'), '');
-    text = _decodeHtmlEntities(text);
-    
-    text = text.trim();
-    if (text.length > 300) {
-      text = text.substring(0, 300) + '...';
-    }
-    return text;
+  static String _sanitizeUrl(String? url) {
+    if (url == null || url.isEmpty) return '';
+    final sanitized = url.trim();
+    return _isValidUrl(sanitized) ? sanitized : '';
   }
 
-  String _decodeHtmlEntities(String text) {
-    final entities = {
-      '&amp;': '&',
-      '&lt;': '<',
-      '&gt;': '>',
-      '&quot;': '"',
-      '&apos;': "'",
-      '&#039;': "'",
-      '&#39;': "'",
-      '&nbsp;': ' ',
-      '&ndash;': '-',
-      '&mdash;': '-',
-      '&hellip;': '...',
-      '&#8217;': "'",
-      '&#8216;': "'",
-      '&#8220;': '"',
-      '&#8221;': '"',
-      '&#8211;': '-',
-      '&#8212;': '-',
-      '&#160;': ' ',
-    };
-    
-    for (var entry in entities.entries) {
-      text = text.replaceAll(entry.key, entry.value);
-    }
-    
-    text = text.replaceAllMapped(
-      RegExp(r'&#(\d+);'),
-      (m) => String.fromCharCode(int.parse(m.group(1)!))
-    );
-    
-    text = text.replaceAllMapped(
-      RegExp(r'&#x([0-9a-fA-F]+);'),
-      (m) => String.fromCharCode(int.parse(m.group(1)!, radix: 16))
-    );
-    
-    return text;
-  }
-
-  DateTime _parseDate(String rssDate) {
-    if (rssDate.isEmpty) {
-      print('Empty date string, returning epoch');
+  static DateTime _parseDate(String? dateStr) {
+    if (dateStr == null || dateStr.isEmpty) {
       return DateTime(1970, 1, 1);
     }
-    
-    try {
-      // Try standard RSS format: Mon, 01 May 2026 12:00:00 GMT
-      final months = {
-        'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6,
-        'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12,
-      };
-      
-      // Match format: Day, DD Mon YYYY HH:MM:SS (with optional timezone)
-      final match = RegExp(r'([A-Z][a-z]{2}),?\s+(\d{1,2})\s+([A-Z][a-z]{2,3})\s+(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})').firstMatch(rssDate);
-      
+
+    final formats = [
+      RegExp(r'(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})'),
+      RegExp(r'(\d{4})-(\d{2})-(\d{2})'),
+      RegExp(r'(\d{1,2})/(\d{1,2})/(\d{4})'),
+    ];
+
+    for (final format in formats) {
+      final match = format.firstMatch(dateStr);
       if (match != null) {
-        final day = int.parse(match.group(2)!);
-        final monthStr = match.group(3)!;
-        final month = months[monthStr.substring(0, 3)] ?? 1;
-        final year = int.parse(match.group(4)!);
-        final hour = int.parse(match.group(5)!);
-        final minute = int.parse(match.group(6)!);
-        final second = int.parse(match.group(7)!);
-        
-        print('Parsed RSS date: $year-$month-$day $hour:$minute:$second');
-        return DateTime(year, month, day, hour, minute, second);
+        try {
+          if (match.groupCount >= 3) {
+            final year = int.parse(match.group(3)!);
+            final month = _parseMonth(match.group(2)!);
+            final day = int.parse(match.group(1)!);
+            return DateTime(year, month, day);
+          }
+        } catch (e) {
+          continue;
+        }
       }
-      
-      // Try ISO 8601 format
-      try {
-        return DateTime.parse(rssDate);
-      } catch (_) {}
-      
-      // Try Dutch format: 1 mei 2026 12:00
-      final dutchMatch = RegExp(r'(\d{1,2})\s+([a-z]{3,9})\s+(\d{4})\s+(\d{1,2}):(\d{2})').firstMatch(rssDate.toLowerCase());
-      if (dutchMatch != null) {
-        final dutchMonths = {
-          'jan': 1, 'januari': 1, 'feb': 2, 'februari': 2, 'mrt': 3, 'maart': 3,
-          'apr': 4, 'april': 4, 'mei': 5, 'jun': 6, 'juni': 6,
-          'jul': 7, 'juli': 7, 'aug': 8, 'augustus': 8, 'sep': 9, 'september': 9,
-          'okt': 10, 'oktober': 10, 'nov': 11, 'november': 11, 'dec': 12, 'december': 12,
-        };
-        final day = int.parse(dutchMatch.group(1)!);
-        final month = dutchMonths[dutchMatch.group(2)!] ?? 1;
-        final year = int.parse(dutchMatch.group(3)!);
-        final hour = int.parse(dutchMatch.group(4)!);
-        final minute = int.parse(dutchMatch.group(5)!);
-        return DateTime(year, month, day, hour, minute);
-      }
-      
-      print('Could not parse date: $rssDate');
-    } catch (e) {
-      print('Error parsing date "$rssDate": $e');
     }
-    
-    // Return epoch instead of now() to avoid showing old articles as new
-    return DateTime(1970, 1, 1);
+
+    try {
+      return DateTime.parse(dateStr);
+    } catch (e) {
+      return DateTime(1970, 1, 1);
+    }
+  }
+
+  static int _parseMonth(String month) {
+    final months = {
+      'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6,
+      'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12,
+    };
+    return months[month] ?? 1;
   }
 }
