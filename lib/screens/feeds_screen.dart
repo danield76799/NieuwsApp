@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../services/feed_service.dart';
+import '../providers/news_provider.dart';
 
 class FeedsScreen extends StatefulWidget {
   const FeedsScreen({super.key});
@@ -49,9 +51,13 @@ class _FeedsScreenState extends State<FeedsScreen> {
     _urlController.clear();
     await _loadFeeds();
     
+    // Reload news in provider
     if (mounted) {
+      final provider = context.read<NewsProvider>();
+      await provider.loadNews(forceRefresh: true);
+      
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Feed toegevoegd')),
+        const SnackBar(content: Text('Feed toegevoegd - artikelen herladen...')),
       );
     }
   }
@@ -60,9 +66,13 @@ class _FeedsScreenState extends State<FeedsScreen> {
     await FeedService.removeFeed(url);
     await _loadFeeds();
     
+    // Reload news in provider
     if (mounted) {
+      final provider = context.read<NewsProvider>();
+      await provider.loadNews(forceRefresh: true);
+      
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Feed verwijderd')),
+        const SnackBar(content: Text('Feed verwijderd - artikelen herladen...')),
       );
     }
   }
