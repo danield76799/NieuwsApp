@@ -8,37 +8,44 @@ class WeatherService {
     try {
       // Check location permission
       LocationPermission permission = await Geolocator.checkPermission();
+      print('WeatherService: Current permission: $permission');
+      
       if (permission == LocationPermission.denied) {
+        print('WeatherService: Requesting permission...');
         permission = await Geolocator.requestPermission();
+        print('WeatherService: After request: $permission');
         if (permission == LocationPermission.denied) {
-          print('Location permission denied');
+          print('WeatherService: Permission denied, using Amsterdam');
           return getWeather('Amsterdam');
         }
       }
       
       if (permission == LocationPermission.deniedForever) {
-        print('Location permission denied forever');
+        print('WeatherService: Permission denied forever, using Amsterdam');
         return getWeather('Amsterdam');
       }
 
-      // Get current position with timeout
+      // Try to get current position with shorter timeout
       Position? position;
       try {
+        print('WeatherService: Getting current position...');
         position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.medium,
-        ).timeout(Duration(seconds: 15));
-        print('Got position: ${position.latitude}, ${position.longitude}');
+          desiredAccuracy: LocationAccuracy.low, // Use low accuracy for speed
+        ).timeout(Duration(seconds: 8));
+        print('WeatherService: Got position: ${position.latitude}, ${position.longitude}');
       } catch (e) {
-        print('Location timeout or error: $e');
-        // Try last known position
+        print('WeatherService: Error getting position: $e');
+        // Try last known position immediately
         position = await Geolocator.getLastKnownPosition();
         if (position != null) {
-          print('Using last known position: ${position.latitude}, ${position.longitude}');
+          print('WeatherService: Using last known position: ${position.latitude}, ${position.longitude}');
+        } else {
+          print('WeatherService: No last known position available');
         }
       }
       
       if (position == null) {
-        print('Could not get position');
+        print('WeatherService: No position available, using Amsterdam');
         return getWeather('Amsterdam');
       }
       
@@ -46,7 +53,7 @@ class WeatherService {
       final lat = position.latitude.toStringAsFixed(4);
       final lon = position.longitude.toStringAsFixed(4);
       
-      print('Fetching weather for: $lat, $lon');
+      print('WeatherService: Fetching weather for: $lat, $lon');
       
       final response = await http.get(
         Uri.parse('https://wttr.in/$lat,$lon?format=j1'),
@@ -66,10 +73,10 @@ class WeatherService {
             }
           }
         } catch (e) {
-          print('Error parsing location name: $e');
+          print('WeatherService: Error parsing location name: $e');
         }
         
-        print('Weather location: $location');
+        print('WeatherService: Weather location: $location');
         
         return {
           'location': location,
@@ -87,19 +94,21 @@ class WeatherService {
           }).toList(),
         };
       } else {
-        print('Weather API error: ${response.statusCode}');
+        print('WeatherService: Weather API error: ${response.statusCode}');
       }
     } catch (e, stackTrace) {
-      print('Location weather error: $e');
-      print('Stack trace: $stackTrace');
+      print('WeatherService: Location weather error: $e');
+      print('WeatherService: Stack trace: $stackTrace');
     }
     
     // Fallback to Amsterdam
+    print('WeatherService: Falling back to Amsterdam');
     return getWeather('Amsterdam');
   }
 
   static Future<Map<String, dynamic>?> getWeather(String city) async {
     try {
+      print('WeatherService: Fetching weather for $city');
       final response = await http.get(
         Uri.parse('https://wttr.in/$city?format=j1'),
         headers: {'User-Agent': 'PlusNews/1.0'},
@@ -107,6 +116,7 @@ class WeatherService {
       
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        print('WeatherService: Got weather for $city');
         return {
           'location': city,
           'temp': data['current_condition'][0]['temp_C'],
@@ -124,7 +134,7 @@ class WeatherService {
         };
       }
     } catch (e) {
-      print('Weather error: $e');
+      print('WeatherService: Weather error for $city: $e');
     }
     return null;
   }
