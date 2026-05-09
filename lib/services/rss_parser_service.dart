@@ -1,12 +1,8 @@
 import 'package:http/http.dart' as http;
 import 'package:xml/xml.dart';
-import 'dart:convert';
 import '../models/article.dart';
 
 class RssParserService {
-  static const String _nieuwsNlFeed = 'https://www.nieuws.nl/rss';
-  static const String _tweakersFeed = 'https://tweakers.net/feeds/nieuws.xml';
-
   Future<List<Article>> fetchArticles(String url, String sourceName) async {
     try {
       final response = await http.get(
@@ -32,7 +28,6 @@ class RssParserService {
             
             if (title.isEmpty || link.isEmpty) continue;
             
-            // Try multiple sources for thumbnail
             String? thumbnailUrl = _extractThumbnail(item, description);
             
             String articleCategory = sourceName.toLowerCase();
@@ -68,7 +63,7 @@ class RssParserService {
   }
 
   String? _extractThumbnail(XmlElement item, String description) {
-    // Try enclosure first (common for podcasts/images)
+    // Try enclosure first
     final enclosure = item.findElements('enclosure').firstOrNull;
     if (enclosure != null) {
       final type = enclosure.getAttribute('type') ?? '';
@@ -80,10 +75,7 @@ class RssParserService {
     // Try media:content
     final mediaContent = item.findElements('media:content').firstOrNull;
     if (mediaContent != null) {
-      final medium = mediaContent.getAttribute('medium') ?? '';
-      if (medium == 'image' || mediaContent.getAttribute('url')?.contains('image') == true) {
-        return mediaContent.getAttribute('url');
-      }
+      return mediaContent.getAttribute('url');
     }
     
     // Try media:thumbnail
@@ -92,18 +84,10 @@ class RssParserService {
       return mediaThumbnail.getAttribute('url');
     }
     
-    // Try media:description with img tag
-    final mediaDescription = item.findElements('media:description').firstOrNull;
-    if (mediaDescription != null) {
-      final imgMatch = RegExp(r'<img[^>]+src=["\']([^"\']+)["\']').firstMatch(mediaDescription.text);
-      if (imgMatch != null) {
-        return imgMatch.group(1);
-      }
-    }
-    
-    // Fallback: extract from description HTML
-    final imgMatch = RegExp(r'<img[^>]+src=["\']([^"\']+)["\']').firstMatch(description);
-    if (imgMatch != null) {
+    // Fallback: extract from description HTML using img tag
+    final imgRegex = RegExp(r'src=["' + r"'" + r'"]([^"' + r"'" + r']+)["' + r"'" + r']');
+    final imgMatch = imgRegex.firstMatch(description);
+    if (imgMatch != null && imgMatch.groupCount >= 1) {
       return imgMatch.group(1);
     }
     
@@ -122,7 +106,7 @@ class RssParserService {
     // Remove other HTML tags
     text = text.replaceAll(RegExp(r'<[^>]*>'), '');
     
-    // Decode HTML entities using dart:convert
+    // Decode HTML entities
     text = _decodeHtmlEntities(text);
     
     text = text.trim();
@@ -133,8 +117,7 @@ class RssParserService {
   }
 
   String _decodeHtmlEntities(String text) {
-    // Use htmlEscape from dart:html style replacement for common entities
-    final Map<String, String> entities = {
+    final entities = {
       '&amp;': '&',
       '&lt;': '<',
       '&gt;': '>',
@@ -142,38 +125,13 @@ class RssParserService {
       '&#039;': "'",
       '&#39;': "'",
       '&nbsp;': ' ',
-      '&ndash;': '–',
-      '&mdash;': '—',
-      '&hellip;': '...',
-      '&copy;': '©',
-      '&reg;': '®',
-      '&trade;': '™',
-      '&euro;': '€',
-      '&pound;': '£',
-      // Dutch special chars
-      '&eacute;': 'é',
-      '&egrave;': 'è',
-      '&ecirc;': 'ê',
-      '&auml;': 'ä',
-      '&ouml;': 'ö',
-      '&uuml;': 'ü',
-      '&iacute;': 'í',
-      '&oacute;': 'ó',
-      '&uacute;': 'ú',
-      '&ntilde;': 'ñ',
-      '&ccedil;': 'ç',
-      '&aring;': 'å',
-      '&oslash;': 'ø',
-      '&#8217;': ''',
-      '&#8216;': ''',
+      '&#8217;': "'",
+      '&#8216;': "'",
       '&#8220;': '"',
       '&#8221;': '"',
-      '&#8211;': '–',
-      '&#8212;': '—',
+      '&#8211;': '-',
+      '&#8212;': '-',
       '&#160;': ' ',
-      '&#169;': '©',
-      '&#174;': '®',
-      '&#8482;': '™',
     };
     
     for (var entry in entities.entries) {
@@ -184,11 +142,6 @@ class RssParserService {
     text = text.replaceAllMapped(
       RegExp(r'&#(\d+);'),
       (m) => String.fromCharCode(int.parse(m.group(1)!))
-    );
-    
-    text = text.replaceAllMapped(
-      RegExp(r'&#x([0-9a-fA-F]+);'),
-      (m) => String.fromCharCode(int.parse(m.group(1)!, radix: 16))
     );
     
     return text;
@@ -203,7 +156,6 @@ class RssParserService {
         'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12,
       };
       
-      // Standard RSS format: "Sat, 09 May 2026 05:38:38 +0200"
       final match = RegExp(r'([A-Z][a-z]{2}), (\d{1,2}) ([A-Z][a-z]{3}) (\d{4}) (\d{2}):(\d{2}):(\d{2})').firstMatch(rssDate);
       
       if (match != null) {
@@ -217,7 +169,6 @@ class RssParserService {
         return DateTime(year, month, day, hour, minute, second);
       }
       
-      // Try ISO 8601
       try {
         return DateTime.parse(rssDate);
       } catch (_) {}
