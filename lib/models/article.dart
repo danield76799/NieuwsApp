@@ -1,99 +1,43 @@
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import "package:hive/hive.dart";
 
-/// Model voor een nieuws artikel
+part "article.g.dart";
+
+@HiveType(typeId: 0)
 class Article {
+  @HiveField(0)
   final String id;
+  
+  @HiveField(1)
   final String title;
+  
+  @HiveField(2)
   final String description;
-  final String content;
-  final String url;
-  final String? imageUrl;
+  
+  @HiveField(3)
+  final String link;
+  
+  @HiveField(4)
+  final DateTime pubDate;
+  
+  @HiveField(5)
+  final String? thumbnailUrl;
+  
+  @HiveField(6)
   final String source;
-  final DateTime publishedAt;
-  final String? author;
+  
+  @HiveField(7)
   final String? category;
 
   Article({
     required this.id,
     required this.title,
     required this.description,
-    required this.content,
-    required this.url,
-    this.imageUrl,
+    required this.link,
+    required this.pubDate,
+    this.thumbnailUrl,
     required this.source,
-    required this.publishedAt,
-    this.author,
     this.category,
   });
 
-  /// Factory constructor van JSON
-  factory Article.fromJson(Map<String, dynamic> json) {
-    return Article(
-      id: json['url']?.hashCode.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
-      title: json['title'] ?? 'Geen titel',
-      description: json['description'] ?? '',
-      content: json['content'] ?? '',
-      url: json['url'] ?? '',
-      imageUrl: json['urlToImage'],
-      source: json['source']?['name'] ?? 'Onbekend',
-      publishedAt: _parseDate(json['publishedAt']),
-      author: json['author'],
-      category: json['category'],
-    );
-  }
-
-  /// Naar JSON voor lokale opslag
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'title': title,
-      'description': description,
-      'content': content,
-      'url': url,
-      'imageUrl': imageUrl,
-      'source': source,
-      'publishedAt': publishedAt.toIso8601String(),
-      'author': author,
-      'category': category,
-    };
-  }
-
-  /// Parse datum van API formaat
-  static DateTime _parseDate(String? dateStr) {
-    if (dateStr == null) return DateTime.now();
-    try {
-      return DateTime.parse(dateStr);
-    } catch (e) {
-      return DateTime.now();
-    }
-  }
-
-  /// Check of artikel minder dan 1 uur oud is
-  bool get isNew {
-    final now = DateTime.now();
-    final difference = now.difference(publishedAt);
-    return difference.inHours < 1;
-  }
-
-  /// Geformatteerde publicatietijd
-  String get formattedTime {
-    final now = DateTime.now();
-    final difference = now.difference(publishedAt);
-
-    if (difference.inMinutes < 1) {
-      return 'Zojuist';
-    } else if (difference.inMinutes < 60) {
-      return '${difference.inMinutes} min geleden';
-    } else if (difference.inHours < 24) {
-      return '${difference.inHours} uur geleden';
-    } else {
-      return DateFormat('d MMM').format(publishedAt);
-    }
-  }
-
-  @override
-  String toString() {
-    return 'Article(title: $title, source: $source, publishedAt: $publishedAt)';
-  }
+  bool get isNew => DateTime.now().difference(pubDate).inMinutes < 60;
 }
