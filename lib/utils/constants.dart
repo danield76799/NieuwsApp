@@ -2,7 +2,8 @@
 class Constants {
   // NewsAPI.org API key (gratis tier: 100 requests/day)
   // Haal je eigen key op via: https://newsapi.org/register
-  static const String newsApiKey = 'YOUR_API_KEY_HERE';
+  // Demo key voor testen - vervang dit met je eigen key!
+  static const String newsApiKey = 'demo';
   
   // App colors - NU.nl style
   static const Color primaryBlue = Color(0xFF1E88E5);
