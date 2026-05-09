@@ -30,9 +30,9 @@ class NewsApiService {
         List<Article> articles = [];
         
         for (var item in items) {
-          final title = item.findElements('title').firstOrNnul?.text ?? '';
+          final title = item.findElements('title').firstOrNull?.text ?? '';
           final link = item.findElements('link').firstOrNull?.text ?? '';
-          final description = item.findElements('description').firstOrNnul?.text ?? '';
+          final description = item.findElements('description').firstOrNull?.text ?? '';
           final pubDate = item.findElements('pubDate').firstOrNull?.text ?? '';
           final enclosure = item.findElements('enclosure').firstOrNull;
           
@@ -55,12 +55,15 @@ class NewsApiService {
           }
           
           articles.add(Article(
+            id: link.hashCode.toString(),
             title: title,
             description: _cleanDescription(description),
+            content: _cleanDescription(description),
             url: link,
-            urlToImage: imageUrl,
-            publishedAt: _parseDate(pubDate),
+            imageUrl: imageUrl,
             source: 'nieuws.nl',
+            publishedAt: _parseDate(pubDate),
+            author: null,
             category: articleCategory,
           ));
         }
@@ -144,8 +147,8 @@ class NewsApiService {
     return text;
   }
   
-  /// Parse RSS date to ISO format
-  String _parseDate(String rssDate) {
+  /// Parse RSS date to DateTime
+  DateTime _parseDate(String rssDate) {
     try {
       // RSS date format: Sat, 09 May 2026 05:38:38 +0200
       final months = {
@@ -163,13 +166,12 @@ class NewsApiService {
         final minute = int.parse(match.group(6)!);
         final second = int.parse(match.group(7)!);
         
-        final date = DateTime(year, month, day, hour, minute, second);
-        return date.toIso8601String();
+        return DateTime(year, month, day, hour, minute, second);
       }
     } catch (e) {
       print('Error parsing date: $e');
     }
     
-    return DateTime.now().toIso8601String();
+    return DateTime.now();
   }
 }
