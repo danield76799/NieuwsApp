@@ -4,15 +4,15 @@ import '../providers/news_provider.dart';
 import '../screens/home_screen.dart';
 import '../screens/bookmarks_screen.dart';
 
-class NieuwsApp extends StatelessWidget {
-  const NieuwsApp({super.key});
+class PlusNewsApp extends StatelessWidget {
+  const PlusNewsApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => NewsProvider(),
       child: MaterialApp(
-        title: 'Nieuws',
+        title: 'PlusNews',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           useMaterial3: true,
