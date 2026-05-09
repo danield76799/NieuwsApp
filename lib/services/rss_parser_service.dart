@@ -184,34 +184,62 @@ class RssParserService {
   }
 
   DateTime _parseDate(String rssDate) {
-    if (rssDate.isEmpty) return DateTime.now();
+    if (rssDate.isEmpty) {
+      print('Empty date string, returning epoch');
+      return DateTime(1970, 1, 1);
+    }
     
     try {
+      // Try standard RSS format: Mon, 01 May 2026 12:00:00 GMT
       final months = {
         'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6,
         'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12,
       };
       
-      final match = RegExp(r'([A-Z][a-z]{2}), (\d{1,2}) ([A-Z][a-z]{3}) (\d{4}) (\d{2}):(\d{2}):(\d{2})').firstMatch(rssDate);
+      // Match format: Day, DD Mon YYYY HH:MM:SS (with optional timezone)
+      final match = RegExp(r'([A-Z][a-z]{2}),?\s+(\d{1,2})\s+([A-Z][a-z]{2,3})\s+(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})').firstMatch(rssDate);
       
       if (match != null) {
         final day = int.parse(match.group(2)!);
-        final month = months[match.group(3)!] ?? 1;
+        final monthStr = match.group(3)!;
+        final month = months[monthStr.substring(0, 3)] ?? 1;
         final year = int.parse(match.group(4)!);
         final hour = int.parse(match.group(5)!);
         final minute = int.parse(match.group(6)!);
         final second = int.parse(match.group(7)!);
         
+        print('Parsed RSS date: $year-$month-$day $hour:$minute:$second');
         return DateTime(year, month, day, hour, minute, second);
       }
       
+      // Try ISO 8601 format
       try {
         return DateTime.parse(rssDate);
       } catch (_) {}
       
+      // Try Dutch format: 1 mei 2026 12:00
+      final dutchMatch = RegExp(r'(\d{1,2})\s+([a-z]{3,9})\s+(\d{4})\s+(\d{1,2}):(\d{2})').firstMatch(rssDate.toLowerCase());
+      if (dutchMatch != null) {
+        final dutchMonths = {
+          'jan': 1, 'januari': 1, 'feb': 2, 'februari': 2, 'mrt': 3, 'maart': 3,
+          'apr': 4, 'april': 4, 'mei': 5, 'jun': 6, 'juni': 6,
+          'jul': 7, 'juli': 7, 'aug': 8, 'augustus': 8, 'sep': 9, 'september': 9,
+          'okt': 10, 'oktober': 10, 'nov': 11, 'november': 11, 'dec': 12, 'december': 12,
+        };
+        final day = int.parse(dutchMatch.group(1)!);
+        final month = dutchMonths[dutchMatch.group(2)!] ?? 1;
+        final year = int.parse(dutchMatch.group(3)!);
+        final hour = int.parse(dutchMatch.group(4)!);
+        final minute = int.parse(dutchMatch.group(5)!);
+        return DateTime(year, month, day, hour, minute);
+      }
+      
+      print('Could not parse date: $rssDate');
     } catch (e) {
-      print('Error parsing date: $e');
+      print('Error parsing date "$rssDate": $e');
     }
-    return DateTime.now();
+    
+    // Return epoch instead of now() to avoid showing old articles as new
+    return DateTime(1970, 1, 1);
   }
 }
