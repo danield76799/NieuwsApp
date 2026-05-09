@@ -4,7 +4,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/article.dart';
 import '../services/bookmark_service.dart';
-import 'time_helper.dart';
+import '../services/time_helper.dart';
 
 class ArticleCardV2 extends StatefulWidget {
   final Article article;
