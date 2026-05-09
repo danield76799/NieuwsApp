@@ -3,11 +3,12 @@ import 'package:http/http.dart' as http;
 import 'package:xml/xml.dart';
 import '../models/article.dart';
 
-/// Service voor het ophalen van nieuws via nieuws.nl RSS feed
+/// Service voor het ophalen van nieuws via RSS feeds
 class NewsApiService {
-  static const String _rssUrl = 'https://nieuws.nl/sitemap/news.xml';
+  static const String _nieuwsNlUrl = 'https://nieuws.nl/sitemap/news.xml';
+  static const String _tweakersUrl = 'https://tweakers.net/feeds/nieuws.xml';
   
-  /// Haal nieuws op van nieuws.nl RSS feed
+  /// Haal nieuws op van beide RSS feeds
   Future<List<Article>> getTopHeadlines({
     String country = 'nl',
     String? category,
@@ -15,8 +16,52 @@ class NewsApiService {
     int pageSize = 20,
   }) async {
     try {
+      // Laad beide feeds parallel
+      final results = await Future.wait([
+        _fetchRssFeed(_nieuwsNlUrl, 'niews.nl'),
+        _fetchRssFeed(_tweakersUrl, 'tweakers.net'),
+      ]);
+      
+      // Combineer en sorteer op datum
+      List<Article> allArticles = [];
+      for (var articles in results) {
+        allArticles.addAll(articles);
+      }
+      
+      // Sorteer op publishedAt (nieuwste eerst)
+      allArticles.sort((a, b) => b.publishedAt.compareTo(a.publishedAt));
+      
+      // Filter by category if specified
+      if (category != null && category != 'all') {
+        allArticles = allArticles.where((article) {
+          return article.category?.toLowerCase() == category.toLowerCase() ||
+                 (category == 'tech' && article.source == 'tweakers.net');
+        }).toList();
+      }
+      
+      // Pagination
+      final startIndex = (page - 1) * pageSize;
+      final endIndex = startIndex + pageSize;
+      
+      if (startIndex >= allArticles.length) {
+        return [];
+      }
+      
+      return allArticles.sublist(
+        startIndex,
+        endIndex > allArticles.length ? allArticles.length : endIndex,
+      );
+    } catch (e) {
+      print('Error fetching news: $e');
+      return [];
+    }
+  }
+  
+  /// Fetch RSS feed from URL
+  Future<List<Article>> _fetchRssFeed(String url, String source) async {
+    try {
       final response = await http.get(
-        Uri.parse(_rssUrl),
+        Uri.parse(url),
         headers: {
           'Accept': 'application/rss+xml, application/xml, text/xml',
           'User-Agent': 'NieuwsApp/1.0',
@@ -34,24 +79,25 @@ class NewsApiService {
           final link = item.findElements('link').firstOrNull?.text ?? '';
           final description = item.findElements('description').firstOrNull?.text ?? '';
           final pubDate = item.findElements('pubDate').firstOrNull?.text ?? '';
-          final enclosure = item.findElements('enclosure').firstOrNull;
+          final author = item.findElements('author').firstOrNull?.text;
+          final categoryElement = item.findElements('category').firstOrNnull;
           
-          // Extract image URL from enclosure
+          // Extract image URL - try enclosure first, then media:content
           String? imageUrl;
+          final enclosure = item.findElements('enclosure').firstOrNull;
           if (enclosure != null) {
             imageUrl = enclosure.getAttribute('url');
           }
           
-          // Extract category from link
+          // Extract category from link or category element
           String articleCategory = 'algemeen';
-          final categoryMatch = RegExp(r'https://nieuws\.nl/([^/]+)/').firstMatch(link);
-          if (categoryMatch != null) {
-            articleCategory = categoryMatch.group(1) ?? 'algemeen';
-          }
-          
-          // Filter by category if specified
-          if (category != null && category != 'all' && articleCategory != category) {
-            continue;
+          if (categoryElement != null) {
+            articleCategory = categoryElement.text.split('/').first.trim().toLowerCase();
+          } else {
+            final categoryMatch = RegExp(r'https?://[^/]+/([^/]+)/').firstMatch(link);
+            if (categoryMatch != null) {
+              articleCategory = categoryMatch.group(1) ?? 'algemeen';
+            }
           }
           
           articles.add(Article(
@@ -61,30 +107,20 @@ class NewsApiService {
             content: _cleanDescription(description),
             url: link,
             imageUrl: imageUrl,
-            source: 'nieuws.nl',
+            source: source,
             publishedAt: _parseDate(pubDate),
-            author: null,
+            author: author,
             category: articleCategory,
           ));
         }
         
-        // Pagination
-        final startIndex = (page - 1) * pageSize;
-        final endIndex = startIndex + pageSize;
-        
-        if (startIndex >= articles.length) {
-          return [];
-        }
-        
-        return articles.sublist(
-          startIndex,
-          endIndex > articles.length ? articles.length : endIndex,
-        );
+        return articles;
       } else {
-        throw Exception('Failed to load news: ${response.statusCode}');
+        print('Failed to load $source: ${response.statusCode}');
+        return [];
       }
     } catch (e) {
-      print('Error fetching news: $e');
+      print('Error fetching $source: $e');
       return [];
     }
   }
