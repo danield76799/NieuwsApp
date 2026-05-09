@@ -25,12 +25,16 @@ class WeatherService {
       Position? position;
       try {
         position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.low,
-        ).timeout(Duration(seconds: 10));
+          desiredAccuracy: LocationAccuracy.medium,
+        ).timeout(Duration(seconds: 15));
+        print('Got position: ${position.latitude}, ${position.longitude}');
       } catch (e) {
         print('Location timeout or error: $e');
         // Try last known position
         position = await Geolocator.getLastKnownPosition();
+        if (position != null) {
+          print('Using last known position: ${position.latitude}, ${position.longitude}');
+        }
       }
       
       if (position == null) {
@@ -38,11 +42,11 @@ class WeatherService {
         return getWeather('Amsterdam');
       }
       
-      print('Got position: ${position.latitude}, ${position.longitude}');
-      
       // Use coordinates for weather
-      final lat = position.latitude;
-      final lon = position.longitude;
+      final lat = position.latitude.toStringAsFixed(4);
+      final lon = position.longitude.toStringAsFixed(4);
+      
+      print('Fetching weather for: $lat, $lon');
       
       final response = await http.get(
         Uri.parse('https://wttr.in/$lat,$lon?format=j1'),
