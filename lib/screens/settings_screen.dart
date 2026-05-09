@@ -11,61 +11,18 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   late TextEditingController _controller;
-  bool _filterActive = false;
 
   @override
   void initState() {
     super.initState();
     final provider = context.read<NewsProvider>();
     _controller = TextEditingController(text: provider.keywords.join(', '));
-    _filterActive = provider.keywords.isNotEmpty;
   }
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
-  }
-
-  void _saveKeywords() {
-    final provider = context.read<NewsProvider>();
-    provider.setKeywords(_controller.text);
-    setState(() {
-      _filterActive = _controller.text.trim().isNotEmpty;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Keywords opgeslagen'),
-        backgroundColor: Color(0xFF007BC7),
-      ),
-    );
-  }
-
-  void _toggleFilter(bool active) {
-    setState(() {
-      _filterActive = active;
-    });
-    if (active) {
-      _saveKeywords();
-    } else {
-      // Filter uit - maar keywords bewaren!
-      final provider = context.read<NewsProvider>();
-      provider.clearKeywords();
-    }
-  }
-
-  void _clearKeywords() {
-    _controller.clear();
-    final provider = context.read<NewsProvider>();
-    provider.clearKeywords();
-    setState(() {
-      _filterActive = false;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Keywords gewist'),
-      ),
-    );
   }
 
   @override
@@ -117,9 +74,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              _filterActive
+                              provider.filterActive
                                   ? 'Filter actief'
-                                  : 'Filter uitgeschakeld',
+                                  : provider.keywords.isNotEmpty
+                                      ? 'Filter uit (keywords bewaard)'
+                                      : 'Filter uitgeschakeld',
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey[600],
@@ -129,9 +88,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ),
                       Switch(
-                        value: _filterActive,
+                        value: provider.filterActive,
                         activeColor: const Color(0xFF007BC7),
-                        onChanged: _toggleFilter,
+                        onChanged: (value) {
+                          provider.toggleFilter(value);
+                        },
                       ),
                     ],
                   ),
@@ -148,7 +109,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Voer keywords in gescheiden door komma\'s. Deze worden bewaard ook als het filter uit staat.',
+                  'Voer keywords in gescheiden door komma\'s.',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[600],
@@ -179,7 +140,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: _saveKeywords,
+                        onPressed: () {
+                          provider.setKeywords(_controller.text);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Keywords opgeslagen'),
+                              backgroundColor: Color(0xFF007BC7),
+                            ),
+                          );
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF007BC7),
                           foregroundColor: Colors.white,
@@ -199,7 +168,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     const SizedBox(width: 12),
                     OutlinedButton(
-                      onPressed: _clearKeywords,
+                      onPressed: () {
+                        _controller.clear();
+                        provider.clearKeywords();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Keywords gewist'),
+                          ),
+                        );
+                      },
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.red[700],
                         side: BorderSide(color: Colors.red[300]!),
