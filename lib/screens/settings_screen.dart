@@ -11,14 +11,12 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   late TextEditingController _controller;
-  bool _showKeywordsInput = false;
 
   @override
   void initState() {
     super.initState();
     final provider = context.read<NewsProvider>();
     _controller = TextEditingController(text: provider.keywords.join(', '));
-    _showKeywordsInput = provider.keywords.isNotEmpty;
   }
 
   @override
@@ -95,12 +93,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           onPressed: () {
                             provider.setKeywords('');
                             _controller.clear();
-                            setState(() => _showKeywordsInput = false);
                           },
                         )
                       else
                         ElevatedButton(
-                          onPressed: () => setState(() => _showKeywordsInput = true),
+                          onPressed: () {
+                            // Focus op het keyword veld
+                            _controller.text = 'Trump';
+                            provider.setKeywords('Trump');
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF007BC7),
                             foregroundColor: Colors.white,
@@ -111,75 +112,74 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
 
-                if (_showKeywordsInput || filterEnabled) ...[
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Keywords',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1A1A1A),
-                    ),
+                // Keywords input - ALTIJD zichtbaar zodat gebruiker kan typen
+                const SizedBox(height: 24),
+                const Text(
+                  'Keywords',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1A1A1A),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Voer keywords in gescheiden door komma\'s. Alleen artikelen die deze woorden bevatten worden getoond.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                      height: 1.4,
-                    ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Voer keywords in gescheiden door komma\'s. Alleen artikelen die deze woorden bevatten worden getoond.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                    height: 1.4,
                   ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _controller,
-                    decoration: InputDecoration(
-                      hintText: 'bijv: AI, Economie, Sport, Tesla',
-                      filled: true,
-                      fillColor: const Color(0xFFF5F5F5),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFF007BC7), width: 2),
-                      ),
-                      contentPadding: const EdgeInsets.all(16),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _controller,
+                  decoration: InputDecoration(
+                    hintText: 'bijv: AI, Economie, Sport, Tesla',
+                    filled: true,
+                    fillColor: const Color(0xFFF5F5F5),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
                     ),
-                    maxLines: 2,
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xFF007BC7), width: 2),
+                    ),
+                    contentPadding: const EdgeInsets.all(16),
                   ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        provider.setKeywords(_controller.text);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Filter bijgewerkt'),
-                            backgroundColor: Color(0xFF007BC7),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF007BC7),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                  maxLines: 2,
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      provider.setKeywords(_controller.text);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Filter bijgewerkt'),
+                          backgroundColor: Color(0xFF007BC7),
                         ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF007BC7),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Text(
-                        'Filter bijwerken',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    ),
+                    child: const Text(
+                      'Filter bijwerken',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
-                ],
+                ),
 
                 const SizedBox(height: 32),
                 const Divider(),
@@ -192,7 +192,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onPressed: () {
                       _controller.clear();
                       provider.setKeywords('');
-                      setState(() => _showKeywordsInput = false);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Alle filters gewist'),
