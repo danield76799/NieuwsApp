@@ -109,7 +109,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Voer keywords in gescheiden door komma\'s.',
+                  'Voer keywords in gescheiden door komma\'s. Deze blijven bewaard ook als je het filter uitzet.',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[600],
