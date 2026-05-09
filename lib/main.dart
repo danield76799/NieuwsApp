@@ -8,5 +8,5 @@ void main() async {
   // Initialize Hive for local storage
   await Hive.initFlutter();
   
-  runApp(const NieuwsApp());
+  runApp(const PlusNewsApp());
 }
