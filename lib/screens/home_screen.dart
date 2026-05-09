@@ -27,37 +27,38 @@ class HomeScreen extends StatelessWidget {
           Consumer<NewsProvider>(
             builder: (context, provider, child) {
               final hasFilter = provider.keywords.isNotEmpty;
-              return IconButton(
-                icon: Icon(
-                  hasFilter ? Icons.filter_alt : Icons.filter_alt_outlined,
-                  color: hasFilter ? Colors.yellow : Colors.white,
-                ),
-                onPressed: () {
-                  if (hasFilter) {
-                    provider.setKeywords('');
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Filter uitgeschakeld'),
-                        duration: Duration(seconds: 1),
-                      ),
-                    );
-                  } else {
-                    Navigator.push(
+              return Row(
+                children: [
+                  // Filter toggle button
+                  IconButton(
+                    icon: Icon(
+                      provider.filterActive ? Icons.filter_alt : Icons.filter_alt_outlined,
+                      color: provider.filterActive ? Colors.yellow : Colors.white,
+                    ),
+                    onPressed: () {
+                      provider.toggleFilter(!provider.filterActive);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(provider.filterActive 
+                              ? 'Filter ingeschakeld' 
+                              : 'Filter uitgeschakeld'),
+                          duration: const Duration(seconds: 1),
+                        ),
+                      );
+                    },
+                    tooltip: provider.filterActive ? 'Filter uitschakelen' : 'Filter inschakelen',
+                  ),
+                  // Settings button
+                  IconButton(
+                    icon: const Icon(Icons.settings, color: Colors.white),
+                    onPressed: () => Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                    );
-                  }
-                },
-                tooltip: hasFilter ? 'Filter uitschakelen' : 'Filter inschakelen',
+                    ),
+                  ),
+                ],
               );
             },
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const SettingsScreen()),
-            ),
           ),
         ],
       ),
@@ -138,7 +139,7 @@ class HomeScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                if (provider.keywords.isNotEmpty)
+                if (provider.filterActive && provider.keywords.isNotEmpty)
                   Container(
                     width: double.infinity,
                     color: const Color(0xFFF5F5F5),
