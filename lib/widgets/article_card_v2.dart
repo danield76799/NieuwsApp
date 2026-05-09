@@ -110,9 +110,7 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                                 fontSize: 12,
                                 color: Colors.grey[600],
                               ),
-                                ),
-                              ),
-                            ],
+                            ),
                           ],
                         ),
                         const SizedBox(height: 16),
@@ -208,30 +206,22 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Thumbnail - KLEINER: 140px hoogte ipv 180
             if (widget.article.thumbnailUrl != null)
-              Stack(
-                children: [
-                  CachedNetworkImage(
-                    imageUrl: widget.article.thumbnailUrl!,
-                    width: double.infinity,
-                    height: 140,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      height: 140,
-                      color: Colors.grey[200],
-                      child: const Center(child: CircularProgressIndicator()),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      height: 140,
-                      color: Colors.grey[200],
-                      child: const Icon(Icons.error),
-                    ),
-                  ),
-                  if (widget.article.isNew)
-                      ),
-                    ),
-                ],
+              CachedNetworkImage(
+                imageUrl: widget.article.thumbnailUrl!,
+                width: double.infinity,
+                height: 140,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(
+                  height: 140,
+                  color: Colors.grey[200],
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  height: 140,
+                  color: Colors.grey[200],
+                  child: const Icon(Icons.error),
+                ),
               )
             else
               Container(
@@ -241,13 +231,11 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                   child: Icon(Icons.article, size: 32, color: Colors.grey),
                 ),
               ),
-            // Content - COMPACTER: minder padding
             Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Source and time - kleinere font
                   Row(
                     children: [
                       Container(
@@ -276,7 +264,6 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  // Title - kleinere font, max 2 regels
                   Text(
                     widget.article.title,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -287,7 +274,6 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
-                  // Description - kleinere font, max 1 regel
                   Text(
                     widget.article.description,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -298,7 +284,6 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 8),
-                  // Actions - kleinere icons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
