@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/article.dart';
 import '../repositories/news_repository.dart';
@@ -25,7 +26,6 @@ class NewsProvider extends ChangeNotifier {
   bool get filterEnabled => _keywords.isNotEmpty;
 
   Future<void> _loadKeywordsAndNews() async {
-    // Load keywords first
     try {
       final prefs = await SharedPreferences.getInstance();
       final saved = prefs.getString('keywords') ?? '';
@@ -36,7 +36,6 @@ class NewsProvider extends ChangeNotifier {
       print('Error loading keywords: $e');
     }
     
-    // Then load news
     await loadNews();
   }
 
