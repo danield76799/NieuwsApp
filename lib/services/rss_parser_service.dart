@@ -1,5 +1,6 @@
 import 'package:http/http.dart' as http;
 import 'package:xml/xml.dart';
+import 'dart:convert' show utf8;
 import '../models/article.dart';
 
 class RssParserService {
@@ -10,11 +11,22 @@ class RssParserService {
         headers: {
           'Accept': 'application/rss+xml, application/xml, text/xml',
           'User-Agent': 'PlusNews/1.0',
+          'Accept-Charset': 'utf-8',
         },
       );
 
       if (response.statusCode == 200) {
-        final document = XmlDocument.parse(response.body);
+        // Ensure UTF-8 decoding - some feeds send Latin-1 despite headers
+        String body;
+        try {
+          // Try UTF-8 first
+          body = utf8.decode(response.bodyBytes);
+        } catch (_) {
+          // Fallback to Latin-1 if UTF-8 fails
+          body = latin1.decode(response.bodyBytes);
+        }
+        
+        final document = XmlDocument.parse(body);
         final items = document.findAllElements('item');
         
         List<Article> articles = [];
@@ -84,8 +96,8 @@ class RssParserService {
       return mediaThumbnail.getAttribute('url');
     }
     
-    // Fallback: extract from description HTML using img tag
-    final imgRegex = RegExp(r'src=["' + r"'" + r'"]([^"' + r"'" + r']+)["' + r"'" + r']');
+    // Fallback: extract from description HTML
+    final imgRegex = RegExp(r'src=["\']([^"\']+)["\']');
     final imgMatch = imgRegex.firstMatch(description);
     if (imgMatch != null && imgMatch.groupCount >= 1) {
       return imgMatch.group(1);
