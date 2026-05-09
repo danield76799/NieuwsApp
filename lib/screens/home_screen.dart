@@ -1,199 +1,267 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:animations/animations.dart';
 import '../providers/news_provider.dart';
-import '../widgets/article_list_item.dart';
+import '../widgets/article_card_v2.dart';
 import '../widgets/empty_state.dart';
+import '../widgets/search_bar.dart';
 import 'settings_screen.dart';
 import 'feeds_screen.dart';
+import 'bookmarks_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _currentIndex = 0;
+  String _searchQuery = '';
+
+  @override
   Widget build(BuildContext context) {
+    final screens = [
+      _buildNewsTab(),
+      const BookmarksScreen(),
+      const FeedsScreen(),
+      const SettingsScreen(),
+    ];
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF007BC7),
-        elevation: 0,
-        title: const Text(
-          'PlusNews',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
-            fontSize: 20,
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: screens[_currentIndex],
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (index) {
+          setState(() => _currentIndex = index);
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Nieuws',
           ),
-        ),
-        actions: [
-          Consumer<NewsProvider>(
-            builder: (context, provider, child) {
-              final hasFilter = provider.keywords.isNotEmpty;
-              return Row(
-                children: [
-                  // Filter toggle button
-                  IconButton(
-                    icon: Icon(
-                      provider.filterActive ? Icons.filter_alt : Icons.filter_alt_outlined,
-                      color: provider.filterActive ? Colors.yellow : Colors.white,
-                    ),
-                    onPressed: () {
-                      provider.toggleFilter(!provider.filterActive);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(provider.filterActive 
-                              ? 'Filter ingeschakeld' 
-                              : 'Filter uitgeschakeld'),
-                          duration: const Duration(seconds: 1),
-                        ),
-                      );
-                    },
-                    tooltip: provider.filterActive ? 'Filter uitschakelen' : 'Filter inschakelen',
-                  ),
-                  // Settings button
-                  IconButton(
-                    icon: const Icon(Icons.settings, color: Colors.white),
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                    ),
-                  ),
-                  // Feeds button
-                  IconButton(
-                    icon: const Icon(Icons.rss_feed, color: Colors.white),
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const FeedsScreen()),
-                    ),
-                  ),
-                ],
-              );
-            },
+          NavigationDestination(
+            icon: Icon(Icons.bookmark_outline),
+            selectedIcon: Icon(Icons.bookmark),
+            label: 'Opgeslagen',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.rss_feed_outlined),
+            selectedIcon: Icon(Icons.rss_feed),
+            label: 'Feeds',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.settings_outlined),
+            selectedIcon: Icon(Icons.settings),
+            label: 'Instellingen',
           ),
         ],
       ),
-      body: Consumer<NewsProvider>(
-        builder: (context, provider, child) {
-          if (provider.isLoading && provider.articles.isEmpty) {
-            return const Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF007BC7)),
-              ),
-            );
-          }
+    );
+  }
 
-          if (provider.error != null && provider.articles.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Er ging iets mis',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey[800],
-                      ),
+  Widget _buildNewsTab() {
+    return Consumer<NewsProvider>(
+      builder: (context, provider, child) {
+        return CustomScrollView(
+          slivers: [
+            // App Bar
+            SliverAppBar(
+              floating: true,
+              pinned: true,
+              expandedHeight: 120,
+              flexibleSpace: FlexibleSpaceBar(
+                title: Text(
+                  'PlusNews',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                background: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Theme.of(context).colorScheme.primary,
+                        Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      provider.error ?? 'Onbekende fout',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () => provider.loadNews(forceRefresh: true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF007BC7),
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text('Opnieuw proberen'),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            );
-          }
-
-          return RefreshIndicator(
-            color: const Color(0xFF007BC7),
-            onRefresh: () => provider.loadNews(forceRefresh: true),
-            child: Column(
-              children: [
-                if (provider.isOffline)
-                  Container(
-                    width: double.infinity,
-                    color: Colors.orange[100],
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.cloud_off, size: 16, color: Colors.orange[800]),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Offline modus - Gecachete artikelen',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.orange[800],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.search),
+                  onPressed: () {
+                    showSearch(
+                      context: context,
+                      delegate: ArticleSearchDelegate(provider.articles),
+                    );
+                  },
+                ),
+                IconButton(
+                  icon: Icon(
+                    provider.filterActive ? Icons.filter_alt : Icons.filter_alt_outlined,
+                    color: provider.filterActive ? Colors.yellow : null,
                   ),
-                if (provider.filterActive && provider.keywords.isNotEmpty)
-                  Container(
-                    width: double.infinity,
-                    color: const Color(0xFFF5F5F5),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.filter_list, size: 16, color: Color(0xFF007BC7)),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Filter: ${provider.keywords.join(", ")}',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: Color(0xFF007BC7),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                Expanded(
-                  child: provider.articles.isEmpty
-                      ? EmptyState(filterText: provider.keywords.join(", "))
-                      : ListView.separated(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          itemCount: provider.articles.length,
-                          separatorBuilder: (_, __) => const Divider(
-                            height: 1,
-                            color: Color(0xFFE0E0E0),
-                            indent: 16,
-                            endIndent: 16,
-                          ),
-                          itemBuilder: (context, index) {
-                            return ArticleListItem(
-                              article: provider.articles[index],
-                            );
-                          },
-                        ),
+                  onPressed: () {
+                    provider.toggleFilter(!provider.filterActive);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(provider.filterActive 
+                            ? 'Filter ingeschakeld' 
+                            : 'Filter uitgeschakeld'),
+                        duration: const Duration(seconds: 1),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
-          );
+
+            // Filter chips
+            if (provider.keywords.isNotEmpty)
+              SliverToBoxAdapter(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Wrap(
+                    spacing: 8,
+                    children: [
+                      if (provider.filterActive)
+                        Chip(
+                          avatar: const Icon(Icons.filter_list, size: 18),
+                          label: Text('Filter: ${provider.keywords.join(", ")}'),
+                          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                          deleteIcon: const Icon(Icons.close, size: 18),
+                          onDeleted: () => provider.toggleFilter(false),
+                        )
+                      else
+                        ActionChip(
+                          avatar: const Icon(Icons.filter_list_off, size: 18),
+                          label: Text('${provider.keywords.join(", ")} (uit)'),
+                          onPressed: () => provider.toggleFilter(true),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+
+            // Loading indicator
+            if (provider.isLoading && provider.articles.isEmpty)
+              const SliverFillRemaining(
+                child: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            else if (provider.error != null && provider.articles.isEmpty)
+              SliverFillRemaining(
+                child: EmptyState(
+                  icon: Icons.error_outline,
+                  title: 'Er ging iets mis',
+                  subtitle: provider.error ?? 'Onbekende fout',
+                  action: ElevatedButton(
+                    onPressed: () => provider.loadNews(forceRefresh: true),
+                    child: const Text('Opnieuw proberen'),
+                  ),
+                ),
+              )
+            else if (provider.articles.isEmpty)
+              const SliverFillRemaining(
+                child: EmptyState(
+                  icon: Icons.search_off,
+                  title: 'Geen artikelen gevonden',
+                  subtitle: 'Probeer andere zoektermen of wacht tot nieuwe artikelen binnenkomen.',
+                ),
+              )
+            else
+              // Article list
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final article = provider.articles[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: ArticleCardV2(article: article),
+                      );
+                    },
+                    childCount: provider.articles.length,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class ArticleSearchDelegate extends SearchDelegate {
+  final List articles;
+
+  ArticleSearchDelegate(this.articles);
+
+  @override
+  List<Widget> buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: const Icon(Icons.clear),
+        onPressed: () {
+          query = '';
         },
       ),
+    ];
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () {
+        close(context, null);
+      },
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    final results = articles.where((article) {
+      return article.title.toLowerCase().contains(query.toLowerCase()) ||
+             article.description.toLowerCase().contains(query.toLowerCase());
+    }).toList();
+
+    return ListView.builder(
+      itemCount: results.length,
+      itemBuilder: (context, index) {
+        return ArticleCardV2(article: results[index]);
+      },
+    );
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    final suggestions = articles.where((article) {
+      return article.title.toLowerCase().contains(query.toLowerCase());
+    }).toList();
+
+    return ListView.builder(
+      itemCount: suggestions.length,
+      itemBuilder: (context, index) {
+        return ListTile(
+          title: Text(suggestions[index].title),
+          onTap: () {
+            query = suggestions[index].title;
+            showResults(context);
+          },
+        );
+      },
     );
   }
 }
