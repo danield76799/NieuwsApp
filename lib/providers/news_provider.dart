@@ -111,6 +111,7 @@ class NewsProvider extends ChangeNotifier {
   /// Pas filters toe op artikelen
   void _applyFilters() {
     if (_keywords.isEmpty) {
+      // Geen keywords = toon alle artikelen
       _filteredArticles = [];
       notifyListeners();
       return;
