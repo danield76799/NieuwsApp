@@ -41,6 +41,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   snap: true,
                   pinned: true,
                   expandedHeight: 120,
+                  leading: IconButton(
+                    icon: Icon(
+                      Icons.filter_list,
+                      color: provider.filterActive ? Colors.amber : Colors.white,
+                    ),
+                    onPressed: () => provider.toggleFilter(!provider.filterActive),
+                    tooltip: provider.filterActive ? 'Filter uit' : 'Filter aan',
+                  ),
                   flexibleSpace: FlexibleSpaceBar(
                     title: const Text(
                       'PlusNews',
@@ -62,7 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   actions: [
                     // Search icon
                     IconButton(
-                      icon: const Icon(Icons.search),
+                      icon: const Icon(Icons.search, color: Colors.white),
                       onPressed: () {
                         showModalBottomSheet(
                           context: context,
@@ -81,15 +89,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         );
                       },
-                    ),
-                    // Filter toggle
-                    IconButton(
-                      icon: Icon(
-                        Icons.filter_list,
-                        color: provider.filterActive ? Colors.amber : null,
-                      ),
-                      onPressed: () => provider.toggleFilter(!provider.filterActive),
-                      tooltip: provider.filterActive ? 'Filter uit' : 'Filter aan',
                     ),
                     const SizedBox(width: 8),
                   ],
