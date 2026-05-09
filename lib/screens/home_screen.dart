@@ -5,6 +5,7 @@ import '../services/weather_service.dart';
 import '../widgets/article_card_v2.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/search_bar.dart' as app_search;
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -180,8 +181,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       Icons.filter_list,
                       color: provider.filterActive ? Colors.amber : Colors.white,
                     ),
-                    onPressed: () async {
-                      await provider.toggleFilter(!provider.filterActive);
+                    onPressed: () {
+                      provider.toggleFilter(!provider.filterActive);
                     },
                     tooltip: provider.filterActive ? 'Filter uit' : 'Filter aan',
                   ),
@@ -255,6 +256,16 @@ class _HomeScreenState extends State<HomeScreen> {
                               },
                             ),
                           ),
+                        );
+                      },
+                    ),
+                    // Settings button
+                    IconButton(
+                      icon: const Icon(Icons.settings, color: Colors.white),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const SettingsScreen()),
                         );
                       },
                     ),
