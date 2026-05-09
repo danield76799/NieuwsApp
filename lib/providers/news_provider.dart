@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/article.dart';
 import '../repositories/news_repository.dart';
@@ -13,25 +12,32 @@ class NewsProvider extends ChangeNotifier {
   String? _error;
   List<String> _keywords = [];
   bool _isOffline = false;
+  bool _filterActive = false;
 
   NewsProvider(this._repository) {
     _loadKeywordsAndNews();
   }
 
-  List<Article> get articles => _filteredArticles;
+  List<Article> get articles => _filterActive ? _filteredArticles : _articles;
   bool get isLoading => _isLoading;
   String? get error => _error;
   List<String> get keywords => _keywords;
   bool get isOffline => _isOffline;
+  bool get filterActive => _filterActive;
   bool get filterEnabled => _keywords.isNotEmpty;
 
   Future<void> _loadKeywordsAndNews() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final saved = prefs.getString('keywords') ?? '';
-      if (saved.isNotEmpty) {
-        _keywords = saved.split(',').map((k) => k.trim()).where((k) => k.isNotEmpty).toList();
+      
+      // Load saved keywords
+      final savedKeywords = prefs.getString('keywords') ?? '';
+      if (savedKeywords.isNotEmpty) {
+        _keywords = savedKeywords.split(',').map((k) => k.trim()).where((k) => k.isNotEmpty).toList();
       }
+      
+      // Load filter active state
+      _filterActive = prefs.getBool('filter_active') ?? false;
     } catch (e) {
       print('Error loading keywords: $e');
     }
@@ -74,11 +80,26 @@ class NewsProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> toggleFilter(bool active) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('filter_active', active);
+      
+      _filterActive = active;
+      notifyListeners();
+    } catch (e) {
+      print('Error toggling filter: $e');
+    }
+  }
+
   Future<void> clearKeywords() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('keywords');
+      await prefs.setBool('filter_active', false);
+      
       _keywords = [];
+      _filterActive = false;
       _applyFilter();
       notifyListeners();
     } catch (e) {
