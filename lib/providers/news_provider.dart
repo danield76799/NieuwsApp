@@ -3,21 +3,19 @@ import 'package:hive/hive.dart';
 import '../models/article.dart';
 import '../services/news_api_service.dart';
 
-/// Provider voor nieuws state management
+/// Provider voor niewws state management
 class NewsProvider extends ChangeNotifier {
   final _newsApi = NewsApiService();
   late Box<dynamic> _settingsBox;
   
   List<Article> _articles = [];
-  List<Article> _filteredArticles = [];
   List<String> _keywords = [];
   bool _isLoading = false;
   String? _error;
   String _selectedCategory = 'all';
 
   // Getters
-  List<Article> get articles => _filteredArticles.isNotEmpty ? _filteredArticles : _articles;
-  List<Article> get allArticles => _articles;
+  List<Article> get articles => _articles;
   List<String> get keywords => _keywords;
   bool get isLoading => _isLoading;
   String? get error => _error;
@@ -54,8 +52,6 @@ class NewsProvider extends ChangeNotifier {
       );
       
       _articles = articles;
-      _applyFilters();
-      
       _setLoading(false);
     } catch (e) {
       _error = 'Kon nieuws niet laden: $e';
@@ -76,7 +72,6 @@ class NewsProvider extends ChangeNotifier {
     try {
       final articles = await _newsApi.searchNews(query: query);
       _articles = articles;
-      _applyFilters();
       _setLoading(false);
     } catch (e) {
       _error = 'Zoeken mislukt: $e';
@@ -90,7 +85,6 @@ class NewsProvider extends ChangeNotifier {
     
     _keywords.add(keyword.toLowerCase());
     await _settingsBox.put('keywords', _keywords);
-    _applyFilters();
     notifyListeners();
   }
 
@@ -98,7 +92,6 @@ class NewsProvider extends ChangeNotifier {
   Future<void> removeKeyword(String keyword) async {
     _keywords.remove(keyword.toLowerCase());
     await _settingsBox.put('keywords', _keywords);
-    _applyFilters();
     notifyListeners();
   }
 
@@ -108,28 +101,10 @@ class NewsProvider extends ChangeNotifier {
     await loadNews();
   }
 
-  /// Pas filters toe op artikelen
-  void _applyFilters() {
-    if (_keywords.isEmpty) {
-      // Geen keywords = toon alle artikelen
-      _filteredArticles = [];
-      notifyListeners();
-      return;
-    }
-
-    _filteredArticles = _articles.where((article) {
-      final searchText = '${article.title} ${article.description} ${article.content}'.toLowerCase();
-      return _keywords.any((keyword) => searchText.contains(keyword.toLowerCase()));
-    }).toList();
-
-    notifyListeners();
-  }
-
   /// Verwijder alle filters
   void clearFilters() {
     _keywords.clear();
     _settingsBox.put('keywords', []);
-    _filteredArticles = [];
     notifyListeners();
   }
 
