@@ -12,10 +12,9 @@ class NewsProvider extends ChangeNotifier {
   String? _error;
   List<String> _keywords = [];
   bool _isOffline = false;
-  bool _initialized = false;
 
   NewsProvider(this._repository) {
-    _init();
+    _loadKeywordsAndNews();
   }
 
   List<Article> get articles => _filteredArticles;
@@ -25,15 +24,23 @@ class NewsProvider extends ChangeNotifier {
   bool get isOffline => _isOffline;
   bool get filterEnabled => _keywords.isNotEmpty;
 
-  Future<void> _init() async {
-    await _loadKeywords();
-    _initialized = true;
-    loadNews();
+  Future<void> _loadKeywordsAndNews() async {
+    // Load keywords first
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getString('keywords') ?? '';
+      if (saved.isNotEmpty) {
+        _keywords = saved.split(',').map((k) => k.trim()).where((k) => k.isNotEmpty).toList();
+      }
+    } catch (e) {
+      print('Error loading keywords: $e');
+    }
+    
+    // Then load news
+    await loadNews();
   }
 
   Future<void> loadNews({bool forceRefresh = false}) async {
-    if (!_initialized) return;
-    
     _isLoading = true;
     _error = null;
     notifyListeners();
@@ -53,20 +60,6 @@ class NewsProvider extends ChangeNotifier {
 
   void _applyFilter() {
     _filteredArticles = _repository.filterByKeywords(_articles, _keywords);
-  }
-
-  Future<void> _loadKeywords() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final saved = prefs.getString('keywords') ?? '';
-      if (saved.isNotEmpty) {
-        _keywords = saved.split(',').map((k) => k.trim()).where((k) => k.isNotEmpty).toList();
-        _applyFilter();
-      }
-    } catch (e) {
-      print('Error loading keywords: $e');
-    }
-    notifyListeners();
   }
 
   Future<void> setKeywords(String keywordString) async {
