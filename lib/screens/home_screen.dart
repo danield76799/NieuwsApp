@@ -180,8 +180,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       Icons.filter_list,
                       color: provider.filterActive ? Colors.amber : Colors.white,
                     ),
-                    onPressed: () {
-                      provider.toggleFilter(!provider.filterActive);
+                    onPressed: () async {
+                      await provider.toggleFilter(!provider.filterActive);
                     },
                     tooltip: provider.filterActive ? 'Filter uit' : 'Filter aan',
                   ),
