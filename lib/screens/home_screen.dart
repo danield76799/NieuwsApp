@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/news_provider.dart';
+import '../services/weather_service.dart';
 import '../widgets/article_card_v2.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/search_bar.dart' as app_search;
@@ -14,6 +15,23 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String _searchQuery = '';
+  Map<String, dynamic>? _weatherData;
+  bool _loadingWeather = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWeather();
+  }
+
+  Future<void> _loadWeather() async {
+    setState(() => _loadingWeather = true);
+    final weather = await WeatherService.getWeather('Amsterdam');
+    setState(() {
+      _weatherData = weather;
+      _loadingWeather = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,13 +46,130 @@ class _HomeScreenState extends State<HomeScreen> {
 
         return Scaffold(
           body: RefreshIndicator(
-            onRefresh: () => provider.loadNews(forceRefresh: true),
+            onRefresh: () async {
+              await provider.loadNews(forceRefresh: true);
+              await _loadWeather();
+            },
             color: Theme.of(context).colorScheme.primary,
             backgroundColor: Theme.of(context).colorScheme.surface,
             displacement: 40,
             strokeWidth: 3,
             child: CustomScrollView(
               slivers: [
+                // Weather Widget
+                if (_weatherData != null)
+                  SliverToBoxAdapter(
+                    child: Container(
+                      margin: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.blue.shade400,
+                            Colors.blue.shade600,
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Amsterdam',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.9),
+                                  fontSize: 14,
+                                ),
+                              ),
+                              if (_loadingWeather)
+                                SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Text(
+                                '${_weatherData!['temp']}°',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _weatherData!['description'],
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Voelt als ${_weatherData!['feelsLike']}°',
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.8),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: (_weatherData!['forecast'] as List).map((day) {
+                              final date = DateTime.parse(day['date']);
+                              final dayName = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'][date.weekday % 7];
+                              return Column(
+                                children: [
+                                  Text(
+                                    dayName,
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.8),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${day['maxTemp']}°',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${day['minTemp']}°',
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.6),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
                 // SliverAppBar
                 SliverAppBar(
                   floating: true,
@@ -68,7 +203,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   actions: [
-                    // Search icon
                     IconButton(
                       icon: const Icon(Icons.search, color: Colors.white),
                       onPressed: () {
