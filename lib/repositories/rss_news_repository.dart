@@ -8,8 +8,12 @@ class RssNewsRepository implements NewsRepository {
   final StorageService _storage;
 
   final List<Map<String, String>> _sources = [
+    // Nieuws.nl feeds - multiple fallback options
     {"name": "Nieuws.nl", "url": "https://www.nieuws.nl/rss"},
+    // Tweakers feed
     {"name": "Tweakers", "url": "https://tweakers.net/feeds/nieuws.xml"},
+    // Additional fallback for nieuws.nl via sitemap
+    {"name": "Nieuws.nl Sitemap", "url": "https://nieuws.nl/sitemap/news.xml"},
   ];
 
   RssNewsRepository(this._rssService, this._storage);
@@ -17,7 +21,7 @@ class RssNewsRepository implements NewsRepository {
   @override
   Future<List<Article>> fetchNews() async {
     List<Article> allArticles = [];
-    List<Exception> errors = [];
+    List<String> errors = [];
 
     for (final source in _sources) {
       try {
@@ -25,12 +29,25 @@ class RssNewsRepository implements NewsRepository {
           source["url"]!,
           source["name"]!
         );
-        allArticles.addAll(articles);
+        if (articles.isNotEmpty) {
+          allArticles.addAll(articles);
+        }
       } catch (e) {
-        errors.add(Exception("${source["name"]}: $e"));
+        errors.add("${source["name"]}: $e");
       }
     }
 
+    // Remove duplicates based on link
+    final seenLinks = <String>{};
+    allArticles = allArticles.where((article) {
+      if (seenLinks.contains(article.link)) {
+        return false;
+      }
+      seenLinks.add(article.link);
+      return true;
+    }).toList();
+
+    // Sort by date (newest first)
     allArticles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
 
     if (allArticles.isNotEmpty) {
@@ -40,7 +57,7 @@ class RssNewsRepository implements NewsRepository {
     if (allArticles.isEmpty && errors.isNotEmpty) {
       final cached = await _storage.getCachedArticles();
       if (cached.isNotEmpty) return cached;
-      throw Exception("Geen internet en geen cache beschikbaar");
+      throw Exception("Kon nieuws niet laden: " + errors.join(", "));
     }
 
     return allArticles;
