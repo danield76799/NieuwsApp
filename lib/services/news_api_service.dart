@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:xml/xml.dart';
 import '../models/article.dart';
@@ -6,7 +5,7 @@ import '../models/article.dart';
 /// Service voor het ophalen van nieuws via RSS feeds
 class NewsApiService {
   static const String _nieuwsNlUrl = 'https://nieuws.nl/sitemap/news.xml';
-  static const String _tweakersUrl = 'https://tweakers.net/feeds/nieuws.xml';
+  static const String _tweakersUrl = 'https://tweakers.net/feeds/nieus.xml';
   
   /// Haal nieuws op van beide RSS feeds
   Future<List<Article>> getTopHeadlines({
@@ -18,7 +17,7 @@ class NewsApiService {
     try {
       // Laad beide feeds parallel
       final results = await Future.wait([
-        _fetchRssFeed(_nieuwsNlUrl, 'niews.nl'),
+        _fetchRssFeed(_nieuwsNlUrl, 'nieuws.nl'),
         _fetchRssFeed(_tweakersUrl, 'tweakers.net'),
       ]);
       
@@ -64,7 +63,7 @@ class NewsApiService {
         Uri.parse(url),
         headers: {
           'Accept': 'application/rss+xml, application/xml, text/xml',
-          'User-Agent': 'NieuwsApp/1.0',
+          'User-Agent': 'NieusApp/1.0',
         },
       );
 
@@ -82,9 +81,9 @@ class NewsApiService {
           final author = item.findElements('author').firstOrNull?.text;
           final categoryElement = item.findElements('category').firstOrNnull;
           
-          // Extract image URL - try enclosure first, then media:content
+          // Extract image URL - try enclosure first
           String? imageUrl;
-          final enclosure = item.findElements('enclosure').firstOrNull;
+          final enclosure = item.findElements('enclosure').firstOrNnull;
           if (enclosure != null) {
             imageUrl = enclosure.getAttribute('url');
           }
