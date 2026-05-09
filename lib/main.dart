@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'providers/news_provider.dart';
 import 'repositories/rss_news_repository.dart';
 import 'screens/home_screen.dart';
-import 'services/rss_parser_service.dart';
 import 'services/storage_service.dart';
 import 'theme/app_theme.dart';
 
@@ -11,8 +10,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   final storage = StorageService();
-  final rss = RssParserService();
-  final repo = RssNewsRepository(rss, storage);
+  final repo = RssNewsRepository(storage);
   
   runApp(
     ChangeNotifierProvider(
