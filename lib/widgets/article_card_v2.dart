@@ -70,7 +70,6 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
             ),
             child: Column(
               children: [
-                // Drag handle
                 Container(
                   margin: const EdgeInsets.only(top: 12, bottom: 8),
                   width: 40,
@@ -80,7 +79,6 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                // Article content
                 Expanded(
                   child: SingleChildScrollView(
                     controller: scrollController,
@@ -88,7 +86,6 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Source and time
                         Row(
                           children: [
                             Container(
@@ -135,7 +132,6 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        // Title
                         Text(
                           widget.article.title,
                           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -144,7 +140,6 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        // Image
                         if (widget.article.thumbnailUrl != null)
                           ClipRRect(
                             borderRadius: BorderRadius.circular(16),
@@ -166,7 +161,6 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                             ),
                           ),
                         const SizedBox(height: 16),
-                        // Description
                         Text(
                           widget.article.description,
                           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -174,7 +168,6 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                           ),
                         ),
                         const SizedBox(height: 24),
-                        // Action buttons
                         Row(
                           children: [
                             Expanded(
@@ -225,46 +218,47 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
   Widget build(BuildContext context) {
     return Card(
       clipBehavior: Clip.antiAlias,
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: InkWell(
         onTap: _showArticleDetail,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Thumbnail
+            // Thumbnail - KLEINER: 140px hoogte ipv 180
             if (widget.article.thumbnailUrl != null)
               Stack(
                 children: [
                   CachedNetworkImage(
                     imageUrl: widget.article.thumbnailUrl!,
                     width: double.infinity,
-                    height: 180,
+                    height: 140,
                     fit: BoxFit.cover,
                     placeholder: (context, url) => Container(
-                      height: 180,
+                      height: 140,
                       color: Colors.grey[200],
                       child: const Center(child: CircularProgressIndicator()),
                     ),
                     errorWidget: (context, url, error) => Container(
-                      height: 180,
+                      height: 140,
                       color: Colors.grey[200],
                       child: const Icon(Icons.error),
                     ),
                   ),
                   if (widget.article.isNew)
                     Positioned(
-                      top: 12,
-                      left: 12,
+                      top: 8,
+                      left: 8,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: Colors.red,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(4),
                         ),
                         child: const Text(
                           'NIEUW',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 12,
+                            fontSize: 10,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -274,70 +268,70 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
               )
             else
               Container(
-                height: 100,
+                height: 80,
                 color: Colors.grey[200],
                 child: const Center(
-                  child: Icon(Icons.article, size: 48, color: Colors.grey),
+                  child: Icon(Icons.article, size: 32, color: Colors.grey),
                 ),
               ),
-            // Content
+            // Content - COMPACTER: minder padding
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Source and time
+                  // Source and time - kleinere font
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           widget.article.source,
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 10,
                             fontWeight: FontWeight.w600,
                             color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       Text(
                         TimeHelper.format(widget.article.pubDate),
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 11,
                           color: Colors.grey[600],
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  // Title
+                  const SizedBox(height: 6),
+                  // Title - kleinere font, max 2 regels
                   Text(
                     widget.article.title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       height: 1.3,
-                    ),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
-                  // Description
-                  Text(
-                    widget.article.description,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                      height: 1.4,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 12),
-                  // Actions
+                  const SizedBox(height: 4),
+                  // Description - kleinere font, max 1 regel
+                  Text(
+                    widget.article.description,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.grey[600],
+                      height: 1.3,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  // Actions - kleinere icons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
@@ -345,16 +339,21 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                         onPressed: _toggleBookmark,
                         icon: Icon(
                           _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                          size: 20,
+                          size: 18,
                           color: _isBookmarked ? Theme.of(context).colorScheme.primary : Colors.grey,
                         ),
                         tooltip: _isBookmarked ? 'Verwijder' : 'Bookmark',
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                       ),
+                      const SizedBox(width: 8),
                       IconButton(
                         onPressed: _shareArticle,
-                        icon: const Icon(Icons.share, size: 20),
+                        icon: const Icon(Icons.share, size: 18),
                         color: Colors.grey,
                         tooltip: 'Delen',
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                       ),
                     ],
                   ),
