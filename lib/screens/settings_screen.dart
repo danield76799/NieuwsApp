@@ -11,12 +11,14 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   late TextEditingController _controller;
+  bool _showKeywordsInput = false;
 
   @override
   void initState() {
     super.initState();
     final provider = context.read<NewsProvider>();
     _controller = TextEditingController(text: provider.keywords.join(', '));
+    _showKeywordsInput = provider.keywords.isNotEmpty;
   }
 
   @override
@@ -53,7 +55,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Filter toggle
+                // Filter status card
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -87,21 +89,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ],
                         ),
                       ),
-                      Switch(
-                        value: filterEnabled,
-                        activeColor: const Color(0xFF007BC7),
-                        onChanged: (value) {
-                          if (!value) {
+                      if (filterEnabled)
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.red),
+                          onPressed: () {
                             provider.setKeywords('');
                             _controller.clear();
-                          }
-                        },
-                      ),
+                            setState(() => _showKeywordsInput = false);
+                          },
+                        )
+                      else
+                        ElevatedButton(
+                          onPressed: () => setState(() => _showKeywordsInput = true),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF007BC7),
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text('Inschakelen'),
+                        ),
                     ],
                   ),
                 ),
 
-                if (filterEnabled) ...[
+                if (_showKeywordsInput || filterEnabled) ...[
                   const SizedBox(height: 24),
                   const Text(
                     'Keywords',
@@ -182,6 +192,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onPressed: () {
                       _controller.clear();
                       provider.setKeywords('');
+                      setState(() => _showKeywordsInput = false);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Alle filters gewist'),
