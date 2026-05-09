@@ -24,6 +24,34 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
         actions: [
+          Consumer<NewsProvider>(
+            builder: (context, provider, child) {
+              final hasFilter = provider.keywords.isNotEmpty;
+              return IconButton(
+                icon: Icon(
+                  hasFilter ? Icons.filter_alt : Icons.filter_alt_outlined,
+                  color: hasFilter ? Colors.yellow : Colors.white,
+                ),
+                onPressed: () {
+                  if (hasFilter) {
+                    provider.setKeywords('');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Filter uitgeschakeld'),
+                        duration: Duration(seconds: 1),
+                      ),
+                    );
+                  } else {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                    );
+                  }
+                },
+                tooltip: hasFilter ? 'Filter uitschakelen' : 'Filter inschakelen',
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
             onPressed: () => Navigator.push(
@@ -117,14 +145,14 @@ class HomeScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: Row(
                       children: [
-                        Icon(Icons.filter_list, size: 16, color: Colors.grey[600]),
+                        const Icon(Icons.filter_list, size: 16, color: Color(0xFF007BC7)),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             'Filter: ${provider.keywords.join(", ")}',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 13,
-                              color: Colors.grey[700],
+                              color: Color(0xFF007BC7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -138,9 +166,9 @@ class HomeScreen extends StatelessWidget {
                       : ListView.separated(
                           physics: const AlwaysScrollableScrollPhysics(),
                           itemCount: provider.articles.length,
-                          separatorBuilder: (_, __) => Divider(
+                          separatorBuilder: (_, __) => const Divider(
                             height: 1,
-                            color: Colors.grey[300],
+                            color: Color(0xFFE0E0E0),
                             indent: 16,
                             endIndent: 16,
                           ),
