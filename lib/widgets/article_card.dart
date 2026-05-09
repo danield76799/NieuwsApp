@@ -287,8 +287,8 @@ class _ArticleCardState extends State<ArticleCard> {
                 
                 // Content
                 Text(
-                  widget.article.content.isNotEmpty 
-                      ? widget.article.content 
+                  widget.article.content?.isNotEmpty == true 
+                      ? widget.article.content! 
                       : widget.article.description,
                   style: TextStyle(
                     fontSize: 16,
@@ -338,15 +338,17 @@ class _ArticleCardState extends State<ArticleCard> {
   }
 
   Future<void> _launchUrl() async {
-    final uri = Uri.parse(widget.article.url);
+    final url = widget.article.url ?? widget.article.link;
+    final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 
   void _shareArticle() {
+    final url = widget.article.url ?? widget.article.link;
     Share.share(
-      '${widget.article.title}\n\n${widget.article.url}',
+      '${widget.article.title}\n\n$url',
       subject: widget.article.title,
     );
   }
