@@ -45,29 +45,41 @@ class HomeScreen extends StatelessWidget {
 
           if (provider.error != null && provider.articles.isEmpty) {
             return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Er ging iets mis',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey[800],
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Er ging iets mis',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[800],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: () => provider.loadNews(forceRefresh: true),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF007BC7),
-                      foregroundColor: Colors.white,
+                    const SizedBox(height: 8),
+                    Text(
+                      provider.error ?? 'Onbekende fout',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    child: const Text('Opnieuw proberen'),
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => provider.loadNews(forceRefresh: true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF007BC7),
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Opnieuw proberen'),
+                    ),
+                  ],
+                ),
               ),
             );
           }
