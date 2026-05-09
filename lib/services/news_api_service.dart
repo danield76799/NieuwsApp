@@ -1,30 +1,13 @@
 import 'dart:convert';
-import 'package:dio/dio.dart';
-import 'package:hive/hive.dart';
+import 'package:http/http.dart' as http;
+import 'package:xml/xml.dart';
 import '../models/article.dart';
-import '../utils/constants.dart';
 
-/// Service voor het ophalen van nieuws via NewsAPI
+/// Service voor het ophalen van nieuws via nieuws.nl RSS feed
 class NewsApiService {
-  final Dio _dio;
-  late Box<dynamic> _cacheBox;
+  static const String _rssUrl = 'https://nieuws.nl/sitemap/news.xml';
   
-  NewsApiService() : _dio = Dio(BaseOptions(
-    baseUrl: 'https://newsapi.org/v2',
-    connectTimeout: const Duration(seconds: 10),
-    receiveTimeout: const Duration(seconds: 10),
-    headers: {
-      'X-Api-Key': Constants.newsApiKey,
-    },
-  )) {
-    _initHive();
-  }
-
-  Future<void> _initHive() async {
-    _cacheBox = await Hive.openBox('news_cache');
-  }
-
-  /// Haal top headlines op
+  /// Haal nieuws op van nieuws.nl RSS feed
   Future<List<Article>> getTopHeadlines({
     String country = 'nl',
     String? category,
@@ -32,94 +15,161 @@ class NewsApiService {
     int pageSize = 20,
   }) async {
     try {
-      final response = await _dio.get('/top-headlines', queryParameters: {
-        'country': country,
-        if (category != null) 'category': category,
-        'page': page,
-        'pageSize': pageSize,
-      });
+      final response = await http.get(
+        Uri.parse(_rssUrl),
+        headers: {
+          'Accept': 'application/rss+xml, application/xml, text/xml',
+          'User-Agent': 'NieuwsApp/1.0',
+        },
+      );
 
       if (response.statusCode == 200) {
-        final articles = (response.data['articles'] as List)
-            .map((json) => Article.fromJson(json))
-            .toList();
+        final document = XmlDocument.parse(response.body);
+        final items = document.findAllElements('item');
         
-        // Cache de artikelen
-        await _cacheArticles(articles);
+        List<Article> articles = [];
         
-        return articles;
+        for (var item in items) {
+          final title = item.findElements('title').firstOrNnul?.text ?? '';
+          final link = item.findElements('link').firstOrNull?.text ?? '';
+          final description = item.findElements('description').firstOrNnul?.text ?? '';
+          final pubDate = item.findElements('pubDate').firstOrNull?.text ?? '';
+          final enclosure = item.findElements('enclosure').firstOrNull;
+          
+          // Extract image URL from enclosure
+          String? imageUrl;
+          if (enclosure != null) {
+            imageUrl = enclosure.getAttribute('url');
+          }
+          
+          // Extract category from link
+          String articleCategory = 'algemeen';
+          final categoryMatch = RegExp(r'https://nieuws\.nl/([^/]+)/').firstMatch(link);
+          if (categoryMatch != null) {
+            articleCategory = categoryMatch.group(1) ?? 'algemeen';
+          }
+          
+          // Filter by category if specified
+          if (category != null && category != 'all' && articleCategory != category) {
+            continue;
+          }
+          
+          articles.add(Article(
+            title: title,
+            description: _cleanDescription(description),
+            url: link,
+            urlToImage: imageUrl,
+            publishedAt: _parseDate(pubDate),
+            source: 'nieuws.nl',
+            category: articleCategory,
+          ));
+        }
+        
+        // Pagination
+        final startIndex = (page - 1) * pageSize;
+        final endIndex = startIndex + pageSize;
+        
+        if (startIndex >= articles.length) {
+          return [];
+        }
+        
+        return articles.sublist(
+          startIndex,
+          endIndex > articles.length ? articles.length : endIndex,
+        );
       } else {
-        throw Exception('Failed to load news: ${response.statusMessage}');
+        throw Exception('Failed to load news: ${response.statusCode}');
       }
-    } on DioException catch (e) {
-      // Bij netwerk errors, probeer cache
-      return _getCachedArticles();
     } catch (e) {
-      return _getCachedArticles();
+      print('Error fetching news: $e');
+      return [];
     }
   }
-
-  /// Zoek nieuws op keywords
+  
+  /// Zoek nieuws op keywords (client-side filtering)
   Future<List<Article>> searchNews({
     required String query,
     int page = 1,
     int pageSize = 20,
   }) async {
-    try {
-      final response = await _dio.get('/everything', queryParameters: {
-        'q': query,
-        'language': 'nl',
-        'sortBy': 'publishedAt',
-        'page': page,
-        'pageSize': pageSize,
-      });
-
-      if (response.statusCode == 200) {
-        final articles = (response.data['articles'] as List)
-            .map((json) => Article.fromJson(json))
-            .toList();
-        
-        await _cacheArticles(articles);
-        
-        return articles;
-      } else {
-        throw Exception('Failed to search news: ${response.statusMessage}');
-      }
-    } on DioException catch (e) {
-      return _getCachedArticles();
-    } catch (e) {
-      return _getCachedArticles();
-    }
-  }
-
-  /// Cache artikelen in Hive
-  Future<void> _cacheArticles(List<Article> articles) async {
-    final cacheData = articles.map((a) => a.toJson()).toList();
-    await _cacheBox.put('cached_articles', jsonEncode(cacheData));
-    await _cacheBox.put('cache_timestamp', DateTime.now().toIso8601String());
-  }
-
-  /// Haal gecachte artikelen op
-  List<Article> _getCachedArticles() {
-    try {
-      final cachedData = _cacheBox.get('cached_articles');
-      if (cachedData != null) {
-        final List<dynamic> jsonList = jsonDecode(cachedData);
-        return jsonList.map((json) => Article.fromJson(json)).toList();
-      }
-    } catch (e) {
-      print('Error reading cache: $e');
-    }
-    return [];
-  }
-
-  /// Check of cache nog geldig is (minder dan 1 uur oud)
-  bool get isCacheValid {
-    final timestamp = _cacheBox.get('cache_timestamp');
-    if (timestamp == null) return false;
+    final allNews = await getTopHeadlines(page: 1, pageSize: 100);
     
-    final cacheTime = DateTime.parse(timestamp);
-    final difference = DateTime.now().difference(cacheTime);
-    return difference.inHours < 1;
+    final filtered = allNews.where((article) {
+      final searchText = '${article.title} ${article.description}'.toLowerCase();
+      return searchText.contains(query.toLowerCase());
+    }).toList();
+    
+    // Pagination
+    final startIndex = (page - 1) * pageSize;
+    final endIndex = startIndex + pageSize;
+    
+    if (startIndex >= filtered.length) {
+      return [];
+    }
+    
+    return filtered.sublist(
+      startIndex,
+      endIndex > filtered.length ? filtered.length : endIndex,
+    );
+  }
+  
+  /// Clean HTML from description
+  String _cleanDescription(String html) {
+    // Remove CDATA tags
+    var text = html.replaceAll(RegExp(r'<\!\[CDATA\[(.*?)\]\]>', dotAll: true), r'$1');
+    
+    // Remove img tags
+    text = text.replaceAll(RegExp(r'<img[^>]*>'), '');
+    
+    // Remove other HTML tags
+    text = text.replaceAll(RegExp(r'<[^>]*>'), '');
+    
+    // Decode HTML entities
+    text = text
+      .replaceAll('&amp;', '&')
+      .replaceAll('&lt;', '<')
+      .replaceAll('&gt;', '>')
+      .replaceAll('&quot;', '"')
+      .replaceAll('&#039;', "'")
+      .replaceAll('&nbsp;', ' ');
+    
+    // Trim whitespace
+    text = text.trim();
+    
+    // Limit length
+    if (text.length > 300) {
+      text = text.substring(0, 300) + '...';
+    }
+    
+    return text;
+  }
+  
+  /// Parse RSS date to ISO format
+  String _parseDate(String rssDate) {
+    try {
+      // RSS date format: Sat, 09 May 2026 05:38:38 +0200
+      final months = {
+        'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6,
+        'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12,
+      };
+      
+      final match = RegExp(r'([A-Z][a-z]{2}), (\d{1,2}) ([A-Z][a-z]{3}) (\d{4}) (\d{2}):(\d{2}):(\d{2})').firstMatch(rssDate);
+      
+      if (match != null) {
+        final day = int.parse(match.group(2)!);
+        final month = months[match.group(3)!] ?? 1;
+        final year = int.parse(match.group(4)!);
+        final hour = int.parse(match.group(5)!);
+        final minute = int.parse(match.group(6)!);
+        final second = int.parse(match.group(7)!);
+        
+        final date = DateTime(year, month, day, hour, minute, second);
+        return date.toIso8601String();
+      }
+    } catch (e) {
+      print('Error parsing date: $e');
+    }
+    
+    return DateTime.now().toIso8601String();
   }
 }
