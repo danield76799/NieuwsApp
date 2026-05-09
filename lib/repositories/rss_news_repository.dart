@@ -20,10 +20,7 @@ class RssNewsRepository implements NewsRepository {
 
     for (final source in feeds) {
       try {
-        final articles = await _rssService.fetchArticles(
-          source["url"]!,
-          source["name"]!
-        );
+        final articles = await _rssService.parseRssFeed(source["url"]!);
         if (articles.isNotEmpty) {
           allArticles.addAll(articles);
         }
