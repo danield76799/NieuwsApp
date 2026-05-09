@@ -4,6 +4,7 @@ import '../providers/news_provider.dart';
 import '../widgets/article_list_item.dart';
 import '../widgets/empty_state.dart';
 import 'settings_screen.dart';
+import 'feeds_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -54,6 +55,14 @@ class HomeScreen extends StatelessWidget {
                     onPressed: () => Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                    ),
+                  ),
+                  // Feeds button
+                  IconButton(
+                    icon: const Icon(Icons.rss_feed, color: Colors.white),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const FeedsScreen()),
                     ),
                   ),
                 ],
