@@ -71,7 +71,7 @@ class RssParserService {
   }
 
   String? _extractThumbnail(XmlElement item) {
-    // 1. Try <enclosure type="image/..."> - standard RSS for images
+    // 1. Try enclosure
     final enclosure = item.findElements('enclosure').firstOrNull;
     if (enclosure != null) {
       final type = enclosure.getAttribute('type') ?? '';
@@ -80,46 +80,36 @@ class RssParserService {
       }
     }
     
-    // 2. Try <media:content medium="image">
+    // 2. Try media:content
     final mediaContent = item.findElements('media:content').firstOrNull;
     if (mediaContent != null) {
       final medium = mediaContent.getAttribute('medium') ?? '';
       if (medium == 'image') {
         return mediaContent.getAttribute('url');
       }
-      // Also check if url contains common image extensions
       final url = mediaContent.getAttribute('url') ?? '';
-      if (url.contains('.jpg') || url.contains('.jpeg') || url.contains('.png') || url.contains('.webp')) {
+      if (url.contains('.jpg') || url.contains('.png')) {
         return url;
       }
     }
     
-    // 3. Try <media:thumbnail> - common in news feeds
+    // 3. Try media:thumbnail
     final mediaThumbnail = item.findElements('media:thumbnail').firstOrNull;
     if (mediaThumbnail != null) {
-      final url = mediaThumbnail.getAttribute('url');
-      if (url != null && url.isNotEmpty) return url;
+      return mediaThumbnail.getAttribute('url');
     }
     
-    // 4. Try <media:description> with embedded img tag
-    final mediaDesc = item.findElements('media:description').firstOrNull;
-    if (mediaDesc != null) {
-      final imgUrl = _extractImgFromHtml(mediaDesc.text);
-      if (imgUrl != null) return imgUrl;
-    }
-    
-    // 5. Try <content:encoded> - often has full HTML with images
+    // 4. Try content:encoded
     final contentEncoded = item.findElements('content:encoded').firstOrNull;
     if (contentEncoded != null) {
-      final imgUrl = _extractImgFromHtml(contentEncoded.text);
-      if (imgUrl != null) return imgUrl;
+      final url = _extractImgFromHtml(contentEncoded.text);
+      if (url != null) return url;
     }
     
-    // 6. Try <description> with img tag
+    // 5. Try description
     final description = item.findElements('description').firstOrNull;
     if (description != null) {
-      final imgUrl = _extractImgFromHtml(description.text);
-      if (imgUrl != null) return imgUrl;
+      return _extractImgFromHtml(description.text);
     }
     
     return null;
@@ -128,22 +118,13 @@ class RssParserService {
   String? _extractImgFromHtml(String html) {
     if (html.isEmpty) return null;
     
-    // Try standard img src pattern
-    final imgRegex = RegExp(r'<img[^>]+src=["\']([^"\']+)["\']');
-    final match = imgRegex.firstMatch(html);
-    if (match != null && match.groupCount >= 1) {
-      return match.group(1);
-    }
+    // Simple regex for img src - use double quotes
+    final match1 = RegExp(r'src="([^"]+)"').firstMatch(html);
+    if (match1 != null) return match1.group(1);
     
-    // Try src= without quotes (less common)
-    final imgRegex2 = RegExp(r'<img[^>]+src=([^\s>]+)');
-    final match2 = imgRegex2.firstMatch(html);
-    if (match2 != null && match2.groupCount >= 1) {
-      String url = match2.group(1)!;
-      // Remove surrounding quotes if any
-      url = url.replaceAll('"', '').replaceAll("'", '');
-      return url;
-    }
+    // Try single quotes
+    final match2 = RegExp(r"src='([^']+)'").firstMatch(html);
+    if (match2 != null) return match2.group(1);
     
     return null;
   }
@@ -151,16 +132,9 @@ class RssParserService {
   String _cleanText(String text) {
     if (text.isEmpty) return '';
     
-    // Remove CDATA
     text = text.replaceAll(RegExp(r'<\!\[CDATA\[(.*?)\]\]>', dotAll: true), r'$1');
-    
-    // Remove img tags
     text = text.replaceAll(RegExp(r'<img[^>]*>'), '');
-    
-    // Remove other HTML tags
     text = text.replaceAll(RegExp(r'<[^>]*>'), '');
-    
-    // Decode HTML entities
     text = _decodeHtmlEntities(text);
     
     text = text.trim();
@@ -180,29 +154,22 @@ class RssParserService {
       '&#039;': "'",
       '&#39;': "'",
       '&nbsp;': ' ',
-      '&ndash;': '–',
-      '&mdash;': '—',
+      '&ndash;': '-',
+      '&mdash;': '-',
       '&hellip;': '...',
-      '&copy;': '©',
-      '&reg;': '®',
-      '&trade;': '™',
-      '&#8217;': ''',
-      '&#8216;': ''',
+      '&#8217;': "'",
+      '&#8216;': "'",
       '&#8220;': '"',
       '&#8221;': '"',
-      '&#8211;': '–',
-      '&#8212;': '—',
+      '&#8211;': '-',
+      '&#8212;': '-',
       '&#160;': ' ',
-      '&#169;': '©',
-      '&#174;': '®',
-      '&#8482;': '™',
     };
     
     for (var entry in entities.entries) {
       text = text.replaceAll(entry.key, entry.value);
     }
     
-    // Handle numeric entities
     text = text.replaceAllMapped(
       RegExp(r'&#(\d+);'),
       (m) => String.fromCharCode(int.parse(m.group(1)!))
