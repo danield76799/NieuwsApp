@@ -1,6 +1,6 @@
 import 'package:http/http.dart' as http;
 import 'package:xml/xml.dart';
-import 'dart:convert' show utf8;
+import 'dart:convert' show utf8, latin1;
 import '../models/article.dart';
 
 class RssParserService {
@@ -11,18 +11,14 @@ class RssParserService {
         headers: {
           'Accept': 'application/rss+xml, application/xml, text/xml',
           'User-Agent': 'PlusNews/1.0',
-          'Accept-Charset': 'utf-8',
         },
       );
 
       if (response.statusCode == 200) {
-        // Ensure UTF-8 decoding - some feeds send Latin-1 despite headers
         String body;
         try {
-          // Try UTF-8 first
           body = utf8.decode(response.bodyBytes);
         } catch (_) {
-          // Fallback to Latin-1 if UTF-8 fails
           body = latin1.decode(response.bodyBytes);
         }
         
@@ -96,10 +92,10 @@ class RssParserService {
       return mediaThumbnail.getAttribute('url');
     }
     
-    // Fallback: extract from description HTML
-    final imgRegex = RegExp(r'src=["\']([^"\']+)["\']');
+    // Fallback: extract img src from description HTML
+    final imgRegex = RegExp(r'src="([^"]+)"');
     final imgMatch = imgRegex.firstMatch(description);
-    if (imgMatch != null && imgMatch.groupCount >= 1) {
+    if (imgMatch != null) {
       return imgMatch.group(1);
     }
     
@@ -134,26 +130,41 @@ class RssParserService {
       '&lt;': '<',
       '&gt;': '>',
       '&quot;': '"',
+      '&apos;': "'",
       '&#039;': "'",
       '&#39;': "'",
       '&nbsp;': ' ',
-      '&#8217;': "'",
-      '&#8216;': "'",
+      '&ndash;': '–',
+      '&mdash;': '—',
+      '&hellip;': '...',
+      '&copy;': '©',
+      '&reg;': '®',
+      '&trade;': '™',
+      '&#8217;': ''',
+      '&#8216;': ''',
       '&#8220;': '"',
       '&#8221;': '"',
-      '&#8211;': '-',
-      '&#8212;': '-',
+      '&#8211;': '–',
+      '&#8212;': '—',
       '&#160;': ' ',
+      '&#169;': '©',
+      '&#174;': '®',
+      '&#8482;': '™',
     };
     
     for (var entry in entities.entries) {
       text = text.replaceAll(entry.key, entry.value);
     }
     
-    // Handle numeric entities
+    // Handle numeric entities - more robust parsing
     text = text.replaceAllMapped(
       RegExp(r'&#(\d+);'),
       (m) => String.fromCharCode(int.parse(m.group(1)!))
+    );
+    
+    text = text.replaceAllMapped(
+      RegExp(r'&#x([0-9a-fA-F]+);'),
+      (m) => String.fromCharCode(int.parse(m.group(1)!, radix: 16))
     );
     
     return text;
