@@ -1,20 +1,12 @@
 import "../models/article.dart";
 import "../services/rss_parser_service.dart";
 import "../services/storage_service.dart";
+import "../services/feed_service.dart";
 import "news_repository.dart";
 
 class RssNewsRepository implements NewsRepository {
   final RssParserService _rssService;
   final StorageService _storage;
-
-  final List<Map<String, String>> _sources = [
-    // Nieuws.nl feeds - multiple fallback options
-    {"name": "Nieuws.nl", "url": "https://www.nieuws.nl/rss"},
-    // Tweakers feed
-    {"name": "Tweakers", "url": "https://tweakers.net/feeds/nieuws.xml"},
-    // Additional fallback for nieuws.nl via sitemap
-    {"name": "Nieuws.nl Sitemap", "url": "https://nieuws.nl/sitemap/news.xml"},
-  ];
 
   RssNewsRepository(this._rssService, this._storage);
 
@@ -23,7 +15,10 @@ class RssNewsRepository implements NewsRepository {
     List<Article> allArticles = [];
     List<String> errors = [];
 
-    for (final source in _sources) {
+    // Get feeds from SharedPreferences
+    final feeds = await FeedService.getFeeds();
+
+    for (final source in feeds) {
       try {
         final articles = await _rssService.fetchArticles(
           source["url"]!,
