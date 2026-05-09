@@ -4,10 +4,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 class FeedService {
   static const String _feedsKey = 'rss_feeds';
   
-  // Default feeds
+  // Default feeds - alleen werkende URLs
   static final List<Map<String, String>> _defaultFeeds = [
-    {'name': 'Nieuws.nl', 'url': 'https://www.nieuws.nl/rss'},
     {'name': 'Tweakers', 'url': 'https://tweakers.net/feeds/nieuws.xml'},
+    {'name': 'Nu.nl - Algemeen', 'url': 'https://www.nu.nl/rss/Algemeen'},
+    {'name': 'AD.nl', 'url': 'https://www.ad.nl/rss.xml'},
   ];
 
   static Future<List<Map<String, String>>> getFeeds() async {
