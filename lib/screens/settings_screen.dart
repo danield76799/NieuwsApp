@@ -11,13 +11,11 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   late TextEditingController _controller;
-  bool _filterEnabled = false;
 
   @override
   void initState() {
     super.initState();
     final provider = context.read<NewsProvider>();
-    _filterEnabled = provider.keywords.isNotEmpty;
     _controller = TextEditingController(text: provider.keywords.join(', '));
   }
 
@@ -48,6 +46,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       body: Consumer<NewsProvider>(
         builder: (context, provider, child) {
+          final filterEnabled = provider.keywords.isNotEmpty;
+          
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -76,7 +76,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              _filterEnabled
+                              filterEnabled
                                   ? 'Filter actief met: ${provider.keywords.join(", ")}'
                                   : 'Filter uitgeschakeld',
                               style: TextStyle(
@@ -88,22 +88,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ),
                       Switch(
-                        value: _filterEnabled,
+                        value: filterEnabled,
                         activeColor: const Color(0xFF007BC7),
                         onChanged: (value) {
-                          setState(() {
-                            _filterEnabled = value;
-                            if (!value) {
-                              provider.setKeywords('');
-                            }
-                          });
+                          if (!value) {
+                            provider.setKeywords('');
+                            _controller.clear();
+                          }
                         },
                       ),
                     ],
                   ),
                 ),
 
-                if (_filterEnabled) ...[
+                if (filterEnabled) ...[
                   const SizedBox(height: 24),
                   const Text(
                     'Keywords',
@@ -183,9 +181,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: OutlinedButton(
                     onPressed: () {
                       _controller.clear();
-                      setState(() {
-                        _filterEnabled = false;
-                      });
                       provider.setKeywords('');
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
