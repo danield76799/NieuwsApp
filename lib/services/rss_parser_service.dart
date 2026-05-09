@@ -114,9 +114,9 @@ class RssParserService {
       if (_isValidUrl(url)) return url;
     }
 
-    // Try to extract from description
+    // Try to extract from description using simpler regex
     final description = _getElementText(item, 'description');
-    final imgMatch = RegExp(r'<img[^>]+src=["\']([^"\']+)["\']').firstMatch(description);
+    final imgMatch = RegExp(r'<img[^>]+src="([^"]+)"').firstMatch(description);
     if (imgMatch != null) {
       final url = imgMatch.group(1);
       if (_isValidUrl(url)) return url;
