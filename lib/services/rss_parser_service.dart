@@ -36,7 +36,7 @@ class RssParserService {
             
             if (title.isEmpty || link.isEmpty) continue;
             
-            String? thumbnailUrl = _extractThumbnail(item, description);
+            String? thumbnailUrl = _extractThumbnail(item);
             
             String articleCategory = sourceName.toLowerCase();
             final categoryMatch = RegExp(r'https?://[^/]+/([^/]+)/').firstMatch(link);
@@ -70,8 +70,8 @@ class RssParserService {
     }
   }
 
-  String? _extractThumbnail(XmlElement item, String description) {
-    // Try enclosure first
+  String? _extractThumbnail(XmlElement item) {
+    // 1. Try <enclosure type="image/..."> - standard RSS for images
     final enclosure = item.findElements('enclosure').firstOrNull;
     if (enclosure != null) {
       final type = enclosure.getAttribute('type') ?? '';
@@ -80,23 +80,69 @@ class RssParserService {
       }
     }
     
-    // Try media:content
+    // 2. Try <media:content medium="image">
     final mediaContent = item.findElements('media:content').firstOrNull;
     if (mediaContent != null) {
-      return mediaContent.getAttribute('url');
+      final medium = mediaContent.getAttribute('medium') ?? '';
+      if (medium == 'image') {
+        return mediaContent.getAttribute('url');
+      }
+      // Also check if url contains common image extensions
+      final url = mediaContent.getAttribute('url') ?? '';
+      if (url.contains('.jpg') || url.contains('.jpeg') || url.contains('.png') || url.contains('.webp')) {
+        return url;
+      }
     }
     
-    // Try media:thumbnail
+    // 3. Try <media:thumbnail> - common in news feeds
     final mediaThumbnail = item.findElements('media:thumbnail').firstOrNull;
     if (mediaThumbnail != null) {
-      return mediaThumbnail.getAttribute('url');
+      final url = mediaThumbnail.getAttribute('url');
+      if (url != null && url.isNotEmpty) return url;
     }
     
-    // Fallback: extract img src from description HTML
-    final imgRegex = RegExp(r'src="([^"]+)"');
-    final imgMatch = imgRegex.firstMatch(description);
-    if (imgMatch != null) {
-      return imgMatch.group(1);
+    // 4. Try <media:description> with embedded img tag
+    final mediaDesc = item.findElements('media:description').firstOrNull;
+    if (mediaDesc != null) {
+      final imgUrl = _extractImgFromHtml(mediaDesc.text);
+      if (imgUrl != null) return imgUrl;
+    }
+    
+    // 5. Try <content:encoded> - often has full HTML with images
+    final contentEncoded = item.findElements('content:encoded').firstOrNull;
+    if (contentEncoded != null) {
+      final imgUrl = _extractImgFromHtml(contentEncoded.text);
+      if (imgUrl != null) return imgUrl;
+    }
+    
+    // 6. Try <description> with img tag
+    final description = item.findElements('description').firstOrNull;
+    if (description != null) {
+      final imgUrl = _extractImgFromHtml(description.text);
+      if (imgUrl != null) return imgUrl;
+    }
+    
+    return null;
+  }
+  
+  String? _extractImgFromHtml(String html) {
+    if (html.isEmpty) return null;
+    
+    // Try standard img src pattern
+    final imgRegex = RegExp(r'<img[^>]+src=["\']([^"\']+)["\']');
+    final match = imgRegex.firstMatch(html);
+    if (match != null && match.groupCount >= 1) {
+      return match.group(1);
+    }
+    
+    // Try src= without quotes (less common)
+    final imgRegex2 = RegExp(r'<img[^>]+src=([^\s>]+)');
+    final match2 = imgRegex2.firstMatch(html);
+    if (match2 != null && match2.groupCount >= 1) {
+      String url = match2.group(1)!;
+      // Remove surrounding quotes if any
+      url = url.replaceAll('"', '').replaceAll("'", '');
+      return url;
     }
     
     return null;
@@ -156,7 +202,7 @@ class RssParserService {
       text = text.replaceAll(entry.key, entry.value);
     }
     
-    // Handle numeric entities - more robust parsing
+    // Handle numeric entities
     text = text.replaceAllMapped(
       RegExp(r'&#(\d+);'),
       (m) => String.fromCharCode(int.parse(m.group(1)!))
