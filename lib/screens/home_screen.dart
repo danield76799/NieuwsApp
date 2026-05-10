@@ -79,26 +79,14 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Text(
                   '${_weatherData!['temp']}°',
-                  style: const TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(width: 16),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      _weatherData!['description'],
-                      style: const TextStyle(fontSize: 18),
-                    ),
-                    Text(
-                      'Voelt als ${_weatherData!['feelsLike']}°',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 14,
-                      ),
-                    ),
+                    Text(_weatherData!['description'], style: const TextStyle(fontSize: 18)),
+                    Text('Voelt als ${_weatherData!['feelsLike']}°', style: TextStyle(color: Colors.grey[600], fontSize: 14)),
                   ],
                 ),
               ],
@@ -106,44 +94,19 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 16),
             const Divider(),
             const SizedBox(height: 8),
-            Text(
-              'Voorspelling',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            Text('Voorspelling', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: (_weatherData!['forecast'] as List).map((day) {
                 final date = DateTime.parse(day['date']);
                 final dayName = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'][date.weekday % 7];
-                return Column(
-                  children: [
-                    Text(
-                      dayName,
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${day['maxTemp']}°',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      '${day['minTemp']}°',
-                      style: TextStyle(
-                        color: Colors.grey[500],
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                );
+                return Column(children: [
+                  Text(dayName, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+                  const SizedBox(height: 4),
+                  Text('${day['maxTemp']}°', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text('${day['minTemp']}°', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+                ]);
               }).toList(),
             ),
             const SizedBox(height: 20),
@@ -158,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Consumer<NewsProvider>(
       builder: (context, provider, child) {
         final articles = provider.articles;
-        final allArticles = provider.articles; // This will be filtered if active
+        final allArticles = provider.articles;
         final filteredArticles = _searchQuery.isEmpty
             ? articles
             : articles.where((a) =>
@@ -177,7 +140,6 @@ class _HomeScreenState extends State<HomeScreen> {
             strokeWidth: 3,
             child: CustomScrollView(
               slivers: [
-                // SliverAppBar
                 SliverAppBar(
                   floating: true,
                   snap: true,
@@ -212,174 +174,70 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   actions: [
-                    // Weather button
                     if (_weatherData != null)
                       InkWell(
                         onTap: _showWeatherPopup,
                         child: Container(
                           margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.wb_sunny,
-                                color: Colors.white,
-                                size: 16,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${_weatherData!['temp']}°',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
+                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+                          child: Row(mainSize: MainAxisSize.min, children: [
+                            Icon(Icons.wb_sunny, color: Colors.white, size: 16),
+                            const SizedBox(width: 4),
+                            Text('${_weatherData!['temp']}°', style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                          ]),
                         ),
                       ),
-                    // Search button
-                    IconButton(
-                      icon: const Icon(Icons.search, color: Colors.white),
-                      onPressed: () {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          builder: (context) => Padding(
-                            padding: EdgeInsets.only(
-                              bottom: MediaQuery.of(context).viewInsets.bottom,
-                            ),
-                            child: app_search.SearchBar(
-                              onSearch: (query) {
-                                setState(() {
-                                  _searchQuery = query;
-                                });
-                              },
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    // Settings button
-                    IconButton(
-                      icon: const Icon(Icons.settings, color: Colors.white),
-                      onPressed: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const SettingsScreen()),
-                        );
-                        await _loadWeather();
-                      },
-                    ),
+                    IconButton(icon: const Icon(Icons.search, color: Colors.white), onPressed: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        builder: (context) => Padding(
+                          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                          child: app_search.SearchBar(onSearch: (query) {
+                            setState(() {
+                              _searchQuery = query;
+                            });
+                          }),
+                        ),
+                      );
+                    }),
+                    IconButton(icon: const Icon(Icons.settings, color: Colors.white), onPressed: () async {
+                      await Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen()));
+                      await _loadWeather();
+                    }),
                     const SizedBox(width: 8),
                   ],
                 ),
 
-                // Filter debug info
-                if (provider.keywords.isNotEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Wrap(
-                            spacing: 8,
-                            children: [
-                              ActionChip(
-                                avatar: Icon(
-                                  provider.filterActive ? Icons.visibility : Icons.visibility_off,
-                                  size: 18,
-                                  color: provider.filterActive ? Colors.green : Colors.grey,
-                                ),
-                                label: Text(
-                                  provider.filterActive ? 'Filter: AAN' : 'Filter: UIT',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: provider.filterActive ? Colors.green : Colors.grey,
-                                  ),
-                                ),
-                                onPressed: () => provider.toggleFilter(!provider.filterActive),
-                                backgroundColor: provider.filterActive
-                                    ? Colors.green.withOpacity(0.1)
-                                    : Colors.grey.withOpacity(0.1),
-                              ),
-                              ...provider.keywords.map((keyword) => Chip(
-                                label: Text(
-                                  keyword,
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                                deleteIcon: const Icon(Icons.close, size: 18),
-                                onDeleted: () {
-                                  final newKeywords = provider.keywords.where((k) => k != keyword).toList();
-                                  provider.setKeywords(newKeywords.join(', '));
-                                },
-                                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                              )),
-                            ],
+                // Filter only info
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Wrap(
+                      spacing: 8,
+                      children: [
+                        ActionChip(
+                          avatar: Icon(provider.filterActive ? Icons.visibility : Icons.visibility_off, size: 18, color: provider.filterActive ? Colors.green : Colors.grey),
+                          label: Text(
+                            provider.filterActive ? 'Filter: AAN' : 'Filter: UIT',
+                            style: TextStyle(fontSize: 12, color: provider.filterActive ? Colors.green : Colors.grey),
                           ),
-                          // Debug info
-                          Text(
-                            'Artikelen: ${allArticles.length} | Gefilterd: ${filteredArticles.length}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
+                          onPressed: () => provider.toggleFilter(!provider.filterActive),
+                          backgroundColor: provider.filterActive ? Colors.green.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                        ),
+                      ],
                     ),
                   ),
+                ),
 
                 // Loading state
                 if (provider.isLoading && articles.isEmpty)
-                  const SliverFillRemaining(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CircularProgressIndicator(),
-                          SizedBox(height: 16),
-                          Text('Nieuws laden...'),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                // Error state
+                  const SliverFillRemaining(child: Center(child: CircularProgressIndicator())),
                 if (provider.error != null && articles.isEmpty)
-                  SliverFillRemaining(
-                    child: EmptyState(
-                      icon: Icons.error_outline,
-                      title: 'Oeps!',
-                      subtitle: provider.error!,
-                      action: ElevatedButton.icon(
-                        onPressed: () => provider.loadNews(forceRefresh: true),
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Opnieuw proberen'),
-                      ),
-                    ),
-                  ),
-
-                // Empty state
+                  SliverFillRemaining(child: EmptyState(icon: Icons.error_outline, title: 'Oeps!', subtitle: provider.error!, action: ElevatedButton.icon(onPressed: () => provider.loadNews(forceRefresh: true), icon: const Icon(Icons.refresh), label: const Text('Opnieuw')))),
                 if (!provider.isLoading && provider.error == null && filteredArticles.isEmpty)
-                  SliverFillRemaining(
-                    child: EmptyState(
-                      icon: _searchQuery.isNotEmpty ? Icons.search_off : Icons.article_outlined,
-                      title: _searchQuery.isNotEmpty ? 'Geen resultaten' : 'Geen artikelen',
-                      subtitle: _searchQuery.isNotEmpty
-                          ? 'Probeer een andere zoekterm'
-                          : 'Trek naar beneden om te vernieuwen',
-                    ),
-                  ),
-
-                // Articles list
+                  SliverFillRemaining(child: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: const [CircularProgressIndicator(), SizedBox(height: 16), Text('Nieuws laden...')]))),
                 if (filteredArticles.isNotEmpty)
                   SliverPadding(
                     padding: const EdgeInsets.only(bottom: 16),
