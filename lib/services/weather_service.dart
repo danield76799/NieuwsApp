@@ -3,16 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class WeatherService {
-  // Default city - no location permission needed
-  static String _defaultCity = 'Amsterdam';
-  
-  static Future<Map<String, dynamic>?> getWeatherForLocation() async {
-    // Always use default city, no location permission needed
-    print('WeatherService: Using default city: $_defaultCity');
-    return getWeather(_defaultCity);
-  }
-
-  static Future<Map<String, dynamic>?> getWeather(String city) async {
+  static Future<Map<String, dynamic>?> getWeatherForCity(String city) async {
     try {
       print('WeatherService: Fetching weather for $city');
       final response = await http.get(
@@ -43,9 +34,5 @@ class WeatherService {
       print('WeatherService: Weather error for $city: $e');
     }
     return null;
-  }
-  
-  static void setDefaultCity(String city) {
-    _defaultCity = city;
   }
 }
