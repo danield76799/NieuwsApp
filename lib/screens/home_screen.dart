@@ -17,7 +17,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String _searchQuery = '';
   Map<String, dynamic>? _weatherData;
-  String _locationStatus = 'Locatie bepalen...';
 
   @override
   void initState() {
@@ -26,13 +25,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadWeather() async {
-    setState(() => _locationStatus = 'Locatie bepalen...');
-    final weather = await WeatherService.getWeatherForLocation();
+    final provider = context.read<NewsProvider>();
+    final weather = await WeatherService.getWeatherForCity(provider.weatherCity);
     setState(() {
       _weatherData = weather;
-      _locationStatus = weather != null 
-          ? 'Weer voor: ${weather['location']}'
-          : 'Kon locatie niet bepalen';
     });
   }
 
@@ -273,21 +269,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(width: 8),
                   ],
-                ),
-
-                // Location status
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Text(
-                      _locationStatus,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ),
                 ),
 
                 // Filter chips
