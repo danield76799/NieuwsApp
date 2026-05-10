@@ -235,19 +235,25 @@ class _HomeScreenState extends State<HomeScreen> {
                           avatar: Icon(
                             provider.filterActive ? Icons.visibility : Icons.visibility_off,
                             size: 18,
-                            color: provider.filterActive ? Colors.green : Colors.grey,
+                            color: provider.filterActive ? Colors.green : Colors.grey[400],
                           ),
                           label: Text(
                             provider.filterActive ? 'Filter: AAN' : 'Filter: UIT',
                             style: TextStyle(
                               fontSize: 12,
-                              color: provider.filterActive ? Colors.green : Colors.grey,
+                              color: provider.filterActive ? Colors.green : Colors.grey[400],
                             ),
                           ),
                           onPressed: () => provider.toggleFilter(!provider.filterActive),
                           backgroundColor: provider.filterActive
                               ? Colors.green.withOpacity(0.1)
-                              : Colors.grey.withOpacity(0.1),
+                              : Colors.grey[700]!.withOpacity(0.2),
+                          side: BorderSide(
+                            color: provider.filterActive
+                                ? Colors.green.withOpacity(0.3)
+                                : Colors.grey[500]!.withOpacity(0.3),
+                            width: 1,
+                          ),
                           padding: EdgeInsets.zero,
                           visualDensity: VisualDensity.compact,
                         ),
