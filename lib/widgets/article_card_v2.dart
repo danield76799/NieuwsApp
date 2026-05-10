@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../models/article.dart';
 import '../services/bookmark_service.dart';
 import '../services/time_helper.dart';
@@ -91,156 +90,13 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
     );
   }
 
-  void _showArticleDetail() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.9,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        builder: (context, scrollController) {
-          return Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).scaffoldBackgroundColor,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            child: Column(
-              children: [
-                Container(
-                  margin: const EdgeInsets.only(top: 12, bottom: 8),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                Expanded(
-                  child: SingleChildScrollView(
-                    controller: scrollController,
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.primaryContainer,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                widget.article.source,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              TimeHelper.format(widget.article.pubDate),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          widget.article.title,
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            height: 1.3,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        if (widget.article.thumbnailUrl != null)
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: CachedNetworkImage(
-                              imageUrl: widget.article.thumbnailUrl!,
-                              width: double.infinity,
-                              height: 200,
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) => Container(
-                                height: 200,
-                                color: Colors.grey[200],
-                                child: const Center(child: CircularProgressIndicator()),
-                              ),
-                              errorWidget: (context, url, error) => Container(
-                                height: 200,
-                                color: Colors.grey[200],
-                                child: const Icon(Icons.error),
-                              ),
-                            ),
-                          ),
-                        const SizedBox(height: 16),
-                        Text(
-                          _stripHtml(widget.article.description),
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            height: 1.6,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                onPressed: _openArticle,
-                                icon: const Icon(Icons.open_in_new),
-                                label: const Text('Lees volledig artikel'),
-                                style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            IconButton(
-                              onPressed: _toggleBookmark,
-                              icon: Icon(
-                                _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                                color: _isBookmarked ? Theme.of(context).colorScheme.primary : null,
-                              ),
-                              tooltip: _isBookmarked ? 'Verwijder bookmark' : 'Bookmark',
-                            ),
-                            IconButton(
-                              onPressed: _shareArticle,
-                              icon: const Icon(Icons.share),
-                              tooltip: 'Delen',
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 32),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Card(
       clipBehavior: Clip.antiAlias,
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: InkWell(
-        onTap: _showArticleDetail,
+        onTap: _openArticle, // Directly open article on tap
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
