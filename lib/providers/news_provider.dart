@@ -11,49 +11,36 @@ class NewsProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
   List<String> _keywords = [];
-  bool _isOffline = false;
   bool _filterActive = false;
-  bool _initialized = false;
+  String _weatherCity = 'Amsterdam';
 
   NewsProvider(this._repository) {
-    _loadKeywordsAndNews();
+    _loadSavedData();
   }
 
   List<Article> get articles => _filterActive ? _filteredArticles : _articles;
   bool get isLoading => _isLoading;
   String? get error => _error;
   List<String> get keywords => _keywords;
-  bool get isOffline => _isOffline;
   bool get filterActive => _filterActive;
-  bool get filterEnabled => _keywords.isNotEmpty;
-  bool get initialized => _initialized;
+  String get weatherCity => _weatherCity;
 
-  Future<void> _loadKeywordsAndNews() async {
-    print('NewsProvider: Loading keywords and news...');
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      
-      // Load saved keywords
-      final savedKeywords = prefs.getString('keywords') ?? '';
-      print('NewsProvider: Saved keywords: "$savedKeywords"');
-      if (savedKeywords.isNotEmpty) {
-        _keywords = savedKeywords.split(',').map((k) => k.trim()).where((k) => k.isNotEmpty).toList();
-        print('NewsProvider: Loaded keywords: $_keywords');
-      } else {
-        _keywords = [];
-        print('NewsProvider: No keywords found');
-      }
-      
-      // Load filter active state
-      _filterActive = prefs.getBool('filter_active') ?? false;
-      print('NewsProvider: Filter active: $_filterActive');
-    } catch (e) {
-      print('NewsProvider: Error loading keywords: $e');
+  Future<void> _loadSavedData() async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    // Load keywords
+    final savedKeywords = prefs.getString('keywords') ?? '';
+    if (savedKeywords.isNotEmpty) {
+      _keywords = savedKeywords.split(',').map((k) => k.trim()).where((k) => k.isNotEmpty).toList();
     }
     
+    // Load filter state
+    _filterActive = prefs.getBool('filter_active') ?? false;
+    
+    // Load weather city
+    _weatherCity = prefs.getString('weather_city') ?? 'Amsterdam';
+    
     await loadNews();
-    _initialized = true;
-    notifyListeners();
   }
 
   Future<void> loadNews({bool forceRefresh = false}) async {
@@ -64,12 +51,9 @@ class NewsProvider extends ChangeNotifier {
     try {
       final articles = await _repository.fetchNews();
       _articles = articles;
-      _isOffline = false;
       _applyFilter();
-      print('NewsProvider: Loaded ${articles.length} articles');
     } catch (e) {
       _error = e.toString();
-      print('NewsProvider: Error loading news: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -77,66 +61,50 @@ class NewsProvider extends ChangeNotifier {
   }
 
   void _applyFilter() {
-    if (_keywords.isEmpty) {
+    if (_keywords.isEmpty || !_filterActive) {
       _filteredArticles = [];
       return;
     }
-    _filteredArticles = _repository.filterByKeywords(_articles, _keywords);
-    print('NewsProvider: Applied filter, ${_filteredArticles.length} articles match');
+    _filteredArticles = _articles.where((article) {
+      final text = '${article.title} ${article.description}'.toLowerCase();
+      return _keywords.any((keyword) => text.contains(keyword.toLowerCase()));
+    }).toList();
   }
 
   Future<void> setKeywords(String keywordString) async {
-    print('NewsProvider: Setting keywords: "$keywordString"');
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      
-      // Save to SharedPreferences
-      await prefs.setString('keywords', keywordString);
-      print('NewsProvider: Saved keywords to SharedPreferences');
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('keywords', keywordString);
 
-      // Update local state
-      _keywords = keywordString.split(',').map((k) => k.trim()).where((k) => k.isNotEmpty).toList();
-      
-      // Apply filter
-      _applyFilter();
-      
-      // Notify listeners
-      notifyListeners();
-      print('NewsProvider: Keywords updated: $_keywords');
-    } catch (e) {
-      print('NewsProvider: Error saving keywords: $e');
-    }
+    _keywords = keywordString.split(',').map((k) => k.trim()).where((k) => k.isNotEmpty).toList();
+    _applyFilter();
+    notifyListeners();
   }
 
   Future<void> toggleFilter(bool active) async {
-    print('NewsProvider: Toggling filter to: $active');
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('filter_active', active);
-      
-      _filterActive = active;
-      notifyListeners();
-      print('NewsProvider: Filter toggled to: $_filterActive');
-    } catch (e) {
-      print('NewsProvider: Error toggling filter: $e');
-    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('filter_active', active);
+    
+    _filterActive = active;
+    _applyFilter();
+    notifyListeners();
   }
 
   Future<void> clearKeywords() async {
-    print('NewsProvider: Clearing keywords');
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('keywords');
-      await prefs.setBool('filter_active', false);
-      
-      _keywords = [];
-      _filterActive = false;
-      _applyFilter();
-      notifyListeners();
-      print('NewsProvider: Keywords cleared');
-    } catch (e) {
-      print('NewsProvider: Error clearing keywords: $e');
-    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('keywords');
+    await prefs.setBool('filter_active', false);
+    
+    _keywords = [];
+    _filterActive = false;
+    _applyFilter();
+    notifyListeners();
+  }
+
+  Future<void> setWeatherCity(String city) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('weather_city', city);
+    _weatherCity = city;
+    notifyListeners();
   }
 
   void clearError() {
