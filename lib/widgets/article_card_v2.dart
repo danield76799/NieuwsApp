@@ -133,9 +133,9 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primaryContainer,
+                          color: Theme.of(context).colorScheme.primary,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -143,11 +143,13 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
-                            color: Theme.of(context).colorScheme.primary,
+                            color: Colors.white,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 8),
+                      Icon(Icons.access_time, size: 12, color: Colors.grey[500]),
+                      const SizedBox(width: 4),
                       Text(
                         TimeHelper.format(widget.article.pubDate),
                         style: TextStyle(
