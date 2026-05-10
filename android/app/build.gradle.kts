@@ -44,41 +44,14 @@ android {
                 keyPassword = keystoreProperties.getProperty("keyPassword")
             } else {
                 // Fallback to debug signing for CI builds
-                // Use Android debug keystore from SDK
-                val debugKeystore = File(System.getProperty("user.home"), ".android/debug.keystore")
-                if (debugKeystore.exists()) {
-                    storeFile = debugKeystore
-                } else {
-                    // Create a temporary keystore if none exists
-                    storeFile = file("temp.keystore")
-                    if (!storeFile.exists()) {
-                        exec {
-                            commandLine(
-                                "keytool", "-genkey", "-v",
-                                "-keystore", storeFile.absolutePath,
-                                "-keyalg", "RSA",
-                                "-keysize", "2048",
-                                "-validity", "10000",
-                                "-alias", "androiddebugkey",
-                                "-storepass", "android",
-                                "-keypass", "android",
-                                "-dname", "CN=Android Debug,O=Android,C=US"
-                            )
-                        }
-                    }
-                }
+                storeFile = file("debug.keystore")
                 storePassword = "android"
                 keyAlias = "androiddebugkey"
                 keyPassword = "android"
             }
         }
         getByName("debug") {
-            val debugKeystore = File(System.getProperty("user.home"), ".android/debug.keystore")
-            if (debugKeystore.exists()) {
-                storeFile = debugKeystore
-            } else {
-                storeFile = file("debug.keystore")
-            }
+            storeFile = file("debug.keystore")
             storePassword = "android"
             keyAlias = "androiddebugkey"
             keyPassword = "android"
