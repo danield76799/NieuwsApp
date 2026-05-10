@@ -5,7 +5,7 @@ import '../models/article.dart';
 class ArticleCacheService {
   static const String _cachedArticlesKey = 'cached_articles';
   static const String _lastFetchKey = 'last_fetch_time';
-  static const Duration _cacheValidity = Duration(minutes: 30); // Cache for 30 minutes
+  static const Duration _cacheValidity = Duration(hours: 2); // Cache for 2 hours
 
   static Future<void> cacheArticles(List<Article> articles) async {
     try {

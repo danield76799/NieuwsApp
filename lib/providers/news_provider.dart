@@ -49,29 +49,47 @@ class NewsProvider extends ChangeNotifier {
     _useAutoLocation = prefs.getBool('auto_location') ?? true;
     _currentPosition = prefs.getString('current_position');
     
-    // Load cached articles first
-    await _loadCachedArticles();
+    // Load cached articles immediately without waiting
+    _loadCachedArticles();
   }
 
-  Future<void> _loadCachedArticles() async {
-    try {
-      final cachedArticles = await ArticleCacheService.getCachedArticles();
+  void _loadCachedArticles() {
+    // Use synchronous loading for instant display
+    ArticleCacheService.getCachedArticles().then((cachedArticles) {
       if (cachedArticles.isNotEmpty) {
         _articles = cachedArticles;
         _applyFilter();
         notifyListeners();
-        
-        // Check if cache is still valid
-        final isValid = await ArticleCacheService.isCacheValid();
+      }
+      
+      // Check if cache is still valid and refresh in background if needed
+      ArticleCacheService.isCacheValid().then((isValid) {
         if (!isValid) {
-          // Cache expired, refresh in background
-          await loadNews(forceRefresh: true);
+          // Cache expired, refresh in background without showing loading
+          _refreshInBackground();
         }
-      } else {
-        await loadNews();
+      });
+    }).catchError((e) {
+      // If cache fails, load from network
+      loadNews();
+    });
+  }
+
+  Future<void> _refreshInBackground() async {
+    try {
+      final articles = await _repository.fetchNews();
+      if (articles.isNotEmpty) {
+        _articles = articles;
+        // Sort articles by date (newest first)
+        _articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
+        _applyFilter();
+        notifyListeners();
+        
+        // Cache the articles
+        await ArticleCacheService.cacheArticles(_articles);
       }
     } catch (e) {
-      await loadNews();
+      print('Background refresh failed: $e');
     }
   }
 
