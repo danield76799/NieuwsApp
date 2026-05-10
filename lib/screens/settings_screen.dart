@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/news_provider.dart';
+import 'feeds_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -124,6 +125,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                     ],
                   ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // RSS Feeds
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.rss_feed, color: Color(0xFF007BC7)),
+                  title: const Text(
+                    'RSS Feeds beheren',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Voeg nieuwsbronnen toe of verwijder ze',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                    ),
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const FeedsScreen()),
+                    );
+                  },
                 ),
               ),
 
