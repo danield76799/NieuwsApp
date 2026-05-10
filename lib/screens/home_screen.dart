@@ -193,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
-                          child: Row(mainSize: MainAxisSize.min, children: [
+                          child: Row(mainAxisSize: MainAxisSize.min, children: [
                             Icon(Icons.wb_sunny, color: Colors.white, size: 16),
                             const SizedBox(width: 4),
                             Text('${_weatherData!['temp']}°', style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
