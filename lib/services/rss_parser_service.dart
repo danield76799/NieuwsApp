@@ -18,11 +18,32 @@ class RssParserService {
   
   static String _sanitizeHtml(String? text) {
     if (text == null || text.isEmpty) return '';
-    return text
+    var sanitized = text
       .replaceAll(RegExp(r'<script[^>]*>.*?</script>', caseSensitive: false, dotAll: true), '')
       .replaceAll(RegExp(r'<style[^>]*>.*?</style>', caseSensitive: false, dotAll: true), '')
       .replaceAll(RegExp(r'javascript:', caseSensitive: false), '')
       .replaceAll(RegExp(r'on\w+\s*=', caseSensitive: false), '');
+    
+    // Remove all remaining HTML tags but keep the text content
+    sanitized = sanitized.replaceAll(RegExp(r'<[^>]+>'), '');
+    
+    // Decode common HTML entities
+    sanitized = sanitized
+      .replaceAll('&nbsp;', ' ')
+      .replaceAll('&amp;', '&')
+      .replaceAll('&lt;', '<')
+      .replaceAll('&gt;', '>')
+      .replaceAll('&quot;', '"')
+      .replaceAll('&#39;', "'")
+      .replaceAll('&ldquo;', '"')
+      .replaceAll('&rdquo;', '"')
+      .replaceAll('&lsquo;', "'")
+      .replaceAll('&rsquo;', "'")
+      .replaceAll('&hellip;', '...')
+      .replaceAll('&mdash;', '-')
+      .replaceAll('&ndash;', '-');
+    
+    return sanitized.trim();
   }
 
   static Future<List<Article>> parseRssFeed(String feedUrl) async {
