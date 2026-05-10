@@ -27,6 +27,13 @@ class RssParserService {
     // Remove all remaining HTML tags but keep the text content
     sanitized = sanitized.replaceAll(RegExp(r'<[^>]+>'), '');
     
+    // Remove common ad/tracking URLs
+    sanitized = sanitized
+      .replaceAll(RegExp(r'https?://\S+\.(?:jpg|jpeg|png|gif|webp|svg)\S*', caseSensitive: false), '')
+      .replaceAll(RegExp(r'https?://r\.testifier\.nl/\S+', caseSensitive: false), '')
+      .replaceAll(RegExp(r'https?://\S+\.newsifier\.com/\S+', caseSensitive: false), '')
+      .replaceAll(RegExp(r'https?://\S+\.digitaloceanspaces\.com/\S+', caseSensitive: false), '');
+    
     // Decode common HTML entities
     sanitized = sanitized
       .replaceAll('&nbsp;', ' ')

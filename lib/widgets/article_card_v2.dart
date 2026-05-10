@@ -6,11 +6,17 @@ import '../models/article.dart';
 import '../services/bookmark_service.dart';
 import '../services/time_helper.dart';
 
-// Helper function to strip HTML tags
+// Helper function to strip HTML tags and ad URLs
 String _stripHtml(String? text) {
   if (text == null || text.isEmpty) return '';
-  return text
+  var sanitized = text
     .replaceAll(RegExp(r'<[^>]+>'), '')
+    .replaceAll(RegExp(r'https?://\S+\.(?:jpg|jpeg|png|gif|webp|svg)\S*', caseSensitive: false), '')
+    .replaceAll(RegExp(r'https?://r\.testifier\.nl/\S+', caseSensitive: false), '')
+    .replaceAll(RegExp(r'https?://\S+\.newsifier\.com/\S+', caseSensitive: false), '')
+    .replaceAll(RegExp(r'https?://\S+\.digitaloceanspaces\.com/\S+', caseSensitive: false), '');
+  
+  sanitized = sanitized
     .replaceAll('&nbsp;', ' ')
     .replaceAll('&amp;', '&')
     .replaceAll('&lt;', '<')
@@ -23,8 +29,9 @@ String _stripHtml(String? text) {
     .replaceAll('&rsquo;', "'")
     .replaceAll('&hellip;', '...')
     .replaceAll('&mdash;', '-')
-    .replaceAll('&ndash;', '-')
-    .trim();
+    .replaceAll('&ndash;', '-');
+  
+  return sanitized.trim();
 }
 
 class ArticleCardV2 extends StatefulWidget {
