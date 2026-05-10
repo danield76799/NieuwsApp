@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/article.dart';
 import '../repositories/news_repository.dart';
 import '../services/location_service.dart';
+import '../services/article_cache_service.dart';
 
 class NewsProvider extends ChangeNotifier {
   final NewsRepository _repository;
@@ -48,10 +49,47 @@ class NewsProvider extends ChangeNotifier {
     _useAutoLocation = prefs.getBool('auto_location') ?? true;
     _currentPosition = prefs.getString('current_position');
     
-    await loadNews();
+    // Load cached articles first
+    await _loadCachedArticles();
+  }
+
+  Future<void> _loadCachedArticles() async {
+    try {
+      final cachedArticles = await ArticleCacheService.getCachedArticles();
+      if (cachedArticles.isNotEmpty) {
+        _articles = cachedArticles;
+        _applyFilter();
+        notifyListeners();
+        
+        // Check if cache is still valid
+        final isValid = await ArticleCacheService.isCacheValid();
+        if (!isValid) {
+          // Cache expired, refresh in background
+          await loadNews(forceRefresh: true);
+        }
+      } else {
+        await loadNews();
+      }
+    } catch (e) {
+      await loadNews();
+    }
   }
 
   Future<void> loadNews({bool forceRefresh = false}) async {
+    // If not forcing refresh and cache is valid, use cached data
+    if (!forceRefresh) {
+      final isValid = await ArticleCacheService.isCacheValid();
+      if (isValid) {
+        final cachedArticles = await ArticleCacheService.getCachedArticles();
+        if (cachedArticles.isNotEmpty) {
+          _articles = cachedArticles;
+          _applyFilter();
+          notifyListeners();
+          return;
+        }
+      }
+    }
+
     _isLoading = true;
     _error = null;
     notifyListeners();
@@ -59,9 +97,22 @@ class NewsProvider extends ChangeNotifier {
     try {
       final articles = await _repository.fetchNews();
       _articles = articles;
+      
+      // Sort articles by date (newest first)
+      _articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
+      
       _applyFilter();
+      
+      // Cache the articles
+      await ArticleCacheService.cacheArticles(_articles);
     } catch (e) {
       _error = e.toString();
+      // Try to load cached articles on error
+      final cachedArticles = await ArticleCacheService.getCachedArticles();
+      if (cachedArticles.isNotEmpty) {
+        _articles = cachedArticles;
+        _applyFilter();
+      }
     } finally {
       _isLoading = false;
       notifyListeners();
