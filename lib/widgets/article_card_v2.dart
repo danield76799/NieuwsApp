@@ -6,6 +6,27 @@ import '../models/article.dart';
 import '../services/bookmark_service.dart';
 import '../services/time_helper.dart';
 
+// Helper function to strip HTML tags
+String _stripHtml(String? text) {
+  if (text == null || text.isEmpty) return '';
+  return text
+    .replaceAll(RegExp(r'<[^>]+>'), '')
+    .replaceAll('&nbsp;', ' ')
+    .replaceAll('&amp;', '&')
+    .replaceAll('&lt;', '<')
+    .replaceAll('&gt;', '>')
+    .replaceAll('&quot;', '"')
+    .replaceAll('&#39;', "'")
+    .replaceAll('&ldquo;', '"')
+    .replaceAll('&rdquo;', '"')
+    .replaceAll('&lsquo;', "'")
+    .replaceAll('&rsquo;', "'")
+    .replaceAll('&hellip;', '...')
+    .replaceAll('&mdash;', '-')
+    .replaceAll('&ndash;', '-')
+    .trim();
+}
+
 class ArticleCardV2 extends StatefulWidget {
   final Article article;
 
@@ -144,7 +165,7 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                           ),
                         const SizedBox(height: 16),
                         Text(
-                          widget.article.description,
+                          _stripHtml(widget.article.description),
                           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                             height: 1.6,
                           ),
@@ -275,7 +296,7 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    widget.article.description,
+                    _stripHtml(widget.article.description),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Colors.grey[600],
                       height: 1.3,
