@@ -78,8 +78,9 @@ class RssParserService {
       final document = XmlDocument.parse(body);
       final items = document.findAllElements('item');
       final source = _extractSource(document);
+      final channelImage = _extractChannelImage(document);
 
-      return items.map((item) => _parseItem(item, source)).toList();
+      return items.map((item) => _parseItem(item, source, channelImage)).toList();
     } catch (e) {
       throw Exception('RSS parse error: $e');
     }
@@ -98,12 +99,21 @@ class RssParserService {
     return titleElement?.text ?? 'Onbekende bron';
   }
 
-  static Article _parseItem(XmlElement item, String source) {
+  static String? _extractChannelImage(XmlDocument document) {
+    final imageElement = document.findAllElements('image').firstOrNull;
+    if (imageElement != null) {
+      final url = imageElement.findElements('url').firstOrNull?.text;
+      if (_isValidUrl(url)) return url;
+    }
+    return null;
+  }
+
+  static Article _parseItem(XmlElement item, String source, String? channelImage) {
     final title = _sanitizeHtml(_getElementText(item, 'title'));
     final description = _sanitizeHtml(_getElementText(item, 'description'));
     final link = _sanitizeUrl(_getElementText(item, 'link'));
     final pubDateStr = _getElementText(item, 'pubDate');
-    final thumbnailUrl = _extractThumbnail(item);
+    final thumbnailUrl = _extractThumbnail(item) ?? channelImage;
 
     return Article(
       id: link.hashCode.toString(),
