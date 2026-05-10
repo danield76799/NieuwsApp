@@ -18,21 +18,24 @@ class RssParserService {
   
   static String _sanitizeHtml(String? text) {
     if (text == null || text.isEmpty) return '';
-    var sanitized = text
+    
+    // First remove all HTML tags (including multiline tags with spaces)
+    var sanitized = text.replaceAll(RegExp(r'<[^>]+>', caseSensitive: false, dotAll: true), '');
+    
+    // Remove script and style content
+    sanitized = sanitized
       .replaceAll(RegExp(r'<script[^>]*>.*?</script>', caseSensitive: false, dotAll: true), '')
-      .replaceAll(RegExp(r'<style[^>]*>.*?</style>', caseSensitive: false, dotAll: true), '')
-      .replaceAll(RegExp(r'javascript:', caseSensitive: false), '')
-      .replaceAll(RegExp(r'on\w+\s*=', caseSensitive: false), '');
+      .replaceAll(RegExp(r'<style[^>]*>.*?</style>', caseSensitive: false, dotAll: true), '');
     
-    // Remove all remaining HTML tags but keep the text content
-    sanitized = sanitized.replaceAll(RegExp(r'<[^>]+>'), '');
-    
-    // Remove common ad/tracking URLs
+    // Remove common ad/tracking URLs and image references
     sanitized = sanitized
       .replaceAll(RegExp(r'https?://\S+\.(?:jpg|jpeg|png|gif|webp|svg)\S*', caseSensitive: false), '')
-      .replaceAll(RegExp(r'https?://r\.testifier\.nl/\S+', caseSensitive: false), '')
-      .replaceAll(RegExp(r'https?://\S+\.newsifier\.com/\S+', caseSensitive: false), '')
-      .replaceAll(RegExp(r'https?://\S+\.digitaloceanspaces\.com/\S+', caseSensitive: false), '');
+      .replaceAll(RegExp(r'https?://r\.testifier\.nl/\S*', caseSensitive: false), '')
+      .replaceAll(RegExp(r'https?://\S*\.newsifier\.com/\S*', caseSensitive: false), '')
+      .replaceAll(RegExp(r'https?://\S*\.digitaloceanspaces\.com/\S*', caseSensitive: false), '');
+    
+    // Clean up whitespace
+    sanitized = sanitized.replaceAll(RegExp(r'\s+'), ' ');
     
     // Decode common HTML entities
     sanitized = sanitized
