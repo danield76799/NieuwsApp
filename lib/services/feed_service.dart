@@ -7,8 +7,7 @@ class FeedService {
   // Default feeds - alleen werkende URLs
   static final List<Map<String, String>> _defaultFeeds = [
     {'name': 'Tweakers', 'url': 'https://tweakers.net/feeds/nieuws.xml'},
-    {'name': 'Nu.nl - Algemeen', 'url': 'https://www.nu.nl/rss/Algemeen'},
-    {'name': 'AD.nl', 'url': 'https://www.ad.nl/rss.xml'},
+    {'name': 'Nieuws.nl', 'url': 'https://nieuws.nl/sitemap/news.xml'},
   ];
 
   static Future<List<Map<String, String>>> getFeeds() async {
