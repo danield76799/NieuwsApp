@@ -174,35 +174,64 @@ class RssParserService {
 
   static DateTime _parseDate(String? dateStr) {
     if (dateStr == null || dateStr.isEmpty) {
-      return DateTime(1970, 1, 1);
+      return DateTime.now(); // Use current time instead of 1970
     }
 
-    final formats = [
-      RegExp(r'(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})'),
-      RegExp(r'(\d{4})-(\d{2})-(\d{2})'),
-      RegExp(r'(\d{1,2})/(\d{1,2})/(\d{4})'),
-    ];
-
-    for (final format in formats) {
-      final match = format.firstMatch(dateStr);
-      if (match != null) {
-        try {
-          if (match.groupCount >= 3) {
-            final year = int.parse(match.group(3)!);
-            final month = _parseMonth(match.group(2)!);
-            final day = int.parse(match.group(1)!);
-            return DateTime(year, month, day);
-          }
-        } catch (e) {
-          continue;
-        }
+    // RSS standard format: Sun, 10 May 2026 10:01:23 +0200
+    final rfc822Regex = RegExp(
+      r'(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})\s+(\d{2}):(\d{2}):(\d{2})'
+    );
+    final rfc822Match = rfc822Regex.firstMatch(dateStr);
+    if (rfc822Match != null) {
+      try {
+        final day = int.parse(rfc822Match.group(1)!);
+        final month = _parseMonth(rfc822Match.group(2)!);
+        final year = int.parse(rfc822Match.group(3)!);
+        final hour = int.parse(rfc822Match.group(4)!);
+        final minute = int.parse(rfc822Match.group(5)!);
+        final second = int.parse(rfc822Match.group(6)!);
+        return DateTime(year, month, day, hour, minute, second);
+      } catch (e) {
+        // Fall through to other parsers
       }
     }
 
+    // ISO format: 2026-05-10T10:01:23+02:00
+    final isoRegex = RegExp(r'(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2}):(\d{2})');
+    final isoMatch = isoRegex.firstMatch(dateStr);
+    if (isoMatch != null) {
+      try {
+        final year = int.parse(isoMatch.group(1)!);
+        final month = int.parse(isoMatch.group(2)!);
+        final day = int.parse(isoMatch.group(3)!);
+        final hour = int.parse(isoMatch.group(4)!);
+        final minute = int.parse(isoMatch.group(5)!);
+        final second = int.parse(isoMatch.group(6)!);
+        return DateTime(year, month, day, hour, minute, second);
+      } catch (e) {
+        // Fall through
+      }
+    }
+
+    // Simple date format: 2026-05-10
+    final simpleDateRegex = RegExp(r'(\d{4})-(\d{2})-(\d{2})');
+    final simpleMatch = simpleDateRegex.firstMatch(dateStr);
+    if (simpleMatch != null) {
+      try {
+        final year = int.parse(simpleMatch.group(1)!);
+        final month = int.parse(simpleMatch.group(2)!);
+        final day = int.parse(simpleMatch.group(3)!);
+        return DateTime(year, month, day);
+      } catch (e) {
+        // Fall through
+      }
+    }
+
+    // Try standard DateTime.parse as fallback
     try {
       return DateTime.parse(dateStr);
     } catch (e) {
-      return DateTime(1970, 1, 1);
+      return DateTime.now(); // Fallback to current time instead of 1970
     }
   }
 
