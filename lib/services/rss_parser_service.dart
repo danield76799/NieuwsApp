@@ -95,8 +95,36 @@ class RssParserService {
   }
 
   static String _extractSource(XmlDocument document) {
+    // Try to get channel title first (usually the site name)
+    final channelElement = document.findAllElements('channel').firstOrNull;
+    if (channelElement != null) {
+      final channelTitle = channelElement.findElements('title').firstOrNull?.text;
+      if (channelTitle != null && channelTitle.isNotEmpty) {
+        return _cleanSourceName(channelTitle);
+      }
+    }
+    
+    // Fallback to first title element
     final titleElement = document.findAllElements('title').firstOrNull;
-    return titleElement?.text ?? 'Onbekende bron';
+    if (titleElement != null) {
+      return _cleanSourceName(titleElement.text);
+    }
+    
+    return 'Onbekende bron';
+  }
+
+  static String _cleanSourceName(String? name) {
+    if (name == null || name.isEmpty) return 'Onbekende bron';
+    
+    // Remove common suffixes
+    var cleaned = name
+      .replaceAll(RegExp(r'\s*-\s*Nieuws$', caseSensitive: false), '')
+      .replaceAll(RegExp(r'\s*-\s*News$', caseSensitive: false), '')
+      .replaceAll(RegExp(r'\s*-\s*RSS$', caseSensitive: false), '')
+      .replaceAll(RegExp(r'\s*-\s*Feed$', caseSensitive: false), '')
+      .trim();
+    
+    return cleaned.isNotEmpty ? cleaned : 'Onbekende bron';
   }
 
   static String? _extractChannelImage(XmlDocument document) {
