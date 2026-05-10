@@ -71,6 +71,64 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
               const SizedBox(height: 16),
 
+              // Auto-location toggle
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Automatische locatie',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Switch(
+                            value: provider.useAutoLocation,
+                            onChanged: (value) {
+                              provider.setUseAutoLocation(value);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(value
+                                      ? 'GPS locatie ingeschakeld'
+                                      : 'GPS locatie uitgeschakeld'),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Gebruik je huidige GPS locatie voor het weer',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 14,
+                        ),
+                      ),
+                      if (provider.useAutoLocation && provider.weatherCity.contains(','))
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            'Huidige locatie: ${provider.weatherCity}',
+                            style: TextStyle(
+                              color: Colors.green[700],
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
               // Keywords
               Card(
                 child: Padding(

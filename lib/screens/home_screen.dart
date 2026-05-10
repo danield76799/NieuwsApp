@@ -32,6 +32,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadWeather() async {
     final provider = context.read<NewsProvider>();
+    
+    // Detect GPS location if auto-location is enabled
+    if (provider.useAutoLocation) {
+      await provider.detectLocation();
+    }
+    
     final weather = await WeatherService.getWeatherForCity(provider.weatherCity);
     if (mounted) {
       setState(() {
