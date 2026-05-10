@@ -26,7 +26,7 @@ class NewsProvider extends ChangeNotifier {
   String? get error => _error;
   List<String> get keywords => _keywords;
   bool get filterActive => _filterActive;
-  String get weatherCity => _currentPosition ?? _weatherCity;
+  String get weatherCity => _weatherCity;
   bool get useAutoLocation => _useAutoLocation;
 
   Future<void> _loadSavedData() async {
@@ -122,9 +122,18 @@ class NewsProvider extends ChangeNotifier {
     if (position != null) {
       _currentPosition = '${position.latitude},${position.longitude}';
       
+      // Probeer stad naam te krijgen
+      final cityName = await LocationService.getCityFromPosition(position);
+      if (cityName != null) {
+        _weatherCity = cityName;
+      }
+      
       // Save position
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('current_position', _currentPosition!);
+      if (cityName != null) {
+        await prefs.setString('weather_city', cityName);
+      }
     }
   }
 

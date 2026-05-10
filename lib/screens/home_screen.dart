@@ -55,6 +55,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showWeatherPopup() {
     if (_weatherData == null) return;
     
+    final currentIcon = WeatherService.getWeatherIcon(_weatherData!['description'] ?? '');
+    
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -89,6 +91,8 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 16),
             Row(
               children: [
+                Icon(currentIcon, size: 48, color: Colors.orange),
+                const SizedBox(width: 12),
                 Text(
                   '${_weatherData!['temp']}°',
                   style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
@@ -113,8 +117,11 @@ class _HomeScreenState extends State<HomeScreen> {
               children: (_weatherData!['forecast'] as List).map((day) {
                 final date = DateTime.parse(day['date']);
                 final dayName = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'][date.weekday % 7];
+                final dayIcon = day['icon'] as IconData? ?? Icons.wb_sunny;
                 return Column(children: [
                   Text(dayName, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+                  const SizedBox(height: 4),
+                  Icon(dayIcon, size: 24, color: Colors.grey[400]),
                   const SizedBox(height: 4),
                   Text('${day['maxTemp']}°', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   Text('${day['minTemp']}°', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
@@ -182,7 +189,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     if (_weatherData != null)
                       TextButton.icon(
                         onPressed: _showWeatherPopup,
-                        icon: const Icon(Icons.wb_sunny, color: Colors.white, size: 18),
+                        icon: Icon(
+                          WeatherService.getWeatherIcon(_weatherData!['description'] ?? ''),
+                          color: Colors.white,
+                          size: 18,
+                        ),
                         label: Text(
                           '${_weatherData!['temp']}°',
                           style: const TextStyle(
