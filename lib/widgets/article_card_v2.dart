@@ -135,16 +135,15 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: Colors.grey[200],
+                          color: Theme.of(context).colorScheme.primary,
                           borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: Colors.grey[300]!, width: 1),
                         ),
                         child: Text(
                           widget.article.source,
                           style: TextStyle(
-                            fontSize: 10,
+                            fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: Colors.grey[800],
+                            color: Colors.white,
                           ),
                         ),
                       ),
