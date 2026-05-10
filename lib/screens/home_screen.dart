@@ -152,11 +152,13 @@ class _HomeScreenState extends State<HomeScreen> {
             strokeWidth: 3,
             child: CustomScrollView(
               slivers: [
+                // Compact App Bar with inline title and icons
                 SliverAppBar(
                   floating: true,
                   snap: true,
                   pinned: true,
-                  expandedHeight: 120,
+                  elevation: 2,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   leading: IconButton(
                     icon: Icon(
                       Icons.filter_list,
@@ -167,77 +169,99 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                     tooltip: provider.filterActive ? 'Filter uit' : 'Filter aan',
                   ),
-                  flexibleSpace: FlexibleSpaceBar(
-                    title: const Text(
-                      'PlusNews',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    background: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Theme.of(context).colorScheme.primary,
-                            Theme.of(context).colorScheme.primary.withOpacity(0.8),
-                          ],
-                        ),
-                      ),
+                  title: const Text(
+                    'PlusNews',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 20,
                     ),
                   ),
+                  centerTitle: false,
                   actions: [
                     if (_weatherData != null)
-                      InkWell(
-                        onTap: _showWeatherPopup,
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
-                          child: Row(mainAxisSize: MainAxisSize.min, children: [
-                            Icon(Icons.wb_sunny, color: Colors.white, size: 16),
-                            const SizedBox(width: 4),
-                            Text('${_weatherData!['temp']}°', style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-                          ]),
+                      TextButton.icon(
+                        onPressed: _showWeatherPopup,
+                        icon: const Icon(Icons.wb_sunny, color: Colors.white, size: 18),
+                        label: Text(
+                          '${_weatherData!['temp']}°',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                       ),
-                    IconButton(icon: const Icon(Icons.search, color: Colors.white), onPressed: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        builder: (context) => Padding(
-                          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-                          child: app_search.SearchBar(onSearch: (query) {
-                            setState(() {
-                              _searchQuery = query;
-                            });
-                          }),
-                        ),
-                      );
-                    }),
-                    IconButton(icon: const Icon(Icons.settings, color: Colors.white), onPressed: () async {
-                      await Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen()));
-                      await _loadWeather();
-                    }),
-                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.search, color: Colors.white),
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          builder: (context) => Padding(
+                            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                            child: app_search.SearchBar(onSearch: (query) {
+                              setState(() {
+                                _searchQuery = query;
+                              });
+                            }),
+                          ),
+                        );
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.settings, color: Colors.white),
+                      onPressed: () async {
+                        await Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen()));
+                        await _loadWeather();
+                      },
+                    ),
+                    const SizedBox(width: 4),
                   ],
                 ),
 
-                // Filter only info
+                // Compact Filter Status Bar
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Wrap(
-                      spacing: 8,
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+                    child: Row(
                       children: [
                         ActionChip(
-                          avatar: Icon(provider.filterActive ? Icons.visibility : Icons.visibility_off, size: 18, color: provider.filterActive ? Colors.green : Colors.grey),
+                          avatar: Icon(
+                            provider.filterActive ? Icons.visibility : Icons.visibility_off,
+                            size: 18,
+                            color: provider.filterActive ? Colors.green : Colors.grey,
+                          ),
                           label: Text(
                             provider.filterActive ? 'Filter: AAN' : 'Filter: UIT',
-                            style: TextStyle(fontSize: 12, color: provider.filterActive ? Colors.green : Colors.grey),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: provider.filterActive ? Colors.green : Colors.grey,
+                            ),
                           ),
                           onPressed: () => provider.toggleFilter(!provider.filterActive),
-                          backgroundColor: provider.filterActive ? Colors.green.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                          backgroundColor: provider.filterActive
+                              ? Colors.green.withOpacity(0.1)
+                              : Colors.grey.withOpacity(0.1),
+                          padding: EdgeInsets.zero,
+                          visualDensity: VisualDensity.compact,
                         ),
+                        if (provider.filterActive && provider.keywords.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: Text(
+                              '${provider.keywords.length} actief',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
