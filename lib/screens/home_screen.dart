@@ -176,14 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                     tooltip: provider.filterActive ? 'Filter uit' : 'Filter aan',
                   ),
-                  title: const Text(
-                    'PlusNews',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: 20,
-                    ),
-                  ),
+                  title: const SizedBox.shrink(),
                   centerTitle: false,
                   actions: [
                     if (_weatherData != null)
