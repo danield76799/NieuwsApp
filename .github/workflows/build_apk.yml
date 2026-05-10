@@ -42,6 +42,17 @@ jobs:
     - name: Get dependencies
       run: flutter pub get
       
+    - name: Setup release signing
+      run: |
+        # Create key.properties for release signing
+        echo "storePassword=android" > android/app/key.properties
+        echo "keyPassword=android" >> android/app/key.properties
+        echo "keyAlias=upload" >> android/app/key.properties
+        echo "storeFile=upload-keystore.jks" >> android/app/key.properties
+        
+        # Copy the upload keystore (already in repo from earlier)
+        ls -la android/app/upload-keystore.jks || echo "Keystore not found"
+      
     - name: Build APK
       run: flutter build apk --release
       env:
