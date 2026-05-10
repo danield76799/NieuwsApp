@@ -24,12 +24,21 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadWeather();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Reload weather when returning from settings
+    _loadWeather();
+  }
+
   Future<void> _loadWeather() async {
     final provider = context.read<NewsProvider>();
     final weather = await WeatherService.getWeatherForCity(provider.weatherCity);
-    setState(() {
-      _weatherData = weather;
-    });
+    if (mounted) {
+      setState(() {
+        _weatherData = weather;
+      });
+    }
   }
 
   void _showWeatherPopup() {
@@ -260,11 +269,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     // Settings button
                     IconButton(
                       icon: const Icon(Icons.settings, color: Colors.white),
-                      onPressed: () {
-                        Navigator.push(
+                      onPressed: () async {
+                        await Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => const SettingsScreen()),
                         );
+                        // Reload weather after returning from settings
+                        await _loadWeather();
                       },
                     ),
                     const SizedBox(width: 8),
