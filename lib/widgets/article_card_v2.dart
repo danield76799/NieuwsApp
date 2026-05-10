@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/article.dart';
 import '../services/bookmark_service.dart';
 import '../services/time_helper.dart';
+import '../screens/article_webview_screen.dart';
 
 // Helper function to strip HTML tags and ad URLs
 String _stripHtml(String? text) {
@@ -81,11 +82,13 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
     );
   }
 
-  Future<void> _openArticle() async {
-    final url = Uri.parse(widget.article.link);
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    }
+  void _openArticle() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ArticleWebViewScreen(article: widget.article),
+      ),
+    );
   }
 
   void _showArticleDetail() {
