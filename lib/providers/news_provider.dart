@@ -125,8 +125,6 @@ class NewsProvider extends ChangeNotifier {
       // Save position
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('current_position', _currentPosition!);
-      
-      notifyListeners();
     }
   }
 

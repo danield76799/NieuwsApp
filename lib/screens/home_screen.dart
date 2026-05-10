@@ -21,16 +21,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadWeather();
+    _detectLocationAndLoadWeather();
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _loadWeather();
-  }
-
-  Future<void> _loadWeather() async {
+  Future<void> _detectLocationAndLoadWeather() async {
     final provider = context.read<NewsProvider>();
     
     // Detect GPS location if auto-location is enabled
@@ -38,6 +32,18 @@ class _HomeScreenState extends State<HomeScreen> {
       await provider.detectLocation();
     }
     
+    await _loadWeather();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Only load weather, don't detect location here to avoid rebuild issues
+    _loadWeather();
+  }
+
+  Future<void> _loadWeather() async {
+    final provider = context.read<NewsProvider>();
     final weather = await WeatherService.getWeatherForCity(provider.weatherCity);
     if (mounted) {
       setState(() {
