@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/article.dart';
 import '../repositories/news_repository.dart';
+import '../services/location_service.dart';
 
 class NewsProvider extends ChangeNotifier {
   final NewsRepository _repository;
@@ -13,6 +14,8 @@ class NewsProvider extends ChangeNotifier {
   List<String> _keywords = [];
   bool _filterActive = false;
   String _weatherCity = 'Amsterdam';
+  bool _useAutoLocation = true;
+  String? _currentPosition;
 
   NewsProvider(this._repository) {
     _loadSavedData();
@@ -23,7 +26,8 @@ class NewsProvider extends ChangeNotifier {
   String? get error => _error;
   List<String> get keywords => _keywords;
   bool get filterActive => _filterActive;
-  String get weatherCity => _weatherCity;
+  String get weatherCity => _currentPosition ?? _weatherCity;
+  bool get useAutoLocation => _useAutoLocation;
 
   Future<void> _loadSavedData() async {
     final prefs = await SharedPreferences.getInstance();
@@ -39,6 +43,10 @@ class NewsProvider extends ChangeNotifier {
     
     // Load weather city
     _weatherCity = prefs.getString('weather_city') ?? 'Amsterdam';
+    
+    // Load auto-location preference
+    _useAutoLocation = prefs.getBool('auto_location') ?? true;
+    _currentPosition = prefs.getString('current_position');
     
     await loadNews();
   }
@@ -104,6 +112,35 @@ class NewsProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('weather_city', city);
     _weatherCity = city;
+    notifyListeners();
+  }
+
+  Future<void> detectLocation() async {
+    if (!_useAutoLocation) return;
+    
+    final position = await LocationService.getCurrentPosition();
+    if (position != null) {
+      _currentPosition = '${position.latitude},${position.longitude}';
+      
+      // Save position
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('current_position', _currentPosition!);
+      
+      notifyListeners();
+    }
+  }
+
+  Future<void> setUseAutoLocation(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('auto_location', value);
+    
+    _useAutoLocation = value;
+    if (value) {
+      await detectLocation();
+    } else {
+      _currentPosition = null;
+      await prefs.remove('current_position');
+    }
     notifyListeners();
   }
 
