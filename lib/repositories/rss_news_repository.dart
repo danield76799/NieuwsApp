@@ -21,7 +21,23 @@ class RssNewsRepository implements NewsRepository {
       try {
         final articles = await RssParserService.parseRssFeed(source["url"]!);
         if (articles.isNotEmpty) {
-          allArticles.addAll(articles);
+          // Override source name with feed name from settings
+          final articlesWithSource = articles.map((article) => Article(
+            id: article.id,
+            title: article.title,
+            description: article.description,
+            content: article.content,
+            link: article.link,
+            url: article.url,
+            pubDate: article.pubDate,
+            publishedAt: article.publishedAt,
+            thumbnailUrl: article.thumbnailUrl,
+            imageUrl: article.imageUrl,
+            source: source["name"] ?? article.source, // Use feed name from settings
+            category: article.category,
+            author: article.author,
+          )).toList();
+          allArticles.addAll(articlesWithSource);
         }
       } catch (e) {
         errors.add("${source["name"]}: $e");
