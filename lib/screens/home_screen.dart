@@ -27,7 +27,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Reload weather when returning from settings
     _loadWeather();
   }
 
@@ -159,6 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Consumer<NewsProvider>(
       builder: (context, provider, child) {
         final articles = provider.articles;
+        final allArticles = provider.articles; // This will be filtered if active
         final filteredArticles = _searchQuery.isEmpty
             ? articles
             : articles.where((a) =>
@@ -274,7 +274,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           context,
                           MaterialPageRoute(builder: (context) => const SettingsScreen()),
                         );
-                        // Reload weather after returning from settings
                         await _loadWeather();
                       },
                     ),
@@ -282,44 +281,57 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
 
-                // Filter chips
+                // Filter debug info
                 if (provider.keywords.isNotEmpty)
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      child: Wrap(
-                        spacing: 8,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          ActionChip(
-                            avatar: Icon(
-                              provider.filterActive ? Icons.visibility : Icons.visibility_off,
-                              size: 18,
-                              color: provider.filterActive ? Colors.green : Colors.grey,
-                            ),
-                            label: Text(
-                              provider.filterActive ? 'Filter: AAN' : 'Filter: UIT',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: provider.filterActive ? Colors.green : Colors.grey,
+                          Wrap(
+                            spacing: 8,
+                            children: [
+                              ActionChip(
+                                avatar: Icon(
+                                  provider.filterActive ? Icons.visibility : Icons.visibility_off,
+                                  size: 18,
+                                  color: provider.filterActive ? Colors.green : Colors.grey,
+                                ),
+                                label: Text(
+                                  provider.filterActive ? 'Filter: AAN' : 'Filter: UIT',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: provider.filterActive ? Colors.green : Colors.grey,
+                                  ),
+                                ),
+                                onPressed: () => provider.toggleFilter(!provider.filterActive),
+                                backgroundColor: provider.filterActive
+                                    ? Colors.green.withOpacity(0.1)
+                                    : Colors.grey.withOpacity(0.1),
                               ),
-                            ),
-                            onPressed: () => provider.toggleFilter(!provider.filterActive),
-                            backgroundColor: provider.filterActive
-                                ? Colors.green.withOpacity(0.1)
-                                : Colors.grey.withOpacity(0.1),
+                              ...provider.keywords.map((keyword) => Chip(
+                                label: Text(
+                                  keyword,
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                                deleteIcon: const Icon(Icons.close, size: 18),
+                                onDeleted: () {
+                                  final newKeywords = provider.keywords.where((k) => k != keyword).toList();
+                                  provider.setKeywords(newKeywords.join(', '));
+                                },
+                                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                              )),
+                            ],
                           ),
-                          ...provider.keywords.map((keyword) => Chip(
-                            label: Text(
-                              keyword,
-                              style: const TextStyle(fontSize: 12),
+                          // Debug info
+                          Text(
+                            'Artikelen: ${allArticles.length} | Gefilterd: ${filteredArticles.length}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
                             ),
-                            deleteIcon: const Icon(Icons.close, size: 18),
-                            onDeleted: () {
-                              final newKeywords = provider.keywords.where((k) => k != keyword).toList();
-                              provider.setKeywords(newKeywords.join(', '));
-                            },
-                            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                          )),
+                          ),
                         ],
                       ),
                     ),
