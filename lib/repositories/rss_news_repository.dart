@@ -17,12 +17,12 @@ class RssNewsRepository implements NewsRepository {
     // Get feeds from SharedPreferences
     final feeds = await FeedService.getFeeds();
 
-    for (final source in feeds) {
+    // Fetch all feeds in parallel for much faster loading
+    final futures = feeds.map((source) async {
       try {
         final articles = await RssParserService.parseRssFeed(source["url"]!);
         if (articles.isNotEmpty) {
-          // Override source name with feed name from settings
-          final articlesWithSource = articles.map((article) => Article(
+          return articles.map((article) => Article(
             id: article.id,
             title: article.title,
             description: article.description,
@@ -33,15 +33,24 @@ class RssNewsRepository implements NewsRepository {
             publishedAt: article.publishedAt,
             thumbnailUrl: article.thumbnailUrl,
             imageUrl: article.imageUrl,
-            source: source["name"] ?? article.source, // Use feed name from settings
+            source: source["name"] ?? article.source,
             category: article.category,
             author: article.author,
           )).toList();
-          allArticles.addAll(articlesWithSource);
         }
+        return <Article>[];
       } catch (e) {
         errors.add("${source["name"]}: $e");
+        return <Article>[];
       }
+    }).toList();
+
+    // Wait for all feeds to complete in parallel
+    final results = await Future.wait(futures);
+    
+    // Collect all articles
+    for (final articles in results) {
+      allArticles.addAll(articles);
     }
 
     // Remove duplicates based on link

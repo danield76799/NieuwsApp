@@ -38,8 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Only load weather, don't detect location here to avoid rebuild issues
-    _loadWeather();
+    // Only load weather once at init, not on every dependency change
   }
 
   Future<void> _loadWeather() async {
