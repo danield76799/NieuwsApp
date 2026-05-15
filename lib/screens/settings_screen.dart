@@ -15,14 +15,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _cityController = TextEditingController();
 
   @override
+  @override
   void initState() {
     super.initState();
-    final provider = context.read<NewsProvider>();
-    _keywordsController.text = provider.keywords.join(', ');
-    _cityController.text = provider.weatherCity;
+    // Load data after frame is rendered
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = context.read<NewsProvider>();
+      _keywordsController.text = provider.keywords.join(', ');
+      _cityController.text = provider.weatherCity;
+    });
   }
-
-  @override
   Widget build(BuildContext context) {
     return Consumer<NewsProvider>(
       builder: (context, provider, child) {
@@ -248,7 +250,3 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void dispose() {
     _keywordsController.dispose();
-    _cityController.dispose();
-    super.dispose();
-  }
-}
