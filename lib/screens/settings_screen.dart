@@ -250,3 +250,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void dispose() {
     _keywordsController.dispose();
+    super.dispose();
+  }
+}
