@@ -289,8 +289,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
-                          final article = filteredArticles[index];
-                          return ArticleCardV2(article: article);
+                          // First article gets hero card
+                          if (index == 0) {
+                            return ArticleHeroCard(article: filteredArticles[index]);
+                          }
+                          // Rest use compact cards
+                          return ArticleCardV2(article: filteredArticles[index]);
                         },
                         childCount: filteredArticles.length,
                       ),
