@@ -34,7 +34,7 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFF1A1A1A),
       appBar: AppBar(
         title: const Text('Opgeslagen Artikelen'),
         leading: IconButton(
@@ -80,7 +80,7 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[600],
+              color: Colors.grey[400],
             ),
           ),
           const SizedBox(height: 8),

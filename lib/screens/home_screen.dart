@@ -5,6 +5,7 @@ import '../services/weather_service.dart';
 import '../widgets/article_card_v2.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/search_bar.dart' as app_search;
+import 'bookmarks_screen.dart';
 import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -214,6 +215,15 @@ class _HomeScreenState extends State<HomeScreen> {
                               });
                             }),
                           ),
+                        );
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.bookmark, color: Colors.white),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const BookmarksScreen()),
                         );
                       },
                     ),
