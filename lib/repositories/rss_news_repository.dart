@@ -53,13 +53,24 @@ class RssNewsRepository implements NewsRepository {
       allArticles.addAll(articles);
     }
 
-    // Remove duplicates based on link
+    // Remove duplicates based on normalized link AND title similarity
     final seenLinks = <String>{};
+    final seenTitles = <String>{};
     allArticles = allArticles.where((article) {
-      if (seenLinks.contains(article.link)) {
+      // Normalize link
+      final normalizedLink = article.link.replaceAll(RegExp(r'[?#].*$'), '').toLowerCase();
+      if (seenLinks.contains(normalizedLink)) {
         return false;
       }
-      seenLinks.add(article.link);
+      seenLinks.add(normalizedLink);
+      
+      // Also check title similarity (some articles have different URLs but same title)
+      final normalizedTitle = article.title.toLowerCase().trim();
+      if (seenTitles.contains(normalizedTitle)) {
+        return false;
+      }
+      seenTitles.add(normalizedTitle);
+      
       return true;
     }).toList();
 

@@ -186,6 +186,10 @@ class _ArticleCardState extends State<ArticleCard> {
         width: 120,
         height: 100,
         fit: BoxFit.cover,
+        memCacheWidth: 240, // 2x voor retina
+        memCacheHeight: 200,
+        maxWidthDiskCache: 480,
+        maxHeightDiskCache: 400,
         placeholder: (context, url) => Container(
           width: 120,
           height: 100,
