@@ -6,3 +6,4 @@ key.properties
 !android/app/debug.keystore
 !android/app/debug.keystorebuild/
 .dart_tool/
+build/
