@@ -15,14 +15,33 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   String _searchQuery = '';
   Map<String, dynamic>? _weatherData;
+  DateTime? _lastWeatherFetch;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _detectLocationAndLoadWeather();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Only refresh if last fetch was more than 10 minutes ago
+      if (_lastWeatherFetch == null || 
+          DateTime.now().difference(_lastWeatherFetch!) > const Duration(minutes: 10)) {
+        _loadWeather();
+      }
+    }
   }
 
   Future<void> _detectLocationAndLoadWeather() async {
@@ -45,9 +64,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadWeather() async {
     final provider = context.read<NewsProvider>();
     final weather = await WeatherService.getWeatherForCity(provider.weatherCity);
-    if (mounted) {
+    if (mounted && weather != null) {
       setState(() {
         _weatherData = weather;
+        _lastWeatherFetch = DateTime.now();
       });
     }
   }
