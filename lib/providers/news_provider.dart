@@ -62,13 +62,8 @@ class NewsProvider extends ChangeNotifier {
         notifyListeners();
       }
       
-      // Check if cache is still valid and refresh in background if needed
-      ArticleCacheService.isCacheValid().then((isValid) {
-        if (!isValid) {
-          // Cache expired, refresh in background without showing loading
-          _refreshInBackground();
-        }
-      });
+      // Always refresh in background on startup to show latest news
+      _refreshInBackground();
     }).catchError((e) {
       // If cache fails, load from network
       loadNews();
