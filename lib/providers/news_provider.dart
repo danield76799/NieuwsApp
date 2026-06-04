@@ -23,6 +23,24 @@ class NewsProvider extends ChangeNotifier {
   }
 
   List<Article> get articles => _filterActive ? _filteredArticles : _articles;
+  
+  // Pagination
+  static const int _pageSize = 20;
+  int _visibleCount = _pageSize;
+  
+  List<Article> get visibleArticles => articles.take(_visibleCount).toList();
+  bool get hasMoreArticles => articles.length > _visibleCount;
+  
+  void loadMoreArticles() {
+    _visibleCount += _pageSize;
+    notifyListeners();
+  }
+  
+  void resetPagination() {
+    _visibleCount = _pageSize;
+    notifyListeners();
+  }
+  
   bool get isLoading => _isLoading;
   String? get error => _error;
   List<String> get keywords => _keywords;
@@ -74,10 +92,19 @@ class NewsProvider extends ChangeNotifier {
     try {
       final articles = await _repository.fetchNews();
       if (articles.isNotEmpty) {
-        _articles = articles;
+        // Cache limiet: max 100 artikelen
+        const maxCacheSize = 100;
+        if (articles.length > maxCacheSize) {
+          articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
+          _articles = articles.take(maxCacheSize).toList();
+        } else {
+          _articles = articles;
+        }
+        
         // Sort articles by date (newest first)
         _articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
         _applyFilter();
+        resetPagination();
         notifyListeners();
         
         // Cache the articles
@@ -109,12 +136,21 @@ class NewsProvider extends ChangeNotifier {
 
     try {
       final articles = await _repository.fetchNews();
-      _articles = articles;
+      
+      // Cache limiet: max 100 artikelen
+      const maxCacheSize = 100;
+      if (articles.length > maxCacheSize) {
+        articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
+        _articles = articles.take(maxCacheSize).toList();
+      } else {
+        _articles = articles;
+      }
       
       // Sort articles by date (newest first)
       _articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
       
       _applyFilter();
+      resetPagination();
       
       // Cache the articles
       await ArticleCacheService.cacheArticles(_articles);

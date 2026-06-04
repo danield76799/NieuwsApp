@@ -159,8 +159,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return Consumer<NewsProvider>(
       builder: (context, provider, child) {
-        final articles = provider.articles;
-        final allArticles = provider.articles;
+        final articles = provider.visibleArticles; // Gebruik visibleArticles i.p.v. articles
+        final hasMore = provider.hasMoreArticles;
         final filteredArticles = _searchQuery.isEmpty
             ? articles
             : articles.where((a) =>
@@ -327,6 +327,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           return ArticleCardV2(article: filteredArticles[index]);
                         },
                         childCount: filteredArticles.length,
+                      ),
+                    ),
+                  ),
+                // Load more button
+                if (hasMore)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Center(
+                        child: ElevatedButton.icon(
+                          onPressed: provider.loadMoreArticles,
+                          icon: const Icon(Icons.expand_more),
+                          label: const Text('Meer laden'),
+                        ),
                       ),
                     ),
                   ),
