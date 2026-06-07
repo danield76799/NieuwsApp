@@ -4,7 +4,7 @@ import 'package:share_plus/share_plus.dart';
 import '../models/article.dart';
 import '../services/bookmark_service.dart';
 import '../services/time_helper.dart';
-import '../screens/article_webview_screen.dart';
+import '../screens/browser_reader_screen.dart';
 
 // Helper function to strip HTML tags and ad URLs
 String _stripHtml(String? text) {
@@ -58,7 +58,7 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ArticleWebViewScreen(article: widget.article),
+        builder: (context) => BrowserReaderScreen(article: widget.article),
       ),
     );
   }
@@ -281,7 +281,7 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ArticleWebViewScreen(article: widget.article),
+        builder: (context) => BrowserReaderScreen(article: widget.article),
       ),
     );
   }

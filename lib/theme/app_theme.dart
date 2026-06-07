@@ -2,19 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Colors - NOS style
-  static const Color primaryColor = Color(0xFFE60000); // NOS red
-  static const Color accentColor = Color(0xFFE60000);
-  static const Color backgroundColor = Color(0xFF1A1A1A); // Dark like NOS
-  static const Color surfaceColor = Color(0xFF242424);
-  static const Color textPrimaryColor = Color(0xFFFFFFFF);
-  static const Color textSecondaryColor = Color(0xFF9E9E9E);
-  
-  // Dark theme colors
-  static const Color darkBackgroundColor = Color(0xFF1A1A1A);
-  static const Color darkSurfaceColor = Color(0xFF242424);
-  static const Color darkTextPrimaryColor = Color(0xFFFFFFFF);
-  static const Color darkTextSecondaryColor = Color(0xFF9E9E9E);
+  // Botanical palette
+  static const Color primaryColor = Color(0xFF4A7C59);
+  static const Color secondaryColor = Color(0xFF8B6F47);
+  static const Color surfaceLight = Color(0xFFF5F0E8);
+  static const Color backgroundLight = Color(0xFFFAF7F2);
+  static const Color textPrimary = Color(0xFF2D2D2D);
+  static const Color textSecondaryLight = Color(0xFF6B6B6B);
+
+  static const Color darkPrimary = Color(0xFF3D6B4C);
+  static const Color darkSurface = Color(0xFF2A2A2A);
+  static const Color darkBackground = Color(0xFF1E1E1E);
 
   static ThemeData get lightTheme {
     return ThemeData(
@@ -22,43 +20,52 @@ class AppTheme {
       brightness: Brightness.light,
       colorScheme: const ColorScheme.light(
         primary: primaryColor,
-        secondary: accentColor,
-        surface: surfaceColor,
-        background: backgroundColor,
+        secondary: secondaryColor,
+        surface: surfaceLight,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
-        onSurface: textPrimaryColor,
-        onBackground: textPrimaryColor,
+        onSurface: textPrimary,
       ),
-      scaffoldBackgroundColor: backgroundColor,
+      scaffoldBackgroundColor: backgroundLight,
       appBarTheme: AppBarTheme(
         elevation: 0,
         centerTitle: false,
-        backgroundColor: surfaceColor,
-        foregroundColor: textPrimaryColor,
+        backgroundColor: backgroundLight,
+        foregroundColor: textPrimary,
         titleTextStyle: GoogleFonts.inter(
-          fontSize: 20,
+          fontSize: 24,
           fontWeight: FontWeight.w700,
-          color: textPrimaryColor,
+          color: textPrimary,
         ),
       ),
       cardTheme: CardThemeData(
-        elevation: 2,
+        elevation: 0,
+        color: surfaceLight,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
         ),
       ),
       textTheme: GoogleFonts.interTextTheme(),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: surfaceColor,
+        backgroundColor: surfaceLight,
         selectedItemColor: primaryColor,
-        unselectedItemColor: textSecondaryColor,
+        unselectedItemColor: textSecondaryLight,
         type: BottomNavigationBarType.fixed,
-        elevation: 8,
+        elevation: 0,
       ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: primaryColor,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+        ),
       ),
     );
   }
@@ -68,40 +75,53 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       colorScheme: const ColorScheme.dark(
-        primary: primaryColor,
-        secondary: accentColor,
-        surface: darkSurfaceColor,
-        background: darkBackgroundColor,
+        primary: darkPrimary,
+        secondary: secondaryColor,
+        surface: darkSurface,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
-        onSurface: darkTextPrimaryColor,
-        onBackground: darkTextPrimaryColor,
+        onSurface: Colors.white,
       ),
-      scaffoldBackgroundColor: darkBackgroundColor,
+      scaffoldBackgroundColor: darkBackground,
       appBarTheme: AppBarTheme(
         elevation: 0,
         centerTitle: false,
-        backgroundColor: darkSurfaceColor,
-        foregroundColor: darkTextPrimaryColor,
+        backgroundColor: darkBackground,
+        foregroundColor: Colors.white,
         titleTextStyle: GoogleFonts.inter(
-          fontSize: 20,
+          fontSize: 24,
           fontWeight: FontWeight.w700,
-          color: darkTextPrimaryColor,
+          color: Colors.white,
         ),
       ),
       cardTheme: CardThemeData(
-        elevation: 2,
+        elevation: 0,
+        color: darkSurface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
         ),
       ),
       textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: darkSurfaceColor,
-        selectedItemColor: primaryColor,
-        unselectedItemColor: darkTextSecondaryColor,
+        backgroundColor: darkSurface,
+        selectedItemColor: darkPrimary,
+        unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
-        elevation: 8,
+        elevation: 0,
+      ),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: darkPrimary,
+        foregroundColor: Colors.white,
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: darkPrimary,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+        ),
       ),
     );
   }
