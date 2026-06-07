@@ -5,8 +5,13 @@ import 'article_card_v2.dart';
 
 class SwipeCardView extends StatefulWidget {
   final List<Article> articles;
+  final Future<void> Function() onRefresh;
 
-  const SwipeCardView({super.key, required this.articles});
+  const SwipeCardView({
+    super.key,
+    required this.articles,
+    required this.onRefresh,
+  });
 
   @override
   State<SwipeCardView> createState() => _SwipeCardViewState();
@@ -36,41 +41,44 @@ class _SwipeCardViewState extends State<SwipeCardView> {
 
     return Column(
       children: [
+        // Filter chip
+        if (widget.articles.length > 10)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              '${widget.articles.length} artikelen',
+              style: TextStyle(
+                fontSize: 13,
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+              ),
+            ),
+          ),
+        // Swipe cards
         Expanded(
-          child: PageView.builder(
-            controller: _pageController,
-            itemCount: widget.articles.length,
-            onPageChanged: (index) => setState(() => _currentPage = index),
-            itemBuilder: (context, index) {
-              final article = widget.articles[index];
-              final offset = (index - _currentPage).abs().toDouble();
-              final scale = max(0.85, 1.0 - offset * 0.15);
-
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOut,
-                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08 + offset * 0.05),
-                      blurRadius: 8 + offset * 8,
-                      offset: Offset(0, 4 + offset * 4),
-                    ),
-                  ],
-                ),
-                child: Transform.scale(
-                  scale: scale,
+          child: RefreshIndicator(
+            onRefresh: widget.onRefresh,
+            color: Theme.of(context).colorScheme.primary,
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            strokeWidth: 3,
+            child: PageView.builder(
+              controller: _pageController,
+              itemCount: widget.articles.length,
+              onPageChanged: (index) => setState(() => _currentPage = index),
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              itemBuilder: (context, index) {
+                final article = widget.articles[index];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: ArticleHeroCard(article: article),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
         // Page dots
         Padding(
-          padding: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.symmetric(vertical: 12),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(

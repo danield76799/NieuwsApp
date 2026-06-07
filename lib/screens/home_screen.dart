@@ -271,57 +271,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ],
           ),
           body: _viewMode == ViewMode.swipe
-              ? RefreshIndicator(
-                  onRefresh: () async {
-                    await provider.loadNews(forceRefresh: true);
-                    await _loadWeather();
-                  },
-                  color: Theme.of(context).colorScheme.primary,
-                  backgroundColor: Theme.of(context).colorScheme.surface,
-                  displacement: 40,
-                  strokeWidth: 3,
-                  child: ListView(children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                      child: Row(
-                        children: [
-                          ActionChip(
-                            avatar: Icon(
-                              provider.filterActive ? Icons.visibility : Icons.visibility_off,
-                              size: 18,
-                              color: provider.filterActive ? Colors.green : Colors.grey[400],
-                            ),
-                            label: Text(
-                              provider.filterActive ? 'Filter: AAN' : 'Filter: UIT',
-                              style: TextStyle(fontSize: 12, color: provider.filterActive ? Colors.green : Colors.grey[400]),
-                            ),
-                            onPressed: () => provider.toggleFilter(!provider.filterActive),
-                            backgroundColor: provider.filterActive ? Colors.green.withOpacity(0.1) : Colors.grey[700]!.withOpacity(0.2),
-                            side: BorderSide(color: provider.filterActive ? Colors.green.withOpacity(0.3) : Colors.grey[500]!.withOpacity(0.3), width: 1),
-                            padding: EdgeInsets.zero,
-                            visualDensity: VisualDensity.compact,
-                          ),
-                          if (provider.filterActive && provider.keywords.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(left: 8),
-                              child: Text('${provider.keywords.length} actief', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-                            ),
-                        ],
+              ? Column(
+                  children: [
+                    Expanded(
+                      child: SwipeCardView(
+                        articles: filteredArticles,
+                        onRefresh: () async {
+                          await provider.loadNews(forceRefresh: true);
+                          await _loadWeather();
+                        },
                       ),
                     ),
-                    if (provider.isLoading && articles.isEmpty)
-                      const Center(child: CircularProgressIndicator()),
-                    if (provider.error != null && articles.isEmpty)
-                      EmptyState(icon: Icons.error_outline, title: 'Oeps!', subtitle: provider.error!, action: ElevatedButton.icon(onPressed: () => provider.loadNews(forceRefresh: true), icon: const Icon(Icons.refresh), label: const Text('Opnieuw'))),
-                    if (!provider.isLoading && provider.error == null && filteredArticles.isEmpty)
-                      const Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: const [CircularProgressIndicator(), SizedBox(height: 16), Text('Nieuws laden...')])),
-                    if (filteredArticles.isNotEmpty)
-                      const SizedBox(height: 8),
-                    if (filteredArticles.isNotEmpty)
-                      SwipeCardView(articles: filteredArticles),
                     if (hasMore)
                       Padding(
-                        padding: const EdgeInsets.all(16.0),
+                        padding: const EdgeInsets.all(16),
                         child: Center(
                           child: ElevatedButton.icon(
                             onPressed: provider.loadMoreArticles,
@@ -330,7 +293,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           ),
                         ),
                       ),
-                  ]),
+                  ],
                 )
               : RefreshIndicator(
                   onRefresh: () async {
