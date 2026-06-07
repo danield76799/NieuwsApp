@@ -151,6 +151,7 @@ class RssParserService {
       pubDate: _parseDate(pubDateStr),
       source: source,
       thumbnailUrl: _isValidUrl(thumbnailUrl) ? thumbnailUrl : null,
+      imageUrl: _isValidUrl(thumbnailUrl) ? thumbnailUrl : null,
     );
   }
 
@@ -160,7 +161,31 @@ class RssParserService {
   }
 
   static String? _extractThumbnail(XmlElement item) {
-    // Try media:content
+    // Try media:content with medium="image"
+    for (final mediaContent in item.findElements('media:content')) {
+      final url = mediaContent.getAttribute('url');
+      final medium = mediaContent.getAttribute('medium') ?? '';
+      if (medium == 'image' && _isValidUrl(url)) return url;
+    }
+
+    // Try media:group -> media:content
+    final mediaGroup = item.findElements('media:group').firstOrNull;
+    if (mediaGroup != null) {
+      for (final mediaContent in mediaGroup.findElements('media:content')) {
+        final url = mediaContent.getAttribute('url');
+        final medium = mediaContent.getAttribute('medium') ?? '';
+        final type = mediaContent.getAttribute('type') ?? '';
+        if ((medium == 'image' || type.startsWith('image/')) && _isValidUrl(url)) return url;
+      }
+      // Also try media:thumbnail inside media:group
+      final thumb = mediaGroup.findElements('media:thumbnail').firstOrNull;
+      if (thumb != null) {
+        final url = thumb.getAttribute('url');
+        if (_isValidUrl(url)) return url;
+      }
+    }
+
+    // Try media:content (any)
     final mediaContent = item.findElements('media:content').firstOrNull ??
                         item.findElements('content').firstOrNull;
     if (mediaContent != null) {
@@ -183,11 +208,43 @@ class RssParserService {
       if (_isValidUrl(url)) return url;
     }
 
-    // Try to extract from description using simpler regex
+    // Try itunes:image
+    final itunesImage = item.findElements('itunes:image').firstOrNull;
+    if (itunesImage != null) {
+      final url = itunesImage.getAttribute('href');
+      if (_isValidUrl(url)) return url;
+    }
+
+    // Try image tag inside item
+    final imageTag = item.findElements('image').firstOrNull;
+    if (imageTag != null) {
+      final url = imageTag.findElements('url').firstOrNull?.text;
+      if (_isValidUrl(url)) return url;
+    }
+
+    // Try to extract from description/content using regex
     final description = _getElementText(item, 'description');
-    final imgMatch = RegExp(r'<img[^>]+src="([^"]+)"').firstMatch(description);
+    final content = _getElementText(item, 'content:encoded');
+    final combined = '$description $content';
+
+    // Match img src
+    final imgMatch = RegExp(r'<img[^>]+src="([^"]+)"').firstMatch(combined);
     if (imgMatch != null) {
       final url = imgMatch.group(1);
+      if (_isValidUrl(url)) return url;
+    }
+
+    // Match data-src (lazy loading)
+    final dataSrcMatch = RegExp(r'data-src="([^"]+)"').firstMatch(combined);
+    if (dataSrcMatch != null) {
+      final url = dataSrcMatch.group(1);
+      if (_isValidUrl(url)) return url;
+    }
+
+    // Match og:image or twitter:image meta
+    final ogMatch = RegExp(r'property="og:image"[^>]+content="([^"]+)"').firstMatch(combined);
+    if (ogMatch != null) {
+      final url = ogMatch.group(1);
       if (_isValidUrl(url)) return url;
     }
 
