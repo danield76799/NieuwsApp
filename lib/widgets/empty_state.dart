@@ -25,40 +25,64 @@ class EmptyState extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (icon != null)
-              Icon(icon, size: 64, color: Colors.grey[400]),
-            if (icon != null) const SizedBox(height: 16),
-            if (title != null)
-              Text(
-                title!,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[800],
+              AnimatedOpacity(
+                opacity: 1.0,
+                duration: const Duration(milliseconds: 500),
+                child: Icon(
+                  icon,
+                  size: 80,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
                 ),
               ),
-            if (title != null) const SizedBox(height: 8),
-            if (subtitle != null)
-              Text(
-                subtitle!,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
+            if (icon != null) const SizedBox(height: 24),
+            if (title != null)
+              AnimatedOpacity(
+                opacity: 1.0,
+                duration: const Duration(milliseconds: 500),
+                child: Text(
+                  title!,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
-                textAlign: TextAlign.center,
+              ),
+            if (title != null) const SizedBox(height: 12),
+            if (subtitle != null)
+              AnimatedOpacity(
+                opacity: 1.0,
+                duration: const Duration(milliseconds: 500),
+                child: Text(
+                  subtitle!,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ),
             if (filterText != null && filterText!.isNotEmpty)
-              Text(
-                'Geen artikelen gevonden voor: "$filterText"',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: AnimatedOpacity(
+                  opacity: 1.0,
+                  duration: const Duration(milliseconds: 500),
+                  child: Text(
+                    'Geen artikelen gevonden voor: \"$filterText\"',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
               ),
             if (action != null) ...[
-              const SizedBox(height: 16),
-              action!,
+              const SizedBox(height: 24),
+              AnimatedOpacity(
+                opacity: 1.0,
+                duration: const Duration(milliseconds: 500),
+                child: action!,
+              ),
             ],
           ],
         ),

@@ -26,6 +26,8 @@ dependencies:
   flutter_local_notifications: ^18.0.0
   timezone: ^0.9.4
   flutter_inappwebview: ^6.0.0
+  dynamic_color: ^1.5.0
+  collection: ^1.18.0
 
 dev_dependencies:
   flutter_test:
