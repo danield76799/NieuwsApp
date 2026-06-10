@@ -308,121 +308,118 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
             ],
           ),
           child: Row(
-          children: [
-            // Thumbnail
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: widget.article.thumbnailUrl != null
-                  ? CachedNetworkImage(
-                      imageUrl: widget.article.thumbnailUrl!,
-                      width: 100,
-                      height: 75,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => Container(
+            children: [
+              // Thumbnail
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: widget.article.thumbnailUrl != null
+                    ? CachedNetworkImage(
+                        imageUrl: widget.article.thumbnailUrl!,
                         width: 100,
                         height: 75,
-                        color: Colors.grey[800],
-                        child: const Center(
-                          child: SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Color(0xFFE60000),
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Container(
+                          width: 100,
+                          height: 75,
+                          color: Colors.grey[800],
+                          child: const Center(
+                            child: SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Color(0xFFE60000),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      errorWidget: (context, url, error) => Container(
+                        errorWidget: (context, url, error) => Container(
+                          width: 100,
+                          height: 75,
+                          color: Colors.grey[800],
+                          child: const Icon(Icons.image, color: Colors.grey),
+                        ),
+                      )
+                    : Container(
                         width: 100,
                         height: 75,
                         color: Colors.grey[800],
-                        child: const Icon(Icons.image, color: Colors.grey),
+                        child: const Icon(Icons.article, color: Colors.grey),
                       ),
-                    )
-                  : Container(
-                      width: 100,
-                      height: 75,
-                      color: Colors.grey[800],
-                      child: const Icon(Icons.article, color: Colors.grey),
-                    ),
-            ),
-            const SizedBox(width: 12),
-            
-            // Content
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Source + time
-                  Row(
-                    children: [
-                      Text(
-                        widget.article.source.toUpperCase(),
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFFE60000),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '•',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 11),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        TimeHelper.format(widget.article.pubDate),
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey[500],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  
-                  // Title
-                  Text(
-                    widget.article.title,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                      height: 1.3,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 6),
-                  
-                  // Description
-                  Text(
-                    _stripHtml(widget.article.description),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[500],
-                      height: 1.3,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
               ),
-            ),
-            
-            // Bookmark
-            IconButton(
-              onPressed: _toggleBookmark,
-              icon: Icon(
-                _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                size: 18,
-                color: _isBookmarked ? const Color(0xFFE60000) : Colors.grey,
+              const SizedBox(width: 12),
+              // Content
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Source + time
+                    Row(
+                      children: [
+                        Text(
+                          widget.article.source.toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFFE60000),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '•',
+                          style: TextStyle(color: Colors.grey[600], fontSize: 11),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          TimeHelper.format(widget.article.pubDate),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    // Title
+                    Text(
+                      widget.article.title,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        height: 1.3,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 6),
+                    // Description
+                    Text(
+                      _stripHtml(widget.article.description),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[500],
+                        height: 1.3,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-            ),
-          ],
+              // Bookmark
+              IconButton(
+                onPressed: _toggleBookmark,
+                icon: Icon(
+                  _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                  size: 18,
+                  color: _isBookmarked ? const Color(0xFFE60000) : Colors.grey,
+                ),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              ),
+            ],
+          ),
         ),
       ),
     );
