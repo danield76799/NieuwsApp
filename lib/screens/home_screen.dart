@@ -24,7 +24,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   String _searchQuery = '';
   Map<String, dynamic>? _weatherData;
   DateTime? _lastWeatherFetch;
+  DateTime? _lastNewsRefresh;
   ViewMode _viewMode = ViewMode.list;
+  Timer? _autoRefreshTimer;
 
   @override
   void initState() {
@@ -43,7 +45,38 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _detectLocationAndLoadWeather();
+    _loadViewMode();
+    _startAutoRefreshTimer();
+  }
+
+  void _startAutoRefreshTimer() {
+    // Refresh news every 5 minutes while app is open
+    _autoRefreshTimer = Timer.periodic(const Duration(minutes: 5), (_) {
+      _refreshNewsInBackground();
+    });
+  }
+
+  Future<void> _refreshNewsInBackground() async {
+    final provider = context.read<NewsProvider>();
+    try {
+      await provider.loadNews(forceRefresh: true);
+      if (mounted) {
+        setState(() {
+          _lastNewsRefresh = DateTime.now();
+        });
+      }
+    } catch (_) {
+      // Silent fail — don't bother user with background refresh errors
+    }
+  }
+
+  @override
   void dispose() {
+    _autoRefreshTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -51,7 +84,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // Only refresh if last fetch was more than 10 minutes ago
+      // Refresh news if last refresh was more than 5 minutes ago
+      if (_lastNewsRefresh == null ||
+          DateTime.now().difference(_lastNewsRefresh!) > const Duration(minutes: 5)) {
+        _refreshNewsInBackground();
+      }
+      // Only refresh weather if last fetch was more than 10 minutes ago
       if (_lastWeatherFetch == null ||
           DateTime.now().difference(_lastWeatherFetch!) > const Duration(minutes: 10)) {
         _loadWeather();

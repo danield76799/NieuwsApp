@@ -83,8 +83,9 @@ class NewsProvider extends ChangeNotifier {
       // Always refresh in background on startup to show latest news
       _refreshInBackground();
     }).catchError((e) {
-      // If cache fails, load from network
-      loadNews();
+      // Cache corrupt or empty — force network load
+      print('Cache load failed: $e — forcing network refresh');
+      loadNews(forceRefresh: true);
     });
   }
 
