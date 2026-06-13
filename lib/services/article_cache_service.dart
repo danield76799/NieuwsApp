@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/article.dart';
 
 const _kCachedArticles = 'cached_articles';
 const _kCacheTimestamp = 'cache_timestamp';
@@ -21,7 +22,7 @@ class ArticleCacheService {
 
   static Future<List<Article>> getCachedArticles() async {
     final jsonString = await _read(key: _kCachedArticles, fallback: '');
-    if (jsonString.isEmpty) return <Article>[];
+    if (jsonString == null || jsonString.isEmpty) return <Article>[];
     final decoded = jsonDecode(jsonString) as List<dynamic>;
     return decoded
         .map((e) => Article.fromJson(e as Map<String, dynamic>))
@@ -32,7 +33,7 @@ class ArticleCacheService {
     final ts = await _read(key: _kCacheTimestamp, fallback: null);
     if (ts == null) return false;
     final age = DateTime.now().difference(
-      DateTime.fromMillisecondsSinceEpoch(ts as int),
+      DateTime.fromMillisecondsSinceEpoch(ts),
     );
     return age.inDays < _kCacheTtlDays;
   }
@@ -61,13 +62,13 @@ class ArticleCacheService {
   static Future<void> cacheArticlesContent(List<Article> articles) async {
     final prefs = await SharedPreferences.getInstance();
     for (final article in articles) {
-      if (article.content != null && article.content!.isNotEmpty) {
-        await cacheArticleContent(article.id, article.content!);
+      if (article.description != null && article.description!.isNotEmpty) {
+        await cacheArticleContent(article.id, article.description!);
       }
     }
   }
 
-  static Future<void> _read<T>({required String key, required T fallback}) async {
+  static Future<T?> _read<T>({required String key, required T fallback}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final value = prefs.get(key);
