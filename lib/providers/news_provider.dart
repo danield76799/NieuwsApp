@@ -155,6 +155,9 @@ class NewsProvider extends ChangeNotifier {
       
       // Cache the articles
       await ArticleCacheService.cacheArticles(_articles);
+
+      // Preload article content in background for smoother reading.
+      ArticleCacheService.cacheArticlesContent(_articles).ignore();
     } catch (e) {
       _error = e.toString();
       // Try to load cached articles on error

@@ -1,59 +1,83 @@
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+
 import '../models/article.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+const _kCachedArticles = 'cached_articles';
+const _kCacheTimestamp = 'cache_timestamp';
+const _kCacheTtlDays = 1;
 
 class ArticleCacheService {
-  static const String _cachedArticlesKey = 'cached_articles';
-  static const String _lastFetchKey = 'last_fetch_time';
-  static const Duration _cacheValidity = Duration(hours: 2); // Cache for 2 hours
-
   static Future<void> cacheArticles(List<Article> articles) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final jsonList = articles.map((a) => a.toJson()).toList();
-      await prefs.setString(_cachedArticlesKey, jsonEncode(jsonList));
-      await prefs.setInt(_lastFetchKey, DateTime.now().millisecondsSinceEpoch);
-    } catch (e) {
-      print('Error caching articles: $e');
+      final payload = articles.map((a) => a.toJson()).toList();
+      final encoded = jsonEncode(payload);
+      await prefs.setString(_kCachedArticles, encoded);
+      await prefs.setInt(_kCacheTimestamp, DateTime.now().millisecondsSinceEpoch);
+    } catch (_) {
+      await _cacheFallback(articles);
     }
   }
 
   static Future<List<Article>> getCachedArticles() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final data = prefs.getString(_cachedArticlesKey);
-      
-      if (data != null && data.isNotEmpty) {
-        final List<dynamic> jsonList = jsonDecode(data);
-        return jsonList.map((e) => Article.fromJson(e)).toList();
-      }
-    } catch (e) {
-      print('Error loading cached articles: $e');
-    }
-    return [];
+    final jsonString = await _read(key: _kCachedArticles, fallback: '');
+    if (jsonString.isEmpty) return <Article>[];
+    final decoded = jsonDecode(jsonString) as List<dynamic>;
+    return decoded
+        .map((e) => Article.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   static Future<bool> isCacheValid() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final lastFetch = prefs.getInt(_lastFetchKey);
-      
-      if (lastFetch == null) return false;
-      
-      final lastFetchTime = DateTime.fromMillisecondsSinceEpoch(lastFetch);
-      return DateTime.now().difference(lastFetchTime) < _cacheValidity;
-    } catch (e) {
-      return false;
-    }
+    final ts = await _read(key: _kCacheTimestamp, fallback: null);
+    if (ts == null) return false;
+    final age = DateTime.now().difference(
+      DateTime.fromMillisecondsSinceEpoch(ts as int),
+    );
+    return age.inDays < _kCacheTtlDays;
   }
 
   static Future<void> clearCache() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_cachedArticlesKey);
-      await prefs.remove(_lastFetchKey);
-    } catch (e) {
-      print('Error clearing cache: $e');
+      await prefs.remove(_kCachedArticles);
+      await prefs.remove(_kCacheTimestamp);
+    } catch (_) {
+      await _fallbackClear();
+    }
+  }
+
+  static Future<T?> _read<T>({required String key, required T fallback}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final value = prefs.get(key);
+      return value == null ? fallback : value as T;
+    } catch (_) {
+      return fallback;
+    }
+  }
+
+  static Future<void> _cacheFallback(List<Article> articles) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      for (final a in articles) {
+        await prefs.setString('article_${a.id}', jsonEncode(a.toJson()));
+      }
+    } catch (_) {
+      // no-op
+    }
+  }
+
+  static Future<void> _fallbackClear() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final keys = prefs.getKeys();
+      await Future.wait(
+        keys.where((k) => k.startsWith('article_')).map(prefs.remove),
+      );
+    } catch (_) {
+      // no-op
     }
   }
 }
