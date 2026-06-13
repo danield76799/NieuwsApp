@@ -80,4 +80,31 @@ class ArticleCacheService {
       // no-op
     }
   }
+
+  /// Cache article content for offline reading.
+  static Future<void> cacheArticlesContent(List<Article> articles) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      for (final article in articles) {
+        if (article.description?.isNotEmpty == true) {
+          await prefs.setString(
+            'article_content_${article.id}',
+            article.description!,
+          );
+        }
+      }
+    } catch (_) {
+      // no-op
+    }
+  }
+
+  /// Get cached article content for offline reading.
+  static Future<String?> getArticleContent(String articleId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString('article_content_$articleId');
+    } catch (_) {
+      return null;
+    }
+  }
 }

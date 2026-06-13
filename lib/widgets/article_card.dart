@@ -3,8 +3,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import '../models/article.dart';
+import '../services/article_cache_service.dart';
 import '../services/bookmark_service.dart';
 import '../widgets/news_badge.dart';
+import '../screens/cached_article_reader_screen.dart';
 
 class ArticleCard extends StatefulWidget {
   final Article article;
@@ -350,6 +352,21 @@ class _ArticleCardState extends State<ArticleCard> {
 
   Future<void> _launchUrl() async {
     final url = widget.article.url ?? widget.article.link;
+    final cachedContent = await ArticleCacheService.getArticleContent(widget.article.id);
+    if (cachedContent != null && cachedContent.isNotEmpty) {
+      if (!mounted) return;
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => CachedArticleReaderScreen(
+            title: widget.article.title,
+            content: cachedContent,
+            source: widget.article.source,
+            pubDate: widget.article.pubDate,
+          ),
+        ),
+      );
+      return;
+    }
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
