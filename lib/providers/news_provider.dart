@@ -31,15 +31,7 @@ class NewsProvider extends ChangeNotifier {
   List<Article> get visibleArticles => articles.take(_visibleCount).toList();
   bool get hasMoreArticles => articles.length > _visibleCount;
 
-  void loadMoreArticles() {
-    _visibleCount += _pageSize;
-    notifyListeners();
-  }
 
-  void resetPagination() {
-    _visibleCount = _pageSize;
-    notifyListeners();
-  }
 
   bool get isLoading => _isLoading;
   String? get error => _error;
@@ -248,19 +240,3 @@ class NewsProvider extends ChangeNotifier {
       await detectLocation();
     } else {
       _currentPosition = null;
-      await prefs.remove('current_position');
-    }
-    notifyListeners();
-  }
-
-  void clearError() {
-    _error = null;
-    notifyListeners();
-  }
-
-
-  void clearError() {
-    _error = null;
-    notifyListeners();
-  }
-}
