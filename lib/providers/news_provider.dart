@@ -42,8 +42,7 @@ class NewsProvider extends ChangeNotifier {
     _visibleCount = _pageSize;
     notifyListeners();
   }
-  String get weatherCity => _weatherCity;
-  bool get useAutoLocation => _useAutoLocation;
+  List<String> get keywords => _keywords;
 
   Future<void> _loadSavedData() async {
     final prefs = await SharedPreferences.getInstance();
