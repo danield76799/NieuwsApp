@@ -258,8 +258,6 @@ class NewsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-    notifyListeners();
-  }
 
   void clearError() {
     _error = null;
