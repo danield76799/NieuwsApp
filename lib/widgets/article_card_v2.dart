@@ -4,7 +4,9 @@ import 'package:share_plus/share_plus.dart';
 import '../models/article.dart';
 import '../services/bookmark_service.dart';
 import '../services/time_helper.dart';
+import '../services/article_cache_service.dart';
 import '../screens/browser_reader_screen.dart';
+import '../screens/cached_article_reader_screen.dart';
 
 // Helper function to strip HTML tags and ad URLs
 String _stripHtml(String? text) {
@@ -54,13 +56,30 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
     );
   }
 
-  void _openArticle() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => BrowserReaderScreen(article: widget.article),
-      ),
-    );
+  Future<void> _openArticle() async {
+    final cachedContent = await ArticleCacheService.getArticleContent(widget.article.id);
+    if (cachedContent != null && cachedContent.isNotEmpty && mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CachedArticleReaderScreen(
+            title: widget.article.title,
+            content: cachedContent,
+            source: widget.article.source,
+            pubDate: widget.article.pubDate,
+          ),
+        ),
+      );
+      return;
+    }
+    if (mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => BrowserReaderScreen(article: widget.article),
+        ),
+      );
+    }
   }
 
   @override
@@ -277,13 +296,30 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
     );
   }
 
-  void _openArticle() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => BrowserReaderScreen(article: widget.article),
-      ),
-    );
+  Future<void> _openArticle() async {
+    final cachedContent = await ArticleCacheService.getArticleContent(widget.article.id);
+    if (cachedContent != null && cachedContent.isNotEmpty && mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CachedArticleReaderScreen(
+            title: widget.article.title,
+            content: cachedContent,
+            source: widget.article.source,
+            pubDate: widget.article.pubDate,
+          ),
+        ),
+      );
+      return;
+    }
+    if (mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => BrowserReaderScreen(article: widget.article),
+        ),
+      );
+    }
   }
 
   @override
