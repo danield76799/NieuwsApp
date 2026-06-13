@@ -71,26 +71,38 @@ class NewsProvider extends ChangeNotifier {
     _loadCachedArticles();
   }
 
-  void _loadCachedArticles() {
-    // Use synchronous loading for instant display
-    ArticleCacheService.getCachedArticles().then((cachedArticles) {
+  Future<void> _loadCachedArticles() async {
+    final isValid = await ArticleCacheService.isCacheValid();
+    if (isValid) {
+      final cachedArticles = await ArticleCacheService.getCachedArticles();
       if (cachedArticles.isNotEmpty) {
         _articles = cachedArticles;
         _applyFilter();
         notifyListeners();
+        return;
       }
-      
-      // Always refresh in background on startup to show latest news
-      _refreshInBackground();
-    }).catchError((e) {
-      // Cache corrupt or empty — force network load
-      print('Cache load failed: $e — forcing network refresh');
-      loadNews(forceRefresh: true);
-    });
+    }
+    
+    // Cache invalid, fetch fresh data
+    await _refreshInBackground();
   }
 
   Future<void> _refreshInBackground() async {
     try {
+      final isValid = await ArticleCacheService.isCacheValid();
+      if (isValid) {
+        // Cache is valid, load cached articles
+        final cachedArticles = await ArticleCacheService.getCachedArticles();
+        if (cachedArticles.isNotEmpty) {
+          _articles = cachedArticles;
+          _applyFilter();
+          resetPagination();
+          notifyListeners();
+          return;
+        }
+      }
+      
+      // Cache invalid, fetch fresh data
       final articles = await _repository.fetchNews();
       if (articles.isNotEmpty) {
         // Cache limiet: max 100 artikelen
@@ -125,6 +137,7 @@ class NewsProvider extends ChangeNotifier {
         if (cachedArticles.isNotEmpty) {
           _articles = cachedArticles;
           _applyFilter();
+          resetPagination();
           notifyListeners();
           return;
         }
@@ -155,9 +168,6 @@ class NewsProvider extends ChangeNotifier {
       
       // Cache the articles
       await ArticleCacheService.cacheArticles(_articles);
-
-      // Preload article content in background for smoother reading.
-      ArticleCacheService.cacheArticlesContent(_articles).ignore();
     } catch (e) {
       _error = e.toString();
       // Try to load cached articles on error
@@ -168,6 +178,9 @@ class NewsProvider extends ChangeNotifier {
       }
     } finally {
       _isLoading = false;
+      notifyListeners();
+    }
+  }
       notifyListeners();
     }
   }
