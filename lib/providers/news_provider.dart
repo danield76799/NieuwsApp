@@ -38,10 +38,10 @@ class NewsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void resetPagination() {
-    _visibleCount = _pageSize;
-    notifyListeners();
-  }
+  bool get isLoading => _isLoading;
+  String? get error => _error;
+  List<String> get keywords => _keywords;
+  bool get filterActive => _filterActive;
   String get weatherCity => _weatherCity;
   bool get useAutoLocation => _useAutoLocation;
 
