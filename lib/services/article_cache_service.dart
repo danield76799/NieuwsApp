@@ -21,8 +21,8 @@ class ArticleCacheService {
   }
 
   static Future<List<Article>> getCachedArticles() async {
-    final jsonString = await _read(key: _kCachedArticles, fallback: '');
-    if (jsonString.isEmpty) return <Article>[];
+    final jsonString = await _read<String>(key: _kCachedArticles, fallback: '');
+    if (jsonString == null || jsonString.isEmpty) return <Article>[];
     final decoded = jsonDecode(jsonString) as List<dynamic>;
     return decoded
         .map((e) => Article.fromJson(e as Map<String, dynamic>))
