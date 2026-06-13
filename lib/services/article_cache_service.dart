@@ -21,12 +21,17 @@ class ArticleCacheService {
   }
 
   static Future<List<Article>> getCachedArticles() async {
-    final jsonString = await _read<String>(key: _kCachedArticles, fallback: '');
+    final jsonString = await _read<String>(key: _kCachedArticles, fallback: null);
     if (jsonString == null || jsonString.isEmpty) return <Article>[];
-    final decoded = jsonDecode(jsonString) as List<dynamic>;
-    return decoded
-        .map((e) => Article.fromJson(e as Map<String, dynamic>))
-        .toList();
+    try {
+      final decoded = jsonDecode(jsonString) as List<dynamic>;
+      return decoded
+          .map((e) => Article.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      print('Cache decode error: $e');
+      return <Article>[];
+    }
   }
 
   static Future<bool> isCacheValid() async {
@@ -81,7 +86,6 @@ class ArticleCacheService {
     }
   }
 
-  /// Cache article content for offline reading.
   static Future<void> cacheArticlesContent(List<Article> articles) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -92,17 +96,26 @@ class ArticleCacheService {
             article.description!,
           );
         }
+        if (article.content?.isNotEmpty == true) {
+          await prefs.setString(
+            'article_full_content_${article.id}',
+            article.content!,
+          );
+        }
       }
     } catch (_) {
       // no-op
     }
   }
 
-  /// Get cached article content for offline reading.
   static Future<String?> getArticleContent(String articleId) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      return prefs.getString('article_content_$articleId');
+      final content = prefs.getString('article_content_$articleId');
+      if (content != null && content.isNotEmpty) {
+        return content;
+      }
+      return prefs.getString('article_full_content_$articleId');
     } catch (_) {
       return null;
     }

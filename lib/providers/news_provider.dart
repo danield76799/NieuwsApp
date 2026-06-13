@@ -79,6 +79,24 @@ class NewsProvider extends ChangeNotifier {
         _articles = cachedArticles;
         _applyFilter();
         notifyListeners();
+        
+        // Load article content in background
+        final articleIds = _articles.map((a) => a.id).toList();
+        final futures = articleIds.map((id) => ArticleCacheService.getArticleContent(id));
+        final contents = await Future.wait(futures);
+        
+        // Update articles with cached content
+        for (int i = 0; i < _articles.length; i++) {
+          if (contents[i] != null) {
+            _articles[i] = _articles[i].copyWith(content: contents[i]);
+          }
+        }
+        
+        // Cache the articles
+        await ArticleCacheService.cacheArticles(_articles);
+        
+        // Preload article content in background for smoother reading.
+        ArticleCacheService.cacheArticlesContent(_articles).ignore();
         return;
       }
     }
@@ -102,29 +120,35 @@ class NewsProvider extends ChangeNotifier {
         }
       }
       
-      // Cache invalid, fetch fresh data
-      final articles = await _repository.fetchNews();
-      if (articles.isNotEmpty) {
-        // Cache limiet: max 100 artikelen
-        const maxCacheSize = 100;
-        if (articles.length > maxCacheSize) {
-          articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
-          _articles = articles.take(maxCacheSize).toList();
-        } else {
-          _articles = articles;
+      Future<void> _refreshInBackground() async {
+      try {
+        final articles = await _repository.fetchNews();
+        if (articles.isNotEmpty) {
+          // Cache limiet: max 100 artikelen
+          const maxCacheSize = 100;
+          if (articles.length > maxCacheSize) {
+            articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
+            _articles = articles.take(maxCacheSize).toList();
+          } else {
+            _articles = articles;
+          }
+        
+          // Sort articles by date (newest first)
+          _articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
+          _applyFilter();
+          resetPagination();
+          notifyListeners();
+        
+          // Cache the articles
+          await ArticleCacheService.cacheArticles(_articles);
+        
+          // Preload article content in background for smoother reading.
+          ArticleCacheService.cacheArticlesContent(_articles).ignore();
         }
-        
-        // Sort articles by date (newest first)
-        _articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
-        _applyFilter();
-        resetPagination();
-        notifyListeners();
-        
-        // Cache the articles
-        await ArticleCacheService.cacheArticles(_articles);
+      } catch (e) {
+        print('Background refresh failed: $e');
       }
-    } catch (e) {
-      print('Background refresh failed: $e');
+      }
     }
   }
 
@@ -148,29 +172,35 @@ class NewsProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
 
+  Future<void> _refreshInBackground() async {
     try {
       final articles = await _repository.fetchNews();
-      
-      // Cache limiet: max 100 artikelen
-      const maxCacheSize = 100;
-      if (articles.length > maxCacheSize) {
-        articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
-        _articles = articles.take(maxCacheSize).toList();
-      } else {
-        _articles = articles;
+      if (articles.isNotEmpty) {
+        // Cache limiet: max 100 artikelen
+        const maxCacheSize = 100;
+        if (articles.length > maxCacheSize) {
+          articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
+          _articles = articles.take(maxCacheSize).toList();
+        } else {
+          _articles = articles;
+        }
+        
+        // Sort articles by date (newest first)
+        _articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
+        _applyFilter();
+        resetPagination();
+        notifyListeners();
+        
+        // Cache the articles
+        await ArticleCacheService.cacheArticles(_articles);
+        
+        // Preload article content in background for smoother reading.
+        ArticleCacheService.cacheArticlesContent(_articles).ignore();
       }
-      
-      // Sort articles by date (newest first)
-      _articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
-      
-      _applyFilter();
-      resetPagination();
-      
-      // Cache the articles
-      await ArticleCacheService.cacheArticles(_articles);
     } catch (e) {
-      _error = e.toString();
-      // Try to load cached articles on error
+      print('Background refresh failed: $e');
+    }
+  }
       final cachedArticles = await ArticleCacheService.getCachedArticles();
       if (cachedArticles.isNotEmpty) {
         _articles = cachedArticles;
