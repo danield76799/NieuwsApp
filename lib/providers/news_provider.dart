@@ -33,10 +33,15 @@ class NewsProvider extends ChangeNotifier {
 
 
 
-  bool get isLoading => _isLoading;
-  String? get error => _error;
-  List<String> get keywords => _keywords;
-  bool get filterActive => _filterActive;
+  void loadMoreArticles() {
+    _visibleCount += _pageSize;
+    notifyListeners();
+  }
+
+  void resetPagination() {
+    _visibleCount = _pageSize;
+    notifyListeners();
+  }
   String get weatherCity => _weatherCity;
   bool get useAutoLocation => _useAutoLocation;
 
