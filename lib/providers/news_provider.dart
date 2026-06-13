@@ -23,24 +23,24 @@ class NewsProvider extends ChangeNotifier {
   }
 
   List<Article> get articles => _filterActive ? _filteredArticles : _articles;
-  
+
   // Pagination
   static const int _pageSize = 20;
   int _visibleCount = _pageSize;
-  
+
   List<Article> get visibleArticles => articles.take(_visibleCount).toList();
   bool get hasMoreArticles => articles.length > _visibleCount;
-  
+
   void loadMoreArticles() {
     _visibleCount += _pageSize;
     notifyListeners();
   }
-  
+
   void resetPagination() {
     _visibleCount = _pageSize;
     notifyListeners();
   }
-  
+
   bool get isLoading => _isLoading;
   String? get error => _error;
   List<String> get keywords => _keywords;
@@ -50,23 +50,23 @@ class NewsProvider extends ChangeNotifier {
 
   Future<void> _loadSavedData() async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     // Load keywords
     final savedKeywords = prefs.getString('keywords') ?? '';
     if (savedKeywords.isNotEmpty) {
       _keywords = savedKeywords.split(',').map((k) => k.trim()).where((k) => k.isNotEmpty).toList();
     }
-    
+
     // Load filter state
     _filterActive = prefs.getBool('filter_active') ?? false;
-    
+
     // Load weather city
     _weatherCity = prefs.getString('weather_city') ?? 'Amsterdam';
-    
+
     // Load auto-location preference
     _useAutoLocation = prefs.getBool('auto_location') ?? true;
     _currentPosition = prefs.getString('current_position');
-    
+
     // Load cached articles immediately without waiting
     _loadCachedArticles();
   }
@@ -79,76 +79,37 @@ class NewsProvider extends ChangeNotifier {
         _articles = cachedArticles;
         _applyFilter();
         notifyListeners();
-        
-        // Load article content in background
-        final articleIds = _articles.map((a) => a.id).toList();
-        final futures = articleIds.map((id) => ArticleCacheService.getArticleContent(id));
-        final contents = await Future.wait(futures);
-        
-        // Update articles with cached content
-        for (int i = 0; i < _articles.length; i++) {
-          if (contents[i] != null) {
-            _articles[i] = _articles[i].copyWith(content: contents[i]);
-          }
-        }
-        
-        // Cache the articles
-        await ArticleCacheService.cacheArticles(_articles);
-        
-        // Preload article content in background for smoother reading.
-        ArticleCacheService.cacheArticlesContent(_articles).ignore();
         return;
       }
     }
-    
     // Cache invalid, fetch fresh data
     await _refreshInBackground();
   }
 
   Future<void> _refreshInBackground() async {
     try {
-      final isValid = await ArticleCacheService.isCacheValid();
-      if (isValid) {
-        // Cache is valid, load cached articles
-        final cachedArticles = await ArticleCacheService.getCachedArticles();
-        if (cachedArticles.isNotEmpty) {
-          _articles = cachedArticles;
-          _applyFilter();
-          resetPagination();
-          notifyListeners();
-          return;
+      final articles = await _repository.fetchNews();
+      if (articles.isNotEmpty) {
+        // Cache limiet: max 100 artikelen
+        const maxCacheSize = 100;
+        if (articles.length > maxCacheSize) {
+          articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
+          _articles = articles.take(maxCacheSize).toList();
+        } else {
+          _articles = articles;
         }
+
+        // Sort articles by date (newest first)
+        _articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
+        _applyFilter();
+        resetPagination();
+        notifyListeners();
+
+        // Cache the articles
+        await ArticleCacheService.cacheArticles(_articles);
       }
-      
-      Future<void> _refreshInBackground() async {
-      try {
-        final articles = await _repository.fetchNews();
-        if (articles.isNotEmpty) {
-          // Cache limiet: max 100 artikelen
-          const maxCacheSize = 100;
-          if (articles.length > maxCacheSize) {
-            articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
-            _articles = articles.take(maxCacheSize).toList();
-          } else {
-            _articles = articles;
-          }
-        
-          // Sort articles by date (newest first)
-          _articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
-          _applyFilter();
-          resetPagination();
-          notifyListeners();
-        
-          // Cache the articles
-          await ArticleCacheService.cacheArticles(_articles);
-        
-          // Preload article content in background for smoother reading.
-          ArticleCacheService.cacheArticlesContent(_articles).ignore();
-        }
-      } catch (e) {
-        print('Background refresh failed: $e');
-      }
-      }
+    } catch (e) {
+      print('Background refresh failed: $e');
     }
   }
 
@@ -172,35 +133,32 @@ class NewsProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
 
-  Future<void> _refreshInBackground() async {
     try {
       final articles = await _repository.fetchNews();
-      if (articles.isNotEmpty) {
-        // Cache limiet: max 100 artikelen
-        const maxCacheSize = 100;
-        if (articles.length > maxCacheSize) {
-          articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
-          _articles = articles.take(maxCacheSize).toList();
-        } else {
-          _articles = articles;
-        }
-        
-        // Sort articles by date (newest first)
-        _articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
-        _applyFilter();
-        resetPagination();
-        notifyListeners();
-        
-        // Cache the articles
-        await ArticleCacheService.cacheArticles(_articles);
-        
-        // Preload article content in background for smoother reading.
-        ArticleCacheService.cacheArticlesContent(_articles).ignore();
+
+      // Cache limiet: max 100 artikelen
+      const maxCacheSize = 100;
+      if (articles.length > maxCacheSize) {
+        articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
+        _articles = articles.take(maxCacheSize).toList();
+      } else {
+        _articles = articles;
       }
+
+      // Sort articles by date (newest first)
+      _articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
+
+      _applyFilter();
+      resetPagination();
+
+      // Cache the articles
+      await ArticleCacheService.cacheArticles(_articles);
+
+      // Preload article content in background
+      ArticleCacheService.cacheArticlesContent(_articles).ignore();
     } catch (e) {
-      print('Background refresh failed: $e');
-    }
-  }
+      _error = e.toString();
+      // Try to load cached articles on error
       final cachedArticles = await ArticleCacheService.getCachedArticles();
       if (cachedArticles.isNotEmpty) {
         _articles = cachedArticles;
@@ -208,9 +166,6 @@ class NewsProvider extends ChangeNotifier {
       }
     } finally {
       _isLoading = false;
-      notifyListeners();
-    }
-  }
       notifyListeners();
     }
   }
@@ -238,7 +193,7 @@ class NewsProvider extends ChangeNotifier {
   Future<void> toggleFilter(bool active) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('filter_active', active);
-    
+
     _filterActive = active;
     _applyFilter();
     notifyListeners();
@@ -248,7 +203,7 @@ class NewsProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('keywords');
     await prefs.setBool('filter_active', false);
-    
+
     _keywords = [];
     _filterActive = false;
     _applyFilter();
@@ -264,7 +219,7 @@ class NewsProvider extends ChangeNotifier {
 
   Future<void> detectLocation() async {
     if (!_useAutoLocation) return;
-    
+
     final position = await LocationService.getCurrentPosition();
     if (position != null) {
       _currentPosition = '${position.latitude},${position.longitude}';
@@ -287,7 +242,7 @@ class NewsProvider extends ChangeNotifier {
   Future<void> setUseAutoLocation(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('auto_location', value);
-    
+
     _useAutoLocation = value;
     if (value) {
       await detectLocation();
@@ -295,6 +250,14 @@ class NewsProvider extends ChangeNotifier {
       _currentPosition = null;
       await prefs.remove('current_position');
     }
+    notifyListeners();
+  }
+
+  void clearError() {
+    _error = null;
+    notifyListeners();
+  }
+
     notifyListeners();
   }
 

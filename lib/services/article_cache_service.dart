@@ -1,11 +1,10 @@
 import 'dart:convert';
-
-import '../models/article.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _kCachedArticles = 'cached_articles';
 const _kCacheTimestamp = 'cache_timestamp';
 const _kCacheTtlDays = 1;
+const _kArticleContent = 'article_content_';
 
 class ArticleCacheService {
   static Future<void> cacheArticles(List<Article> articles) async {
@@ -21,17 +20,12 @@ class ArticleCacheService {
   }
 
   static Future<List<Article>> getCachedArticles() async {
-    final jsonString = await _read<String>(key: _kCachedArticles, fallback: null);
-    if (jsonString == null || jsonString.isEmpty) return <Article>[];
-    try {
-      final decoded = jsonDecode(jsonString) as List<dynamic>;
-      return decoded
-          .map((e) => Article.fromJson(e as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      print('Cache decode error: $e');
-      return <Article>[];
-    }
+    final jsonString = await _read(key: _kCachedArticles, fallback: '');
+    if (jsonString.isEmpty) return <Article>[];
+    final decoded = jsonDecode(jsonString) as List<dynamic>;
+    return decoded
+        .map((e) => Article.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   static Future<bool> isCacheValid() async {
@@ -53,7 +47,27 @@ class ArticleCacheService {
     }
   }
 
-  static Future<T?> _read<T>({required String key, required T fallback}) async {
+  static Future<String?> getArticleContent(String articleId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final content = prefs.getString('${_kArticleContent}$articleId');
+    return content;
+  }
+
+  static Future<void> cacheArticleContent(String articleId, String content) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('${_kArticleContent}$articleId', content);
+  }
+
+  static Future<void> cacheArticlesContent(List<Article> articles) async {
+    final prefs = await SharedPreferences.getInstance();
+    for (final article in articles) {
+      if (article.content != null && article.content!.isNotEmpty) {
+        await cacheArticleContent(article.id, article.content!);
+      }
+    }
+  }
+
+  static Future<void> _read<T>({required String key, required T fallback}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final value = prefs.get(key);
@@ -83,41 +97,6 @@ class ArticleCacheService {
       );
     } catch (_) {
       // no-op
-    }
-  }
-
-  static Future<void> cacheArticlesContent(List<Article> articles) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      for (final article in articles) {
-        if (article.description?.isNotEmpty == true) {
-          await prefs.setString(
-            'article_content_${article.id}',
-            article.description!,
-          );
-        }
-        if (article.content?.isNotEmpty == true) {
-          await prefs.setString(
-            'article_full_content_${article.id}',
-            article.content!,
-          );
-        }
-      }
-    } catch (_) {
-      // no-op
-    }
-  }
-
-  static Future<String?> getArticleContent(String articleId) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final content = prefs.getString('article_content_$articleId');
-      if (content != null && content.isNotEmpty) {
-        return content;
-      }
-      return prefs.getString('article_full_content_$articleId');
-    } catch (_) {
-      return null;
     }
   }
 }
