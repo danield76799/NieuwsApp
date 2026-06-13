@@ -55,7 +55,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _refreshNewsInBackground() async {
     final provider = context.read<NewsProvider>();
     try {
-      await provider.loadNews(forceRefresh: true);
+      // Don't force refresh — let loadNews() use cache if valid.
+      // Only fetch from network if cache is stale.
+      await provider.loadNews();
       if (mounted) {
         setState(() {
           _lastNewsRefresh = DateTime.now();
