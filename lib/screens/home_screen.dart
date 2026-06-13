@@ -34,22 +34,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _detectLocationAndLoadWeather();
     _loadViewMode();
-  }
-
-  Future<void> _loadViewMode() async {
-    final prefs = await SharedPreferences.getInstance();
-    final isSwipe = prefs.getBool('swipe_view') ?? false;
-    setState(() {
-      _viewMode = isSwipe ? ViewMode.swipe : ViewMode.list;
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    _detectLocationAndLoadWeather();
-    _loadViewMode();
     _startAutoRefreshTimer();
   }
 
@@ -57,6 +41,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     // Refresh news every 5 minutes while app is open
     _autoRefreshTimer = Timer.periodic(const Duration(minutes: 5), (_) {
       _refreshNewsInBackground();
+    });
+  }
+
+  Future<void> _loadViewMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isSwipe = prefs.getBool('swipe_view') ?? false;
+    setState(() {
+      _viewMode = isSwipe ? ViewMode.swipe : ViewMode.list;
     });
   }
 
