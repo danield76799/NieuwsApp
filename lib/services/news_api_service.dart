@@ -79,11 +79,11 @@ class NewsApiService {
           final description = item.findElements('description').firstOrNull?.text ?? '';
           final pubDate = item.findElements('pubDate').firstOrNull?.text ?? '';
           final author = item.findElements('author').firstOrNull?.text;
-          final categoryElement = item.findElements('category').firstOrNnull;
+          final categoryElement = item.findElements('category').firstOrNull;
           
           // Extract image URL - try enclosure first
           String? imageUrl;
-          final enclosure = item.findElements('enclosure').firstOrNnull;
+          final enclosure = item.findElements('enclosure').firstOrNull;
           if (enclosure != null) {
             imageUrl = enclosure.getAttribute('url');
           }
@@ -104,7 +104,9 @@ class NewsApiService {
             title: title,
             description: _cleanDescription(description),
             content: _cleanDescription(description),
+            link: link,
             url: link,
+            pubDate: _parseDate(pubDate),
             imageUrl: imageUrl,
             source: source,
             publishedAt: _parseDate(pubDate),

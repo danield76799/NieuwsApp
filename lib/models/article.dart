@@ -68,7 +68,7 @@ class Article {
     description: json['description'] ?? '',
     content: json['content'],
     link: json['link'] ?? json['url'] ?? '',
-    url: json['url'] ?? json['link'],
+    url: json['url'] ?? json['link'] ?? '',
     pubDate: json['pubDate'] != null 
         ? DateTime.parse(json['pubDate']) 
         : DateTime.now(),

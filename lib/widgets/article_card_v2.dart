@@ -57,21 +57,7 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
   }
 
   Future<void> _openArticle() async {
-    final cachedContent = await ArticleCacheService.getArticleContent(widget.article.id);
-    if (cachedContent != null && cachedContent.isNotEmpty && mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CachedArticleReaderScreen(
-            title: widget.article.title,
-            content: cachedContent,
-            source: widget.article.source,
-            pubDate: widget.article.pubDate,
-          ),
-        ),
-      );
-      return;
-    }
+    // Altijd browser openen - webview laadt de volledige artikel pagina
     if (mounted) {
       Navigator.push(
         context,
@@ -297,21 +283,7 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
   }
 
   Future<void> _openArticle() async {
-    final cachedContent = await ArticleCacheService.getArticleContent(widget.article.id);
-    if (cachedContent != null && cachedContent.isNotEmpty && mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CachedArticleReaderScreen(
-            title: widget.article.title,
-            content: cachedContent,
-            source: widget.article.source,
-            pubDate: widget.article.pubDate,
-          ),
-        ),
-      );
-      return;
-    }
+    // Altijd browser openen - webview laadt de volledige artikel pagina
     if (mounted) {
       Navigator.push(
         context,
