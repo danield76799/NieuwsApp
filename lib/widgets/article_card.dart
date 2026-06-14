@@ -224,29 +224,6 @@ class _ArticleCardState extends State<ArticleCard> {
     launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
-  Future<void> _launchUrl() async {
-    final url = widget.article.url ?? widget.article.link;
-    final cachedContent = await ArticleCacheService.getArticleContent(widget.article.id);
-    if (cachedContent != null && cachedContent.isNotEmpty) {
-      if (!mounted) return;
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => CachedArticleReaderScreen(
-            title: widget.article.title,
-            content: cachedContent,
-            source: widget.article.source,
-            pubDate: widget.article.pubDate,
-          ),
-        ),
-      );
-      return;
-    }
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-  }
-
   void _shareArticle() {
     final url = widget.article.url ?? widget.article.link;
     Share.share(

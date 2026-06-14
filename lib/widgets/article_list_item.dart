@@ -2,9 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/article.dart';
-import '../services/article_cache_service.dart';
 import '../services/time_helper.dart';
-import '../screens/cached_article_reader_screen.dart';
 import 'new_badge.dart';
 
 class ArticleListItem extends StatelessWidget {
@@ -12,53 +10,16 @@ class ArticleListItem extends StatelessWidget {
 
   const ArticleListItem({super.key, required this.article});
 
-  Future<void> _openArticle(BuildContext context) async {
-    final cachedContent = await ArticleCacheService.getArticleContent(article.id);
-    if (cachedContent != null && cachedContent.isNotEmpty) {
-      if (context.mounted) {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => CachedArticleReaderScreen(
-              title: article.title,
-              content: cachedContent,
-              source: article.source,
-              pubDate: article.pubDate,
-            ),
-          ),
-        );
-      }
-      return;
-    }
-    final url = Uri.parse(article.link);
-    try {
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-      } else {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Kon artikel niet openen'),
-              backgroundColor: Colors.orange,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Fout: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
+  void _openArticle() {
+    final url = article.url ?? article.link;
+    if (url.isEmpty) return;
+    launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
   }
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => _openArticle(context),
+      onTap: _openArticle,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
