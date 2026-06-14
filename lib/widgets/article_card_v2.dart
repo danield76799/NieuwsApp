@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/article.dart';
 import '../services/bookmark_service.dart';
 import '../services/time_helper.dart';
 import '../services/article_cache_service.dart';
-import '../screens/browser_reader_screen.dart';
 import '../screens/cached_article_reader_screen.dart';
 
 // Helper function to strip HTML tags and ad URLs
@@ -76,14 +76,13 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
       return;
     }
     
-    // Geen cache: open direct in browser
+    // Geen cache: open in externe browser
     if (mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => BrowserReaderScreen(article: widget.article),
-        ),
-      );
+      final url = widget.article.url ?? widget.article.link;
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
     }
   }
 
@@ -321,14 +320,13 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
       return;
     }
     
-    // Geen cache: open direct in browser
+    // Geen cache: open in externe browser
     if (mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => BrowserReaderScreen(article: widget.article),
-        ),
-      );
+      final url = widget.article.url ?? widget.article.link;
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
     }
   }
 
