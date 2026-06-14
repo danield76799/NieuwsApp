@@ -5,8 +5,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/article.dart';
 import '../services/bookmark_service.dart';
 import '../services/time_helper.dart';
-import '../services/article_cache_service.dart';
-import '../screens/cached_article_reader_screen.dart';
 
 // Helper function to strip HTML tags and ad URLs
 String _stripHtml(String? text) {
@@ -49,43 +47,17 @@ class ArticleHeroCard extends StatefulWidget {
 }
 
 class _ArticleHeroCardState extends State<ArticleHeroCard> {
+  void _openArticle() {
+    final url = widget.article.url ?? widget.article.link;
+    if (url.isEmpty) return;
+    launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+  }
+
   Future<void> _shareArticle() async {
     await Share.share(
       '${widget.article.title}\n\n${widget.article.link}',
       subject: widget.article.title,
     );
-  }
-
-  Future<void> _openArticle() async {
-    try {
-      // Check of er gecachte content is
-      final cachedContent = await ArticleCacheService.getArticleContent(widget.article.id);
-      
-      if (cachedContent != null && cachedContent.isNotEmpty && mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CachedArticleReaderScreen(
-              title: widget.article.title,
-              content: cachedContent,
-              source: widget.article.source,
-              pubDate: widget.article.pubDate,
-            ),
-          ),
-        );
-        return;
-      }
-    } catch (_) {
-      // Cache check failed, fall through to browser
-    }
-    
-    // Open in externe browser
-    if (mounted) {
-      final url = widget.article.url ?? widget.article.link;
-      if (url.isEmpty) return;
-      final uri = Uri.parse(url);
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
   }
 
   @override
@@ -295,43 +267,17 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
     });
   }
 
+  void _openArticle() {
+    final url = widget.article.url ?? widget.article.link;
+    if (url.isEmpty) return;
+    launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+  }
+
   Future<void> _shareArticle() async {
     await Share.share(
       '${widget.article.title}\n\n${widget.article.link}',
       subject: widget.article.title,
     );
-  }
-
-  Future<void> _openArticle() async {
-    try {
-      // Check of er gecachte content is
-      final cachedContent = await ArticleCacheService.getArticleContent(widget.article.id);
-      
-      if (cachedContent != null && cachedContent.isNotEmpty && mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CachedArticleReaderScreen(
-              title: widget.article.title,
-              content: cachedContent,
-              source: widget.article.source,
-              pubDate: widget.article.pubDate,
-            ),
-          ),
-        );
-        return;
-      }
-    } catch (_) {
-      // Cache check failed, fall through to browser
-    }
-    
-    // Open in externe browser
-    if (mounted) {
-      final url = widget.article.url ?? widget.article.link;
-      if (url.isEmpty) return;
-      final uri = Uri.parse(url);
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
   }
 
   @override
