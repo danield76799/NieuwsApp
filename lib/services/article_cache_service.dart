@@ -60,54 +60,49 @@ class ArticleCacheService {
     await prefs.setString('${_kArticleContent}$articleId', content);
   }
 
-  /// Pre-fetch top N articles in background (fire-and-forget, non-blocking)
-  /// Caches description first as instant fallback, then fetches full content
-  static void prefetchTopArticles(List<Article> articles, {int count = 7}) {
-    // Fire-and-forget: geen await, geen blokkering
-    _prefetchAsync(articles, count);
-  }
-
-  static Future<void> _prefetchAsync(List<Article> articles, int count) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      int fetched = 0;
-      for (final article in articles) {
-        if (fetched >= count) break;
-        final url = article.url ?? article.link;
-        if (url.isEmpty) continue;
-
-        // Eerst description cachen als instant fallback
-        if (article.description.isNotEmpty) {
-          await prefs.setString('${_kArticleContent}${article.id}', article.description);
-        }
-
-        // Dan volledige content fetchen (silent fail)
-        try {
-          final content = await _fetchArticleContent(url);
-          if (content != null && content.isNotEmpty) {
-            await prefs.setString('${_kArticleContent}${article.id}', content);
-          }
-        } catch (_) {
-          // description is al gecached als fallback
-        }
-        fetched++;
+  /// Cache full article content from URLs in background
+  static Future<void> cacheArticlesContent(List<Article> articles) async {
+    // Eerst description cachen als snelle fallback
+    final prefs = await SharedPreferences.getInstance();
+    for (final article in articles) {
+      if (article.description.isNotEmpty) {
+        await prefs.setString('${_kArticleContent}${article.id}', article.description);
       }
-    } catch (_) {
-      // silent fail — pre-fetch is optional
+    }
+    
+    // Daarna volledige content fetchen in achtergrond (max 10 artikelen)
+    int count = 0;
+    for (final article in articles) {
+      if (count >= 10) break;
+      final url = article.url ?? article.link;
+      if (url.isNotEmpty) {
+        fetchAndCacheArticleContent(article.id, url).catchError((e) {
+          // silent fail - description is al gecached als fallback
+          return null;
+        });
+        count++;
+      }
     }
   }
 
-  /// Fetch article content from URL (returns plain text, max 10k chars)
-  static Future<String?> _fetchArticleContent(String url) async {
+  /// Fetch and cache full article content from URL
+  static Future<String?> fetchAndCacheArticleContent(String articleId, String url) async {
     try {
       final response = await http.get(Uri.parse(url), headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       });
+      
       if (response.statusCode == 200) {
+        // Extract article text from HTML
         final content = _extractArticleText(response.body);
-        if (content.isNotEmpty) return content;
+        if (content.isNotEmpty) {
+          await cacheArticleContent(articleId, content);
+          return content;
+        }
       }
-    } catch (_) {}
+    } catch (e) {
+      print('Error fetching article content: $e');
+    }
     return null;
   }
 

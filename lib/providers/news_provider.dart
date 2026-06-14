@@ -86,8 +86,6 @@ class NewsProvider extends ChangeNotifier {
 
         // Cache the article list only (fast, no HTTP)
         ArticleCacheService.cacheArticles(_articles);
-        // Pre-fetch top 7 articles in background (fire-and-forget)
-        ArticleCacheService.prefetchTopArticles(_articles, count: 7);
       }
     } catch (e) {
       print('Background refresh failed: $e');
@@ -120,8 +118,6 @@ class NewsProvider extends ChangeNotifier {
       _applyFilter();
       resetPagination();
       ArticleCacheService.cacheArticles(_articles);
-      // Pre-fetch top 7 articles in background (fire-and-forget)
-      ArticleCacheService.prefetchTopArticles(_articles, count: 7);
     } catch (e) {
       _error = e.toString();
       final cachedArticles = await ArticleCacheService.getCachedArticles();
