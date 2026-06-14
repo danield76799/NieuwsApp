@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../models/article.dart';
 import '../services/bookmark_service.dart';
 import '../services/time_helper.dart';
-
-// Helper function to strip HTML tags and ad URLs
+import '../screens/browser_reader_screen.dart';
 String _stripHtml(String? text) {
   if (text == null || text.isEmpty) return '';
   
@@ -48,9 +46,11 @@ class ArticleHeroCard extends StatefulWidget {
 
 class _ArticleHeroCardState extends State<ArticleHeroCard> {
   void _openArticle() {
-    final url = widget.article.url ?? widget.article.link;
-    if (url.isEmpty) return;
-    launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => BrowserReaderScreen(article: widget.article),
+      ),
+    );
   }
 
   Future<void> _shareArticle() async {
@@ -268,9 +268,11 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
   }
 
   void _openArticle() {
-    final url = widget.article.url ?? widget.article.link;
-    if (url.isEmpty) return;
-    launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => BrowserReaderScreen(article: widget.article),
+      ),
+    );
   }
 
   Future<void> _shareArticle() async {

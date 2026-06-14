@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import '../models/article.dart';
-import '../services/article_cache_service.dart';
 import '../services/bookmark_service.dart';
 import '../widgets/news_badge.dart';
-import '../screens/cached_article_reader_screen.dart';
+import '../screens/browser_reader_screen.dart';
 
 class ArticleCard extends StatefulWidget {
   final Article article;
@@ -218,10 +216,11 @@ class _ArticleCardState extends State<ArticleCard> {
   }
 
   void _openArticle(BuildContext context) {
-    final url = widget.article.url ?? widget.article.link;
-    if (url.isEmpty) return;
-    final uri = Uri.parse(url);
-    launchUrl(uri, mode: LaunchMode.externalApplication);
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => BrowserReaderScreen(article: widget.article),
+      ),
+    );
   }
 
   void _shareArticle() {

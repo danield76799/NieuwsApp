@@ -1,8 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../models/article.dart';
 import '../services/time_helper.dart';
+import '../screens/browser_reader_screen.dart';
 import 'new_badge.dart';
 
 class ArticleListItem extends StatelessWidget {
@@ -10,16 +10,16 @@ class ArticleListItem extends StatelessWidget {
 
   const ArticleListItem({super.key, required this.article});
 
-  void _openArticle() {
-    final url = article.url ?? article.link;
-    if (url.isEmpty) return;
-    launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-  }
-
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: _openArticle,
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => BrowserReaderScreen(article: article),
+          ),
+        );
+      },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
