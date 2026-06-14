@@ -57,30 +57,39 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
   }
 
   Future<void> _openArticle() async {
-    // Check of er gecachte content is
-    final cachedContent = await ArticleCacheService.getArticleContent(widget.article.id);
-    
-    if (cachedContent != null && cachedContent.isNotEmpty && mounted) {
-      // Toon gecachte content in offline reader
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CachedArticleReaderScreen(
-            title: widget.article.title,
-            content: cachedContent,
-            source: widget.article.source,
-            pubDate: widget.article.pubDate,
+    try {
+      // Check of er gecachte content is
+      final cachedContent = await ArticleCacheService.getArticleContent(widget.article.id);
+      
+      if (cachedContent != null && cachedContent.isNotEmpty && mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CachedArticleReaderScreen(
+              title: widget.article.title,
+              content: cachedContent,
+              source: widget.article.source,
+              pubDate: widget.article.pubDate,
+            ),
           ),
-        ),
-      );
-      return;
+        );
+        return;
+      }
+    } catch (_) {
+      // Cache check failed, fall through to browser
     }
     
-    // Geen cache: open in externe browser
+    // Open in externe browser
     if (mounted) {
       final url = widget.article.url ?? widget.article.link;
+      if (url.isEmpty) return;
       final uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
+      try {
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      } catch (_) {
+        // Last resort: force launch
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       }
     }
@@ -301,30 +310,39 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
   }
 
   Future<void> _openArticle() async {
-    // Check of er gecachte content is
-    final cachedContent = await ArticleCacheService.getArticleContent(widget.article.id);
-    
-    if (cachedContent != null && cachedContent.isNotEmpty && mounted) {
-      // Toon gecachte content in offline reader
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CachedArticleReaderScreen(
-            title: widget.article.title,
-            content: cachedContent,
-            source: widget.article.source,
-            pubDate: widget.article.pubDate,
+    try {
+      // Check of er gecachte content is
+      final cachedContent = await ArticleCacheService.getArticleContent(widget.article.id);
+      
+      if (cachedContent != null && cachedContent.isNotEmpty && mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CachedArticleReaderScreen(
+              title: widget.article.title,
+              content: cachedContent,
+              source: widget.article.source,
+              pubDate: widget.article.pubDate,
+            ),
           ),
-        ),
-      );
-      return;
+        );
+        return;
+      }
+    } catch (_) {
+      // Cache check failed, fall through to browser
     }
     
-    // Geen cache: open in externe browser
+    // Open in externe browser
     if (mounted) {
       final url = widget.article.url ?? widget.article.link;
+      if (url.isEmpty) return;
       final uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
+      try {
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      } catch (_) {
+        // Last resort: force launch
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       }
     }
