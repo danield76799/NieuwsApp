@@ -68,7 +68,7 @@ class RssParserService {
           'User-Agent': 'PlusNews/1.0',
           'Accept': 'application/rss+xml, application/xml, text/xml',
         },
-      ).timeout(const Duration(seconds: 10));
+      );
 
       if (response.statusCode != 200) {
         throw Exception('HTTP ${response.statusCode}');
