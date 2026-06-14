@@ -8,9 +8,9 @@ class NieuwsNlService {
   /// Haal artikelen op van nieuws.nl RSS feed
   Future<List<Article>> getArticles() async {
     try {
-      // nieuws.nl RSS feed
+      // nieuws.nl sitemap (RSS vervangen door sitemap)
       final response = await http.get(
-        Uri.parse('https://www.nieuws.nl/rss'),
+        Uri.parse('https://nieuws.nl/sitemap/news.xml'),
         headers: {
           'User-Agent': 'Mozilla/5.0 (compatible; NieuwsApp/1.0)',
         },
@@ -31,34 +31,67 @@ class NieuwsNlService {
   List<Article> _parseRssFeed(String xmlData) {
     final articles = <Article>[];
     
-    // Eenvoudige XML parsing met regex (voor RSS feeds)
+    // Eerst proberen als RSS feed
     final itemRegex = RegExp(r'<item>(.*?)</item>', dotAll: true);
     final items = itemRegex.allMatches(xmlData);
     
-    for (final item in items) {
-      final itemXml = item.group(1) ?? '';
+    if (items.isNotEmpty) {
+      // RSS formaat
+      for (final item in items) {
+        final itemXml = item.group(1) ?? '';
+        
+        final title = _extractXmlValue(itemXml, 'title');
+        final description = _extractXmlValue(itemXml, 'description');
+        final link = _extractXmlValue(itemXml, 'link');
+        final pubDate = _extractXmlValue(itemXml, 'pubDate');
+        final imageUrl = _extractImageFromXml(itemXml);
+        
+        if (title.isNotEmpty && link.isNotEmpty) {
+          articles.add(Article(
+            id: link.hashCode.toString(),
+            title: _decodeHtmlEntities(title),
+            description: _decodeHtmlEntities(description),
+            content: _decodeHtmlEntities(description),
+            link: link,
+            url: link,
+            pubDate: _parseRssDate(pubDate),
+            imageUrl: imageUrl,
+            source: 'nieuws.nl',
+            publishedAt: _parseRssDate(pubDate),
+            author: null,
+            category: null,
+          ));
+        }
+      }
+    } else {
+      // Google News sitemap formaat
+      final urlRegex = RegExp(r'<url>(.*?)</url>', dotAll: true);
+      final urls = urlRegex.allMatches(xmlData);
       
-      final title = _extractXmlValue(itemXml, 'title');
-      final description = _extractXmlValue(itemXml, 'description');
-      final link = _extractXmlValue(itemXml, 'link');
-      final pubDate = _extractXmlValue(itemXml, 'pubDate');
-      final imageUrl = _extractImageFromXml(itemXml);
-      
-      if (title.isNotEmpty && link.isNotEmpty) {
-        articles.add(Article(
-          id: link.hashCode.toString(),
-          title: _decodeHtmlEntities(title),
-          description: _decodeHtmlEntities(description),
-          content: _decodeHtmlEntities(description),
-          link: link,
-          url: link,
-          pubDate: _parseRssDate(pubDate),
-          imageUrl: imageUrl,
-          source: 'nieuws.nl',
-          publishedAt: _parseRssDate(pubDate),
-          author: null,
-          category: null,
-        ));
+      for (final url in urls) {
+        final urlXml = url.group(1) ?? '';
+        
+        final loc = _extractXmlValue(urlXml, 'loc');
+        final newsTitle = _extractXmlValue(urlXml, 'news:title');
+        final newsDate = _extractXmlValue(urlXml, 'news:publication_date');
+        final imageUrl = _extractImageFromXml(urlXml);
+        
+        if (newsTitle.isNotEmpty && loc.isNotEmpty) {
+          articles.add(Article(
+            id: loc.hashCode.toString(),
+            title: _decodeHtmlEntities(newsTitle),
+            description: '',
+            content: '',
+            link: loc,
+            url: loc,
+            pubDate: _parseRssDate(newsDate),
+            imageUrl: imageUrl,
+            source: 'nieuws.nl',
+            publishedAt: _parseRssDate(newsDate),
+            author: null,
+            category: null,
+          ));
+        }
       }
     }
     
@@ -122,13 +155,9 @@ class NieuwsNlService {
 
   /// Haal specifieke categorie op
   Future<List<Article>> getCategoryArticles(String category) async {
-    // Map categorieën naar nieuws.nl URLs
+    // Map categorieën naar nieuws.nl URLs (sitemap based)
     final categoryUrls = {
-      'algemeen': 'https://www.nieuws.nl/rss',
-      'economie': 'https://www.nieuws.nl/economie/rss',
-      'sport': 'https://www.nieuws.nl/sport/rss',
-      'tech': 'https://www.nieuws.nl/tech/rss',
-      'entertainment': 'https://www.nieuws.nl/entertainment/rss',
+      'algemeen': 'https://nieuws.nl/sitemap/news.xml',
     };
     
     final url = categoryUrls[category.toLowerCase()];
