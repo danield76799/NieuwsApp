@@ -1,13 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:html_unescape/html_unescape.dart';
 import '../models/article.dart';
 
 /// Service voor het scrapen van nieuws.nl
 class NieuwsNlService {
-  final _unescape = HtmlUnescape();
-  
   /// Haal artikelen op van nieuws.nl RSS feed
   Future<List<Article>> getArticles() async {
     try {
@@ -50,10 +47,12 @@ class NieuwsNlService {
       if (title.isNotEmpty && link.isNotEmpty) {
         articles.add(Article(
           id: link.hashCode.toString(),
-          title: _unescape.convert(title),
-          description: _unescape.convert(description),
-          content: _unescape.convert(description),
+          title: _decodeHtmlEntities(title),
+          description: _decodeHtmlEntities(description),
+          content: _decodeHtmlEntities(description),
+          link: link,
           url: link,
+          pubDate: _parseRssDate(pubDate),
           imageUrl: imageUrl,
           source: 'nieuws.nl',
           publishedAt: _parseRssDate(pubDate),
@@ -107,6 +106,18 @@ class NieuwsNlService {
         return DateTime.now();
       }
     }
+  }
+
+  /// Decode HTML entities
+  String _decodeHtmlEntities(String text) {
+    return text
+      .replaceAll('&amp;', '&')
+      .replaceAll('&lt;', '<')
+      .replaceAll('&gt;', '>')
+      .replaceAll('&quot;', '"')
+      .replaceAll('&#39;', "'")
+      .replaceAll('&nbsp;', ' ')
+      .replaceAll('&apos;', "'");
   }
 
   /// Haal specifieke categorie op

@@ -75,7 +75,7 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
         MaterialPageRoute(
           builder: (context) => CachedArticleReaderScreen(
             title: widget.article.title,
-            content: cachedContent,
+            content: cachedContent!,
             source: widget.article.source,
             pubDate: widget.article.pubDate,
           ),
@@ -328,7 +328,7 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
         MaterialPageRoute(
           builder: (context) => CachedArticleReaderScreen(
             title: widget.article.title,
-            content: cachedContent,
+            content: cachedContent!,
             source: widget.article.source,
             pubDate: widget.article.pubDate,
           ),

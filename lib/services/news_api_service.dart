@@ -27,8 +27,8 @@ class NewsApiService {
         allArticles.addAll(articles);
       }
       
-      // Sorteer op publishedAt (nieuwste eerst)
-      allArticles.sort((a, b) => b.publishedAt.compareTo(a.publishedAt));
+      // Sorteer op pubDate (nieuwste eerst)
+      allArticles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
       
       // Filter by category if specified
       if (category != null && category != 'all') {
