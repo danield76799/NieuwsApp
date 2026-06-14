@@ -57,16 +57,8 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
   }
 
   Future<void> _openArticle() async {
-    // Eerst proberen gecachte content te laden
-    var cachedContent = await ArticleCacheService.getArticleContent(widget.article.id);
-    
-    // Als geen cache, proberen content te fetchen en cachen
-    if (cachedContent == null || cachedContent.isEmpty) {
-      cachedContent = await ArticleCacheService.fetchAndCacheArticleContent(
-        widget.article.id, 
-        widget.article.link,
-      );
-    }
+    // Check of er gecachte content is
+    final cachedContent = await ArticleCacheService.getArticleContent(widget.article.id);
     
     if (cachedContent != null && cachedContent.isNotEmpty && mounted) {
       // Toon gecachte content in offline reader
@@ -75,7 +67,7 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
         MaterialPageRoute(
           builder: (context) => CachedArticleReaderScreen(
             title: widget.article.title,
-            content: cachedContent!,
+            content: cachedContent,
             source: widget.article.source,
             pubDate: widget.article.pubDate,
           ),
@@ -84,7 +76,7 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
       return;
     }
     
-    // Fallback: open browser als geen content beschikbaar
+    // Geen cache: open direct in browser
     if (mounted) {
       Navigator.push(
         context,
@@ -310,16 +302,8 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
   }
 
   Future<void> _openArticle() async {
-    // Eerst proberen gecachte content te laden
-    var cachedContent = await ArticleCacheService.getArticleContent(widget.article.id);
-    
-    // Als geen cache, proberen content te fetchen en cachen
-    if (cachedContent == null || cachedContent.isEmpty) {
-      cachedContent = await ArticleCacheService.fetchAndCacheArticleContent(
-        widget.article.id, 
-        widget.article.link,
-      );
-    }
+    // Check of er gecachte content is
+    final cachedContent = await ArticleCacheService.getArticleContent(widget.article.id);
     
     if (cachedContent != null && cachedContent.isNotEmpty && mounted) {
       // Toon gecachte content in offline reader
@@ -328,7 +312,7 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
         MaterialPageRoute(
           builder: (context) => CachedArticleReaderScreen(
             title: widget.article.title,
-            content: cachedContent!,
+            content: cachedContent,
             source: widget.article.source,
             pubDate: widget.article.pubDate,
           ),
@@ -337,7 +321,7 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
       return;
     }
     
-    // Fallback: open browser als geen content beschikbaar
+    // Geen cache: open direct in browser
     if (mounted) {
       Navigator.push(
         context,
