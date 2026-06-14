@@ -91,6 +91,7 @@ class NewsProvider extends ChangeNotifier {
         ArticleCacheService.cacheArticlesContent(_articles);
       }
     } catch (e) {
+      // Silent fail - don't show error for background refresh
       print('Background refresh failed: $e');
     }
   }

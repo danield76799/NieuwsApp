@@ -40,6 +40,8 @@ class RssNewsRepository implements NewsRepository {
         }
         return <Article>[];
       } catch (e) {
+        // Log error but don't fail - other feeds might still work
+        print('Feed error ${source["name"]}: $e');
         errors.add("${source["name"]}: $e");
         return <Article>[];
       }
