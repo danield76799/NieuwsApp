@@ -77,6 +77,11 @@ class RssNewsRepository implements NewsRepository {
     // Sort by date (newest first)
     allArticles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
 
+    // Limit to 50 articles for faster loading
+    if (allArticles.length > 50) {
+      allArticles = allArticles.take(50).toList();
+    }
+
     if (allArticles.isNotEmpty) {
       await _storage.cacheArticles(allArticles);
     }

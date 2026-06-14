@@ -5,34 +5,6 @@ import '../models/article.dart';
 import '../services/bookmark_service.dart';
 import '../services/time_helper.dart';
 import '../screens/browser_reader_screen.dart';
-String _stripHtml(String? text) {
-  if (text == null || text.isEmpty) return '';
-  
-  var sanitized = text.replaceAll(RegExp(r'<[^>]+>', caseSensitive: false, dotAll: true), '');
-  sanitized = sanitized
-    .replaceAll(RegExp(r'https?://\S+\.(?:jpg|jpeg|png|gif|webp|svg)\S*', caseSensitive: false), '')
-    .replaceAll(RegExp(r'https?://r\.testifier\.nl/\S*', caseSensitive: false), '')
-    .replaceAll(RegExp(r'https?://\S*\.newsifier\.com/\S*', caseSensitive: false), '')
-    .replaceAll(RegExp(r'https?://\S*\.digitaloceanspaces\.com/\S*', caseSensitive: false), '');
-  
-  sanitized = sanitized.replaceAll(RegExp(r'\s+'), ' ');
-  sanitized = sanitized
-    .replaceAll('&nbsp;', ' ')
-    .replaceAll('&amp;', '&')
-    .replaceAll('&lt;', '<')
-    .replaceAll('&gt;', '>')
-    .replaceAll('&quot;', '"')
-    .replaceAll('&#39;', "'")
-    .replaceAll('&ldquo;', '"')
-    .replaceAll('&rdquo;', '"')
-    .replaceAll('&lsquo;', "'")
-    .replaceAll('&rsquo;', "'")
-    .replaceAll('&hellip;', '...')
-    .replaceAll('&mdash;', '-')
-    .replaceAll('&ndash;', '-');
-  
-  return sanitized.trim();
-}
 
 /// NOS-style Hero Card for featured articles
 class ArticleHeroCard extends StatefulWidget {
@@ -87,6 +59,8 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
                   ? CachedNetworkImage(
                       imageUrl: widget.article.imageUrl!,
                       fit: BoxFit.cover,
+                      memCacheWidth: 400,
+                      memCacheHeight: 300,
                       placeholder: (context, url) => Container(
                         color: const Color(0xFF242424),
                         child: const Center(
@@ -314,6 +288,8 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                         width: 100,
                         height: 75,
                         fit: BoxFit.cover,
+                        memCacheWidth: 200,
+                        memCacheHeight: 150,
                         placeholder: (context, url) => Container(
                           width: 100,
                           height: 75,
@@ -391,7 +367,7 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                     const SizedBox(height: 6),
                     // Description
                     Text(
-                      _stripHtml(widget.article.description),
+                      widget.article.description,
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[500],

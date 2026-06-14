@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/article.dart';
 import '../providers/news_provider.dart';
 import '../services/weather_service.dart';
 import '../widgets/article_card_v2.dart';
@@ -35,6 +36,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _detectLocationAndLoadWeather();
     _loadViewMode();
     _startAutoRefreshTimer();
+    
+    // Preload thumbnails after first frame when cached articles are shown
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _preloadThumbnailsFromProvider();
+    });
+  }
+
+  Future<void> _preloadThumbnailsFromProvider() async {
+    if (!mounted) return;
+    final provider = context.read<NewsProvider>();
+    final articles = provider.articles;
+    if (articles.isNotEmpty) {
+      await _preloadThumbnails(articles);
+    }
   }
 
   void _startAutoRefreshTimer() {
@@ -62,9 +77,38 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         setState(() {
           _lastNewsRefresh = DateTime.now();
         });
+        
+        // Preload thumbnails for first 7 articles for instant display
+        final articles = provider.articles;
+        if (articles.isNotEmpty) {
+          _preloadThumbnails(articles);
+        }
       }
     } catch (_) {
       // Silent fail — don't bother user with background refresh errors
+    }
+  }
+
+  Future<void> _preloadThumbnails(List<Article> articles) async {
+    int preloaded = 0;
+    const maxPreload = 7;
+    for (final article in articles) {
+      if (preloaded >= maxPreload) break;
+      
+      final url = article.thumbnailUrl ?? article.imageUrl;
+      if (url != null && url.isNotEmpty && mounted) {
+        try {
+          await precacheImage(
+            NetworkImage(url, headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            }),
+            context,
+          );
+          preloaded++;
+        } catch (_) {
+          // Silent fail
+        }
+      }
     }
   }
 

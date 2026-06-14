@@ -78,7 +78,7 @@ class NewsProvider extends ChangeNotifier {
     try {
       final articles = await _repository.fetchNews();
       if (articles.isNotEmpty) {
-        _articles = articles.take(100).toList();
+        _articles = articles.take(50).toList();
         _articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
         _applyFilter();
         resetPagination();
@@ -113,7 +113,7 @@ class NewsProvider extends ChangeNotifier {
 
     try {
       final articles = await _repository.fetchNews();
-      _articles = articles.take(100).toList();
+      _articles = articles.take(50).toList();
       _articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
       _applyFilter();
       resetPagination();
