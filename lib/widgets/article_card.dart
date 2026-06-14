@@ -217,9 +217,27 @@ class _ArticleCardState extends State<ArticleCard> {
     );
   }
 
-  void _openArticle(BuildContext context) {
+  Future<void> _openArticle(BuildContext context) async {
     final url = widget.article.url ?? widget.article.link;
     if (url.isEmpty) return;
+
+    // Check cache first (fast SharedPreferences read, no HTTP)
+    final cachedContent = await ArticleCacheService.getArticleContent(widget.article.id);
+    if (cachedContent != null && cachedContent.isNotEmpty && context.mounted) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => CachedArticleReaderScreen(
+            title: widget.article.title,
+            content: cachedContent,
+            source: widget.article.source,
+            pubDate: widget.article.pubDate,
+          ),
+        ),
+      );
+      return;
+    }
+
+    // Fallback: external browser
     final uri = Uri.parse(url);
     launchUrl(uri, mode: LaunchMode.externalApplication);
   }

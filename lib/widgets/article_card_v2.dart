@@ -5,6 +5,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/article.dart';
 import '../services/bookmark_service.dart';
 import '../services/time_helper.dart';
+import '../services/article_cache_service.dart';
+import '../screens/cached_article_reader_screen.dart';
 
 // Helper function to strip HTML tags and ad URLs
 String _stripHtml(String? text) {
@@ -47,9 +49,27 @@ class ArticleHeroCard extends StatefulWidget {
 }
 
 class _ArticleHeroCardState extends State<ArticleHeroCard> {
-  void _openArticle() {
+  Future<void> _openArticle() async {
     final url = widget.article.url ?? widget.article.link;
     if (url.isEmpty) return;
+
+    // Check cache first (fast SharedPreferences read, no HTTP)
+    final cachedContent = await ArticleCacheService.getArticleContent(widget.article.id);
+    if (cachedContent != null && cachedContent.isNotEmpty && mounted) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => CachedArticleReaderScreen(
+            title: widget.article.title,
+            content: cachedContent,
+            source: widget.article.source,
+            pubDate: widget.article.pubDate,
+          ),
+        ),
+      );
+      return;
+    }
+
+    // Fallback: external browser
     launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
   }
 
@@ -63,7 +83,7 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: _openArticle,
+      onTap: () => _openArticle(),
       child: Container(
         margin: const EdgeInsets.all(16),
         height: 220,
@@ -267,9 +287,27 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
     });
   }
 
-  void _openArticle() {
+  Future<void> _openArticle() async {
     final url = widget.article.url ?? widget.article.link;
     if (url.isEmpty) return;
+
+    // Check cache first (fast SharedPreferences read, no HTTP)
+    final cachedContent = await ArticleCacheService.getArticleContent(widget.article.id);
+    if (cachedContent != null && cachedContent.isNotEmpty && mounted) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => CachedArticleReaderScreen(
+            title: widget.article.title,
+            content: cachedContent,
+            source: widget.article.source,
+            pubDate: widget.article.pubDate,
+          ),
+        ),
+      );
+      return;
+    }
+
+    // Fallback: external browser
     launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
   }
 
@@ -285,7 +323,7 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: _openArticle,
+        onTap: () => _openArticle(),
         borderRadius: BorderRadius.circular(20),
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
