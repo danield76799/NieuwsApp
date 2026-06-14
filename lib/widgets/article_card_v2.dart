@@ -84,14 +84,7 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
       final url = widget.article.url ?? widget.article.link;
       if (url.isEmpty) return;
       final uri = Uri.parse(url);
-      try {
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-        }
-      } catch (_) {
-        // Last resort: force launch
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      }
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 
@@ -337,14 +330,7 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
       final url = widget.article.url ?? widget.article.link;
       if (url.isEmpty) return;
       final uri = Uri.parse(url);
-      try {
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-        }
-      } catch (_) {
-        // Last resort: force launch
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      }
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 
