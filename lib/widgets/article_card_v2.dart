@@ -4,9 +4,7 @@ import 'package:share_plus/share_plus.dart';
 import '../models/article.dart';
 import '../services/bookmark_service.dart';
 import '../services/time_helper.dart';
-import '../services/article_cache_service.dart';
 import '../screens/browser_reader_screen.dart';
-import '../screens/cached_article_reader_screen.dart';
 
 /// NOS-style Hero Card for featured articles
 class ArticleHeroCard extends StatefulWidget {
@@ -19,31 +17,13 @@ class ArticleHeroCard extends StatefulWidget {
 }
 
 class _ArticleHeroCardState extends State<ArticleHeroCard> {
-  void _openArticle() async {
-    // Eerst checken of content gecached is → instant offline reader
-    final cachedContent = await ArticleCacheService.getArticleContent(widget.article.id);
-    if (cachedContent != null && cachedContent.isNotEmpty && mounted) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => CachedArticleReaderScreen(
-            title: widget.article.title,
-            content: cachedContent,
-            source: widget.article.source,
-            pubDate: widget.article.pubDate,
-          ),
-        ),
-      );
-      return;
-    }
-    
-    // Fallback: browser reader (laadt URL)
-    if (mounted) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => BrowserReaderScreen(article: widget.article),
-        ),
-      );
-    }
+  void _openArticle() {
+    // Altijd browser openen voor betrouwbare weergave
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => BrowserReaderScreen(article: widget.article),
+      ),
+    );
   }
 
   Future<void> _shareArticle() async {
@@ -262,31 +242,14 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
     });
   }
 
-  void _openArticle() async {
-    // Eerst checken of content gecached is → instant offline reader
-    final cachedContent = await ArticleCacheService.getArticleContent(widget.article.id);
-    if (cachedContent != null && cachedContent.isNotEmpty && mounted) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => CachedArticleReaderScreen(
-            title: widget.article.title,
-            content: cachedContent,
-            source: widget.article.source,
-            pubDate: widget.article.pubDate,
-          ),
-        ),
-      );
-      return;
-    }
-
-    // Fallback: browser reader (laadt URL)
-    if (mounted) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => BrowserReaderScreen(article: widget.article),
-        ),
-      );
-    }
+  void _openArticle() {
+    // Altijd browser openen voor betrouwbare weergave
+    // Content wordt in achtergrond gecached voor volgende keer
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => BrowserReaderScreen(article: widget.article),
+      ),
+    );
   }
 
   Future<void> _shareArticle() async {
