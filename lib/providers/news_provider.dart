@@ -49,42 +49,28 @@ class NewsProvider extends ChangeNotifier {
   bool get useAutoLocation => _useAutoLocation;
 
   Future<void> _loadSavedData() async {
+    // Load settings and cached articles in parallel
     final prefs = await SharedPreferences.getInstance();
-
+    
     // Load keywords
     final savedKeywords = prefs.getString('keywords') ?? '';
     if (savedKeywords.isNotEmpty) {
       _keywords = savedKeywords.split(',').map((k) => k.trim()).where((k) => k.isNotEmpty).toList();
     }
-
-    // Load filter state
     _filterActive = prefs.getBool('filter_active') ?? false;
-
-    // Load weather city
     _weatherCity = prefs.getString('weather_city') ?? 'Amsterdam';
-
-    // Load auto-location preference
     _useAutoLocation = prefs.getBool('auto_location') ?? true;
     _currentPosition = prefs.getString('current_position');
 
-    // Load cached articles (fast, no HTTP)
-    _loadCachedArticles();
-  }
-
-  Future<void> _loadCachedArticles() async {
-    final isValid = await ArticleCacheService.isCacheValid();
-    if (isValid) {
-      final cachedArticles = await ArticleCacheService.getCachedArticles();
-      if (cachedArticles.isNotEmpty) {
-        _articles = cachedArticles;
-        _applyFilter();
-        notifyListeners();
-        // Refresh in background without blocking
-        _refreshInBackground();
-        return;
-      }
+    // Direct cached articles laden - geen isValid check (sneller)
+    final cachedArticles = await ArticleCacheService.getCachedArticles();
+    if (cachedArticles.isNotEmpty) {
+      _articles = cachedArticles;
+      _applyFilter();
+      notifyListeners();
     }
-    // No valid cache, fetch fresh
+    
+    // Altijd background refresh voor verse data
     _refreshInBackground();
   }
 
@@ -107,18 +93,17 @@ class NewsProvider extends ChangeNotifier {
   }
 
   Future<void> loadNews({bool forceRefresh = false}) async {
-    // If not forcing refresh and cache is valid, use cached data
+    // Direct cached tonen, dan background refresh
     if (!forceRefresh) {
-      final isValid = await ArticleCacheService.isCacheValid();
-      if (isValid) {
-        final cachedArticles = await ArticleCacheService.getCachedArticles();
-        if (cachedArticles.isNotEmpty) {
-          _articles = cachedArticles;
-          _applyFilter();
-          resetPagination();
-          notifyListeners();
-          return;
-        }
+      final cachedArticles = await ArticleCacheService.getCachedArticles();
+      if (cachedArticles.isNotEmpty) {
+        _articles = cachedArticles;
+        _applyFilter();
+        resetPagination();
+        notifyListeners();
+        // Background refresh voor verse data
+        _refreshInBackground();
+        return;
       }
     }
 
@@ -128,27 +113,13 @@ class NewsProvider extends ChangeNotifier {
 
     try {
       final articles = await _repository.fetchNews();
-
-      // Cache limiet: max 100 artikelen
-      const maxCacheSize = 100;
-      if (articles.length > maxCacheSize) {
-        articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
-        _articles = articles.take(maxCacheSize).toList();
-      } else {
-        _articles = articles;
-      }
-
-      // Sort articles by date (newest first)
+      _articles = articles.take(100).toList();
       _articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
-
       _applyFilter();
       resetPagination();
-
-      // Cache the articles
-      await ArticleCacheService.cacheArticles(_articles);
+      ArticleCacheService.cacheArticles(_articles);
     } catch (e) {
       _error = e.toString();
-      // Try to load cached articles on error
       final cachedArticles = await ArticleCacheService.getCachedArticles();
       if (cachedArticles.isNotEmpty) {
         _articles = cachedArticles;
