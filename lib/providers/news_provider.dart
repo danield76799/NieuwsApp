@@ -84,8 +84,11 @@ class NewsProvider extends ChangeNotifier {
         resetPagination();
         notifyListeners();
 
-        // Cache the article list only (fast, no HTTP)
+        // Cache the article list (fast, no HTTP)
         ArticleCacheService.cacheArticles(_articles);
+        
+        // Cache all article content in background (parallel, non-blocking)
+        ArticleCacheService.cacheArticlesContent(_articles);
       }
     } catch (e) {
       print('Background refresh failed: $e');

@@ -17,12 +17,31 @@ class ArticleHeroCard extends StatefulWidget {
 }
 
 class _ArticleHeroCardState extends State<ArticleHeroCard> {
-  void _openArticle() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => BrowserReaderScreen(article: widget.article),
-      ),
-    );
+  void _openArticle() async {
+    // Eerst checken of content gecached is → instant offline reader
+    final cachedContent = await ArticleCacheService.getArticleContent(widget.article.id);
+    if (cachedContent != null && cachedContent.isNotEmpty && mounted) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => CachedArticleReaderScreen(
+            title: widget.article.title,
+            content: cachedContent,
+            source: widget.article.source,
+            pubDate: widget.article.pubDate,
+          ),
+        ),
+      );
+      return;
+    }
+    
+    // Fallback: browser reader (laadt URL)
+    if (mounted) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => BrowserReaderScreen(article: widget.article),
+        ),
+      );
+    }
   }
 
   Future<void> _shareArticle() async {
@@ -241,12 +260,31 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
     });
   }
 
-  void _openArticle() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => BrowserReaderScreen(article: widget.article),
-      ),
-    );
+  void _openArticle() async {
+    // Eerst checken of content gecached is → instant offline reader
+    final cachedContent = await ArticleCacheService.getArticleContent(widget.article.id);
+    if (cachedContent != null && cachedContent.isNotEmpty && mounted) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => CachedArticleReaderScreen(
+            title: widget.article.title,
+            content: cachedContent,
+            source: widget.article.source,
+            pubDate: widget.article.pubDate,
+          ),
+        ),
+      );
+      return;
+    }
+
+    // Fallback: browser reader (laadt URL)
+    if (mounted) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => BrowserReaderScreen(article: widget.article),
+        ),
+      );
+    }
   }
 
   Future<void> _shareArticle() async {
