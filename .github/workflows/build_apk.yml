@@ -42,41 +42,11 @@ jobs:
     - name: Get dependencies
       run: flutter pub get
       
-    - name: Setup release signing
-      run: |
-        # Create key.properties for release signing
-        echo "storePassword=android" > android/app/key.properties
-        echo "keyPassword=android" >> android/app/key.properties
-        echo "keyAlias=upload" >> android/app/key.properties
-        echo "storeFile=upload-keystore.jks" >> android/app/key.properties
-        
-        # Copy the upload keystore (already in repo from earlier)
-        ls -la android/app/upload-keystore.jks || echo "Keystore not found"
-      
-    - name: Build APK
-      run: flutter build apk --release
-      env:
-        ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
+    - name: Build APK (debug)
+      run: flutter build apk --debug
       
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: release-apk
-        path: build/app/outputs/flutter-apk/app-release.apk
-        
-    - name: Create Release
-      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-      uses: softprops/action-gh-release@v1
-      with:
-        files: build/app/outputs/flutter-apk/app-release.apk
-        tag_name: v${{ github.run_number }}
-        name: Release v${{ github.run_number }}
-        body: |
-          Automatisch gebouwde APK van commit ${{ github.sha }}
-          
-          ## Installatie
-          1. Download `app-release.apk`
-          2. Zet over naar je Android telefoon
-          3. Installeer (sta "Onbekende bronnen" toe in instellingen)
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        name: debug-apk
+        path: build/app/outputs/flutter-apk/app-debug.apk
