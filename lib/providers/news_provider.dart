@@ -67,7 +67,7 @@ class NewsProvider extends ChangeNotifier {
     _useAutoLocation = prefs.getBool('auto_location') ?? true;
     _currentPosition = prefs.getString('current_position');
 
-    // Load cached articles immediately without waiting
+    // Load cached articles (fast, no HTTP)
     _loadCachedArticles();
   }
 
@@ -79,39 +79,27 @@ class NewsProvider extends ChangeNotifier {
         _articles = cachedArticles;
         _applyFilter();
         notifyListeners();
+        // Refresh in background without blocking
+        _refreshInBackground();
         return;
       }
     }
-    // Cache invalid, fetch fresh data
-    await _refreshInBackground();
+    // No valid cache, fetch fresh
+    _refreshInBackground();
   }
 
   Future<void> _refreshInBackground() async {
     try {
       final articles = await _repository.fetchNews();
       if (articles.isNotEmpty) {
-        // Cache limiet: max 100 artikelen
-        const maxCacheSize = 100;
-        if (articles.length > maxCacheSize) {
-          articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
-          _articles = articles.take(maxCacheSize).toList();
-        } else {
-          _articles = articles;
-        }
-
-        // Sort articles by date (newest first)
+        _articles = articles.take(100).toList();
         _articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
         _applyFilter();
         resetPagination();
         notifyListeners();
 
-        // Cache the articles
-        await ArticleCacheService.cacheArticles(_articles);
-        
-        // Cache article content in background for offline reading
-        ArticleCacheService.cacheArticlesContent(_articles).catchError((e) {
-          print('Background content caching failed: $e');
-        });
+        // Cache the article list only (fast, no HTTP)
+        ArticleCacheService.cacheArticles(_articles);
       }
     } catch (e) {
       print('Background refresh failed: $e');
@@ -158,14 +146,6 @@ class NewsProvider extends ChangeNotifier {
 
       // Cache the articles
       await ArticleCacheService.cacheArticles(_articles);
-      
-      // Cache article content in background for offline reading
-      ArticleCacheService.cacheArticlesContent(_articles).catchError((e) {
-        print('Background content caching failed: $e');
-      });
-
-      // Preload article content in background
-      ArticleCacheService.cacheArticlesContent(_articles).ignore();
     } catch (e) {
       _error = e.toString();
       // Try to load cached articles on error
