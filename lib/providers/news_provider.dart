@@ -107,6 +107,11 @@ class NewsProvider extends ChangeNotifier {
 
         // Cache the articles
         await ArticleCacheService.cacheArticles(_articles);
+        
+        // Cache article content in background for offline reading
+        ArticleCacheService.cacheArticlesContent(_articles).catchError((e) {
+          print('Background content caching failed: $e');
+        });
       }
     } catch (e) {
       print('Background refresh failed: $e');
@@ -153,6 +158,11 @@ class NewsProvider extends ChangeNotifier {
 
       // Cache the articles
       await ArticleCacheService.cacheArticles(_articles);
+      
+      // Cache article content in background for offline reading
+      ArticleCacheService.cacheArticlesContent(_articles).catchError((e) {
+        print('Background content caching failed: $e');
+      });
 
       // Preload article content in background
       ArticleCacheService.cacheArticlesContent(_articles).ignore();

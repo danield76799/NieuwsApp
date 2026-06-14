@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/article.dart';
 
@@ -62,10 +63,66 @@ class ArticleCacheService {
   static Future<void> cacheArticlesContent(List<Article> articles) async {
     final prefs = await SharedPreferences.getInstance();
     for (final article in articles) {
-      if (article.description != null && article.description!.isNotEmpty) {
-        await cacheArticleContent(article.id, article.description!);
+      // Cache description as fallback content
+      if (article.description.isNotEmpty) {
+        await cacheArticleContent(article.id, article.description);
       }
     }
+  }
+
+  /// Fetch and cache full article content from URL
+  static Future<String?> fetchAndCacheArticleContent(String articleId, String url) async {
+    try {
+      final response = await http.get(Uri.parse(url), headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      });
+      
+      if (response.statusCode == 200) {
+        // Extract article text from HTML
+        final content = _extractArticleText(response.body);
+        if (content.isNotEmpty) {
+          await cacheArticleContent(articleId, content);
+          return content;
+        }
+      }
+    } catch (e) {
+      print('Error fetching article content: $e');
+    }
+    return null;
+  }
+
+  /// Extract readable text from HTML
+  static String _extractArticleText(String html) {
+    // Remove script and style tags
+    var text = html.replaceAll(RegExp(r'<script[^>]*>[\s\S]*?</script>', caseSensitive: false), '');
+    text = text.replaceAll(RegExp(r'<style[^>]*>[\s\S]*?</style>', caseSensitive: false), '');
+    
+    // Remove all HTML tags
+    text = text.replaceAll(RegExp(r'<[^>]+>', caseSensitive: false), '');
+    
+    // Decode HTML entities
+    text = text
+      .replaceAll('&amp;', '&')
+      .replaceAll('&lt;', '<')
+      .replaceAll('&gt;', '>')
+      .replaceAll('&quot;', '"')
+      .replaceAll('&#39;', "'")
+      .replaceAll('&nbsp;', ' ')
+      .replaceAll('&#x27;', "'")
+      .replaceAll('&#x2F;', '/')
+      .replaceAll('&#x3C;', '<')
+      .replaceAll('&#x3E;', '>')
+      .replaceAll('&#x22;', '"');
+    
+    // Clean up whitespace
+    text = text.replaceAll(RegExp(r'\s+'), ' ').trim();
+    
+    // Limit length
+    if (text.length > 10000) {
+      text = text.substring(0, 10000) + '...';
+    }
+    
+    return text;
   }
 
   static Future<T?> _read<T>({required String key, required T fallback}) async {

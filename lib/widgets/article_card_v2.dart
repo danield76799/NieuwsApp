@@ -57,7 +57,34 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
   }
 
   Future<void> _openArticle() async {
-    // Altijd browser openen - webview laadt de volledige artikel pagina
+    // Eerst proberen gecachte content te laden
+    var cachedContent = await ArticleCacheService.getArticleContent(widget.article.id);
+    
+    // Als geen cache, proberen content te fetchen en cachen
+    if (cachedContent == null || cachedContent.isEmpty) {
+      cachedContent = await ArticleCacheService.fetchAndCacheArticleContent(
+        widget.article.id, 
+        widget.article.link,
+      );
+    }
+    
+    if (cachedContent != null && cachedContent.isNotEmpty && mounted) {
+      // Toon gecachte content in offline reader
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CachedArticleReaderScreen(
+            title: widget.article.title,
+            content: cachedContent,
+            source: widget.article.source,
+            pubDate: widget.article.pubDate,
+          ),
+        ),
+      );
+      return;
+    }
+    
+    // Fallback: open browser als geen content beschikbaar
     if (mounted) {
       Navigator.push(
         context,
@@ -283,7 +310,34 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
   }
 
   Future<void> _openArticle() async {
-    // Altijd browser openen - webview laadt de volledige artikel pagina
+    // Eerst proberen gecachte content te laden
+    var cachedContent = await ArticleCacheService.getArticleContent(widget.article.id);
+    
+    // Als geen cache, proberen content te fetchen en cachen
+    if (cachedContent == null || cachedContent.isEmpty) {
+      cachedContent = await ArticleCacheService.fetchAndCacheArticleContent(
+        widget.article.id, 
+        widget.article.link,
+      );
+    }
+    
+    if (cachedContent != null && cachedContent.isNotEmpty && mounted) {
+      // Toon gecachte content in offline reader
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CachedArticleReaderScreen(
+            title: widget.article.title,
+            content: cachedContent,
+            source: widget.article.source,
+            pubDate: widget.article.pubDate,
+          ),
+        ),
+      );
+      return;
+    }
+    
+    // Fallback: open browser als geen content beschikbaar
     if (mounted) {
       Navigator.push(
         context,
