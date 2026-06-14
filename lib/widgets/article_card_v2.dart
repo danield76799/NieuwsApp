@@ -4,7 +4,9 @@ import 'package:share_plus/share_plus.dart';
 import '../models/article.dart';
 import '../services/bookmark_service.dart';
 import '../services/time_helper.dart';
+import '../services/article_cache_service.dart';
 import '../screens/browser_reader_screen.dart';
+import '../screens/cached_article_reader_screen.dart';
 
 /// NOS-style Hero Card for featured articles
 class ArticleHeroCard extends StatefulWidget {
