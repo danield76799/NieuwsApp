@@ -46,7 +46,7 @@ class PlusNewsApp extends StatelessWidget {
           color: colorScheme.onSurface,
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 0,
         color: colorScheme.surface,
         shape: RoundedRectangleBorder(

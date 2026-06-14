@@ -257,3 +257,5 @@ class NewsProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
   }
+
+}
