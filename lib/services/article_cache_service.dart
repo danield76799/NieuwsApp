@@ -60,12 +60,27 @@ class ArticleCacheService {
     await prefs.setString('${_kArticleContent}$articleId', content);
   }
 
+  /// Cache full article content from URLs in background
   static Future<void> cacheArticlesContent(List<Article> articles) async {
+    // Eerst description cachen als snelle fallback
     final prefs = await SharedPreferences.getInstance();
     for (final article in articles) {
-      // Cache description as fallback content
       if (article.description.isNotEmpty) {
-        await cacheArticleContent(article.id, article.description);
+        await prefs.setString('${_kArticleContent}${article.id}', article.description);
+      }
+    }
+    
+    // Daarna volledige content fetchen in achtergrond (max 10 artikelen)
+    int count = 0;
+    for (final article in articles) {
+      if (count >= 10) break;
+      final url = article.url ?? article.link;
+      if (url.isNotEmpty) {
+        fetchAndCacheArticleContent(article.id, url).catchError((e) {
+          // silent fail - description is al gecached als fallback
+          return null;
+        });
+        count++;
       }
     }
   }
