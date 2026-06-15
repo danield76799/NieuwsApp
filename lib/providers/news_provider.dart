@@ -4,6 +4,7 @@ import '../models/article.dart';
 import '../repositories/news_repository.dart';
 import '../services/location_service.dart';
 import '../services/article_cache_service.dart';
+import '../services/notification_service.dart';
 
 class NewsProvider extends ChangeNotifier {
   final NewsRepository _repository;
@@ -80,6 +81,30 @@ class NewsProvider extends ChangeNotifier {
     try {
       final articles = await _repository.fetchNews();
       if (articles.isNotEmpty) {
+        // Check voor breaking news in nieuwe artikelen
+        final notificationService = NotificationService();
+        await notificationService.initialize();
+        
+        for (final article in articles.take(5)) {
+          if (notificationService.isBreakingNews(article)) {
+            // Check of we dit artikel al hebben gezien
+            final prefs = await SharedPreferences.getInstance();
+            final notifiedArticles = prefs.getStringList('notified_articles') ?? [];
+            
+            if (!notifiedArticles.contains(article.id)) {
+              await notificationService.showBreakingNews(article);
+              
+              // Markeer als genotificeerd
+              notifiedArticles.add(article.id);
+              // Houd max 100 IDs bij
+              if (notifiedArticles.length > 100) {
+                notifiedArticles.removeAt(0);
+              }
+              await prefs.setStringList('notified_articles', notifiedArticles);
+            }
+          }
+        }
+        
         _articles = articles.take(50).toList();
         _articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
         _applyFilter();

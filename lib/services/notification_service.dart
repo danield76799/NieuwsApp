@@ -43,6 +43,18 @@ class NotificationService {
     _isInitialized = true;
   }
 
+  /// Check of artikel breaking news is
+  bool isBreakingNews(Article article) {
+    final breakingKeywords = [
+      'breaking', 'urgent', 'spoed', 'alarm', 'alert',
+      'schokkend', 'belangrijk', 'live', 'nieuwsflits',
+      'update', 'nieuws', 'just', 'net binnen'
+    ];
+    
+    final text = '${article.title} ${article.description}'.toLowerCase();
+    return breakingKeywords.any((keyword) => text.contains(keyword));
+  }
+
   /// Toon breaking news notificatie
   Future<void> showBreakingNews(Article article) async {
     const androidDetails = AndroidNotificationDetails(
