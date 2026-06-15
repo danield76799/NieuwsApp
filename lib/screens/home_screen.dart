@@ -415,22 +415,238 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                         SliverFillRemaining(child: EmptyState(icon: Icons.error_outline, title: 'Oeps!', subtitle: provider.error!, action: ElevatedButton.icon(onPressed: () => provider.loadNews(forceRefresh: true), icon: const Icon(Icons.refresh), label: const Text('Opnieuw')))),
                       if (!provider.isLoading && provider.error == null && filteredArticles.isEmpty)
                         const SliverFillRemaining(child: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [CircularProgressIndicator(), SizedBox(height: 16), Text('Nieuws laden...')]))),
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<NewsProvider>(
+      builder: (context, provider, child) {
+        final filteredArticles = provider.visibleArticles;
+        final hasMore = provider.hasMoreArticles;
+
+        return Scaffold(
+          appBar: AppBar(
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            leading: Consumer<NewsProvider>(
+              builder: (context, provider, child) => IconButton(
+                icon: Icon(
+                  Icons.filter_list,
+                  color: provider.filterActive ? Colors.amber : Colors.white,
+                ),
+                onPressed: () {
+                  provider.toggleFilter(!provider.filterActive);
+                },
+                tooltip: provider.filterActive ? 'Filter uit' : 'Filter aan',
+              ),
+            ),
+            title: const SizedBox.shrink(),
+            centerTitle: false,
+            actions: [
+              if (_weatherData != null)
+                TextButton.icon(
+                  onPressed: _showWeatherPopup,
+                  icon: Icon(
+                    WeatherService.getWeatherIcon(_weatherData!['description'] ?? ''),
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                  label: Text(
+                    '${_weatherData!['temp']}°',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+              IconButton(
+                icon: const Icon(Icons.search, color: Colors.white),
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    builder: (context) {
+                      final provider = context.read<NewsProvider>();
+                      return Padding(
+                        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                        child: app_search.SearchBar(onSearch: (query) {
+                          provider.updateSearchQuery(query);
+                        }),
+                      );
+                    },
+                  );
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.bookmark, color: Colors.white),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const BookmarksScreen()),
+                  );
+                },
+              ),
+              IconButton(
+                icon: Icon(
+                  _viewMode == ViewMode.list ? Icons.swipe : Icons.list,
+                  color: Colors.white,
+                ),
+                onPressed: () async {
+                  setState(() {
+                    _viewMode = _viewMode == ViewMode.list ? ViewMode.swipe : ViewMode.list;
+                  });
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setBool('swipe_view', _viewMode == ViewMode.swipe);
+                },
+                tooltip: _viewMode == ViewMode.list ? 'Swipe weergave' : 'Lijst weergave',
+              ),
+              IconButton(
+                icon: const Icon(Icons.settings, color: Colors.white),
+                onPressed: () async {
+                  await Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen()));
+                  await _loadWeather();
+                },
+              ),
+              const SizedBox(width: 4),
+            ],
+          ),
+          body: _viewMode == ViewMode.swipe
+              ? Column(
+                  children: [
+                    Expanded(
+                      child: SwipeCardView(
+                        articles: filteredArticles,
+                        onRefresh: () async {
+                          await provider.loadNews(forceRefresh: true);
+                          await _loadWeather();
+                        },
+                      ),
+                    ),
+                    if (hasMore)
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Center(
+                          child: ElevatedButton.icon(
+                            onPressed: provider.loadMoreArticles,
+                            icon: const Icon(Icons.expand_more),
+                            label: const Text('Meer laden'),
+                          ),
+                        ),
+                      ),
+                  ],
+                )
+              : RefreshIndicator(
+                  onRefresh: () async {
+                    await provider.loadNews(forceRefresh: true);
+                    await _loadWeather();
+                  },
+                  color: Theme.of(context).colorScheme.primary,
+                  backgroundColor: Theme.of(context).colorScheme.surface,
+                  displacement: 40,
+                  strokeWidth: 3,
+                  child: CustomScrollView(
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+                          child: Row(
+                            children: [
+                              ActionChip(
+                                avatar: Icon(
+                                  provider.filterActive ? Icons.visibility : Icons.visibility_off,
+                                  size: 18,
+                                  color: provider.filterActive ? Colors.green : Colors.grey[400],
+                                ),
+                                label: Text(
+                                  provider.filterActive ? 'Filter: AAN' : 'Filter: UIT',
+                                  style: TextStyle(fontSize: 12, color: provider.filterActive ? Colors.green : Colors.grey[400]),
+                                ),
+                                onPressed: () => provider.toggleFilter(!provider.filterActive),
+                                backgroundColor: provider.filterActive ? Colors.green.withOpacity(0.1) : Colors.grey[700]!.withOpacity(0.2),
+                                side: BorderSide(color: provider.filterActive ? Colors.green.withOpacity(0.3) : Colors.grey[500]!.withOpacity(0.3), width: 1),
+                                padding: EdgeInsets.zero,
+                                visualDensity: VisualDensity.compact,
+                              ),
+                              if (provider.filterActive && provider.keywords.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 8),
+                                  child: Text('${provider.keywords.length} actief', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      if (provider.isLoading && filteredArticles.isEmpty)
+                        const SliverFillRemaining(child: Center(child: CircularProgressIndicator())),
+                      if (provider.error != null && filteredArticles.isEmpty)
+                        SliverFillRemaining(
+                          child: EmptyState(
+                            icon: Icons.error_outline,
+                            title: 'Oeps!',
+                            subtitle: provider.error!,
+                            action: ElevatedButton.icon(
+                              onPressed: () => provider.loadNews(forceRefresh: true),
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('Opnieuw'),
+                            ),
+                          ),
+                        ),
+                      if (!provider.isLoading && provider.error == null && filteredArticles.isEmpty)
+                        const SliverFillRemaining(
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                CircularProgressIndicator(),
+                                SizedBox(height: 16),
+                                Text('Nieuws laden...'),
+                              ],
+                            ),
+                          ),
+                        ),
                       if (filteredArticles.isNotEmpty)
                         SliverPadding(
                           padding: const EdgeInsets.only(bottom: 16),
                           sliver: SliverList(
                             delegate: SliverChildBuilderDelegate(
                               (context, index) {
-                                return RepaintBoundary(
-                                  child: index == 0
-                                      ? ArticleHeroCard(article: filteredArticles[index])
-                                      : ArticleCardV2(article: filteredArticles[index]),
-                                );
+                                // Only load the first 10 articles initially
+                                if (index < 10 || provider.hasMoreArticles) {
+                                  return RepaintBoundary(
+                                    child: index == 0
+                                        ? ArticleHeroCard(article: filteredArticles[index])
+                                        : ArticleCardV2(article: filteredArticles[index]),
+                                  );
+                                }
+                                return const SizedBox.shrink();
                               },
                               childCount: filteredArticles.length,
                             ),
                           ),
                         ),
+                      if (hasMore)
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Center(
+                              child: ElevatedButton.icon(
+                                onPressed: provider.loadMoreArticles,
+                                icon: const Icon(Icons.expand_more),
+                                label: const Text('Meer laden'),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+        );
+      },
+    );
+  }
                       if (hasMore)
                         SliverToBoxAdapter(
                           child: Padding(

@@ -11,102 +11,81 @@ class RssNewsRepository implements NewsRepository {
   RssNewsRepository(this._storage);
 
   @override
-  Future<List<Article>> fetchNews() async {
-    List<Article> allArticles = [];
-    List<String> errors = [];
+  Future<List<Article>> fetchNews({bool forceRefresh = false}) async {
+    try {
+      final cachedArticles = await ArticleCacheService.getCachedArticles();
+      if (!forceRefresh && cachedArticles.isNotEmpty) {
+        return cachedArticles;
+      }
 
-    // Get feeds from SharedPreferences
-    final feeds = await FeedService.getFeeds();
+      // Get feeds from SharedPreferences
+      final feeds = await FeedService.getFeeds();
 
-    // Fetch all feeds in parallel for much faster loading
-    final futures = feeds.map((source) async {
-      try {
-        // Add timeout to prevent hanging on slow feeds
-        final completer = Completer<dynamic>();
-        final timer = Timer(const Duration(seconds: 10), () {
-          completer.completeError("Timeout: Feed ${source["name"]} is te traag");
-        });
-
+      // Fetch all feeds in parallel with timeout
+      final futures = feeds.map((source) async {
         try {
-          final articles = await RssParserService.parseRssFeed(source["url"]!);
-          timer.cancel();
-          if (articles.isNotEmpty) {
-            return articles.map((article) => Article(
-              id: article.id,
-              title: article.title,
-              description: article.description,
-              content: article.content,
-              link: article.link,
-              url: article.url,
-              pubDate: article.pubDate,
-              publishedAt: article.publishedAt,
-              thumbnailUrl: article.thumbnailUrl,
-              imageUrl: article.imageUrl,
-              source: source["name"] ?? article.source,
-              category: article.category,
-              author: article.author,
-            )).toList();
+          // Add timeout to prevent hanging on slow feeds
+          final completer = Completer<dynamic>();
+          final timer = Timer(const Duration(seconds: 10), () {
+            completer.completeError("Timeout: Feed ${source["name"]} is te traag");
+          });
+
+          try {
+            final articles = await RssParserService.parseRssFeed(source["url"]!);
+            timer.cancel();
+            if (articles.isNotEmpty) {
+              return articles.map((article) => Article(
+                id: article.id,
+                title: article.title,
+                description: article.description,
+                content: article.content,
+                link: article.link,
+                url: article.url,
+                pubDate: article.pubDate,
+                publishedAt: article.publishedAt,
+                thumbnailUrl: article.thumbnailUrl,
+                imageUrl: article.imageUrl,
+                source: source["name"] ?? article.source,
+                category: article.category,
+                author: article.author,
+              )).toList();
+            }
+            return <Article>[];
+          } catch (e) {
+            timer.cancel();
+            return <Article>[];
           }
-          return <Article>[];
         } catch (e) {
-          timer.cancel();
-          errors.add("${source["name"]}: $e");
           return <Article>[];
         }
-      } catch (e) {
-        errors.add("${source["name"]}: $e");
-        return <Article>[];
+      }).toList();
+
+      final results = await Future.wait(futures);
+      final allArticles = results.expand((e) => e).toList();
+
+      // Sort by date (newest first)
+      allArticles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
+
+      // Limit to 50 articles for faster loading
+      if (allArticles.length > 50) {
+        allArticles = allArticles.take(50).toList();
       }
-    }).toList();
 
-    // Wait for all feeds to complete in parallel
-    final results = await Future.wait(futures);
-    
-    // Collect all articles
-    for (final articles in results) {
-      allArticles.addAll(articles);
-    }
-
-    // Remove duplicates based on normalized link AND title similarity
-    final seenLinks = <String>{};
-    final seenTitles = <String>{};
-    allArticles = allArticles.where((article) {
-      // Normalize link
-      final normalizedLink = article.link.replaceAll(RegExp(r'[?#].*$'), '').toLowerCase();
-      if (seenLinks.contains(normalizedLink)) {
-        return false;
+      // Cache the results
+      if (allArticles.isNotEmpty) {
+        await ArticleCacheService.cacheArticles(allArticles);
       }
-      seenLinks.add(normalizedLink);
-      
-      // Also check title similarity (some articles have different URLs but same title)
-      final normalizedTitle = article.title.toLowerCase().trim();
-      if (seenTitles.contains(normalizedTitle)) {
-        return false;
+
+      return allArticles;
+    } catch (e) {
+      print('Error fetching news: $e');
+      final cached = await ArticleCacheService.getCachedArticles();
+      if (cached.isNotEmpty) {
+        return cached;
       }
-      seenTitles.add(normalizedTitle);
-      
-      return true;
-    }).toList();
-
-    // Sort by date (newest first)
-    allArticles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
-
-    // Limit to 50 articles for faster loading
-    if (allArticles.length > 50) {
-      allArticles = allArticles.take(50).toList();
+      return [];
     }
-
-    if (allArticles.isNotEmpty) {
-      await _storage.cacheArticles(allArticles);
-    }
-
-    if (allArticles.isEmpty && errors.isNotEmpty) {
-      final cached = await _storage.getCachedArticles();
-      if (cached.isNotEmpty) return cached;
-      throw Exception("Kon nieuws niet laden: " + errors.join(", "));
-    }
-
-    return allArticles;
+  }
   }
 
   @override
