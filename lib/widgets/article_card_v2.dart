@@ -228,8 +228,7 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
     _checkBookmark();
   }
 
-  Future<void> _checkBookmark() async {
-    await _bookmarkService.initialize();
+  void _checkBookmark() {
     setState(() {
       _isBookmarked = _bookmarkService.isBookmarked(widget.article.id);
     });

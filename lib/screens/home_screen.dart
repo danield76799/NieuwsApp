@@ -22,7 +22,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
-  String _searchQuery = '';
   Map<String, dynamic>? _weatherData;
   DateTime? _lastWeatherFetch;
   DateTime? _lastNewsRefresh;
@@ -250,26 +249,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return Consumer<NewsProvider>(
       builder: (context, provider, child) {
-        final articles = provider.visibleArticles; // Gebruik visibleArticles i.p.v. articles
+        final filteredArticles = provider.visibleArticles;
         final hasMore = provider.hasMoreArticles;
-        final filteredArticles = _searchQuery.isEmpty
-            ? articles
-            : articles.where((a) =>
-                a.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                a.description.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
 
         return Scaffold(
           appBar: AppBar(
             backgroundColor: Theme.of(context).colorScheme.primary,
-            leading: IconButton(
-              icon: Icon(
-                Icons.filter_list,
-                color: provider.filterActive ? Colors.amber : Colors.white,
+            leading: Consumer<NewsProvider>(
+              builder: (context, provider, child) => IconButton(
+                icon: Icon(
+                  Icons.filter_list,
+                  color: provider.filterActive ? Colors.amber : Colors.white,
+                ),
+                onPressed: () {
+                  provider.toggleFilter(!provider.filterActive);
+                },
+                tooltip: provider.filterActive ? 'Filter uit' : 'Filter aan',
               ),
-              onPressed: () {
-                provider.toggleFilter(!provider.filterActive);
-              },
-              tooltip: provider.filterActive ? 'Filter uit' : 'Filter aan',
             ),
             title: const SizedBox.shrink(),
             centerTitle: false,
@@ -302,14 +298,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   showModalBottomSheet(
                     context: context,
                     isScrollControlled: true,
-                    builder: (context) => Padding(
-                      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-                      child: app_search.SearchBar(onSearch: (query) {
-                        setState(() {
-                          _searchQuery = query;
-                        });
-                      }),
-                    ),
+                    builder: (context) {
+                      final provider = context.read<NewsProvider>();
+                      return Padding(
+                        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                        child: app_search.SearchBar(onSearch: (query) {
+                          provider.updateSearchQuery(query);
+                        }),
+                      );
+                    },
                   );
                 },
               ),
@@ -412,22 +409,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           ),
                         ),
                       ),
-                      if (provider.isLoading && articles.isEmpty)
+                      if (provider.isLoading && filteredArticles.isEmpty)
                         const SliverFillRemaining(child: Center(child: CircularProgressIndicator())),
-                      if (provider.error != null && articles.isEmpty)
+                      if (provider.error != null && filteredArticles.isEmpty)
                         SliverFillRemaining(child: EmptyState(icon: Icons.error_outline, title: 'Oeps!', subtitle: provider.error!, action: ElevatedButton.icon(onPressed: () => provider.loadNews(forceRefresh: true), icon: const Icon(Icons.refresh), label: const Text('Opnieuw')))),
                       if (!provider.isLoading && provider.error == null && filteredArticles.isEmpty)
-                        SliverFillRemaining(child: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: const [CircularProgressIndicator(), SizedBox(height: 16), Text('Nieuws laden...')]))),
+                        const SliverFillRemaining(child: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [CircularProgressIndicator(), SizedBox(height: 16), Text('Nieuws laden...')]))),
                       if (filteredArticles.isNotEmpty)
                         SliverPadding(
                           padding: const EdgeInsets.only(bottom: 16),
                           sliver: SliverList(
                             delegate: SliverChildBuilderDelegate(
                               (context, index) {
-                                if (index == 0) {
-                                  return ArticleHeroCard(article: filteredArticles[index]);
-                                }
-                                return ArticleCardV2(article: filteredArticles[index]);
+                                return RepaintBoundary(
+                                  child: index == 0
+                                      ? ArticleHeroCard(article: filteredArticles[index])
+                                      : ArticleCardV2(article: filteredArticles[index]),
+                                );
                               },
                               childCount: filteredArticles.length,
                             ),

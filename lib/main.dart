@@ -7,6 +7,7 @@ import 'providers/news_provider.dart';
 import 'repositories/rss_news_repository.dart';
 import 'screens/home_screen.dart';
 import 'services/storage_service.dart';
+import 'services/bookmark_service.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
@@ -14,6 +15,9 @@ void main() async {
 
   final storage = StorageService();
   final repo = RssNewsRepository(storage);
+  
+  // Pre-initialize bookmark service for performance
+  await BookmarkService().initialize();
 
   runApp(
     ChangeNotifierProvider(

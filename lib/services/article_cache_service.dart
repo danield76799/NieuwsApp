@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/article.dart';
@@ -13,7 +14,7 @@ class ArticleCacheService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final payload = articles.map((a) => a.toJson()).toList();
-      final encoded = jsonEncode(payload);
+      final encoded = await compute(jsonEncode, payload);
       await prefs.setString(_kCachedArticles, encoded);
       await prefs.setInt(_kCacheTimestamp, DateTime.now().millisecondsSinceEpoch);
     } catch (_) {
@@ -24,6 +25,11 @@ class ArticleCacheService {
   static Future<List<Article>> getCachedArticles() async {
     final jsonString = await _read(key: _kCachedArticles, fallback: '');
     if (jsonString == null || jsonString.isEmpty) return <Article>[];
+    
+    return compute(_decodeArticles, jsonString);
+  }
+
+  static List<Article> _decodeArticles(String jsonString) {
     final decoded = jsonDecode(jsonString) as List<dynamic>;
     return decoded
         .map((e) => Article.fromJson(e as Map<String, dynamic>))

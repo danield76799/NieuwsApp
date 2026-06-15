@@ -14,6 +14,7 @@ class NewsProvider extends ChangeNotifier {
   String? _error;
   List<String> _keywords = [];
   bool _filterActive = false;
+  String _searchQuery = '';
   String _weatherCity = 'Amsterdam';
   bool _useAutoLocation = true;
   String? _currentPosition;
@@ -22,7 +23,8 @@ class NewsProvider extends ChangeNotifier {
     _loadSavedData();
   }
 
-  List<Article> get articles => _filterActive ? _filteredArticles : _articles;
+  List<Article> get articles => (_filterActive || _searchQuery.isNotEmpty) ? _filteredArticles : _articles;
+  String get searchQuery => _searchQuery;
 
   // Pagination
   static const int _pageSize = 20;
@@ -135,14 +137,26 @@ class NewsProvider extends ChangeNotifier {
   }
 
   void _applyFilter() {
-    if (_keywords.isEmpty || !_filterActive) {
-      _filteredArticles = [];
-      return;
+    final baseList = _articles;
+    
+    // First apply the keyword filter (if active)
+    List<Article> result = _filterActive && _keywords.isNotEmpty 
+        ? baseList.where((article) {
+            final text = '${article.title} ${article.description}'.toLowerCase();
+            return _keywords.any((keyword) => text.contains(keyword.toLowerCase()));
+          }).toList() 
+        : baseList;
+    
+    // Then apply the search query filter (if any)
+    if (_searchQuery.isNotEmpty) {
+      final query = _searchQuery.toLowerCase();
+      result = result.where((article) {
+        return article.title.toLowerCase().contains(query) ||
+               article.description.toLowerCase().contains(query);
+      }).toList();
     }
-    _filteredArticles = _articles.where((article) {
-      final text = '${article.title} ${article.description}'.toLowerCase();
-      return _keywords.any((keyword) => text.contains(keyword.toLowerCase()));
-    }).toList();
+    
+    _filteredArticles = result;
   }
 
   Future<void> setKeywords(String keywordString) async {
@@ -170,6 +184,12 @@ class NewsProvider extends ChangeNotifier {
 
     _keywords = [];
     _filterActive = false;
+    _applyFilter();
+    notifyListeners();
+  }
+
+  Future<void> updateSearchQuery(String query) async {
+    _searchQuery = query;
     _applyFilter();
     notifyListeners();
   }
