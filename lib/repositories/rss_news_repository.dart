@@ -1,23 +1,13 @@
 import 'dart:async';
 import "../models/article.dart";
 import "../services/rss_parser_service.dart";
-import "../services/storage_service.dart";
 import "../services/feed_service.dart";
 import "news_repository.dart";
 
 class RssNewsRepository implements NewsRepository {
-  final StorageService _storage;
-
-  RssNewsRepository(this._storage);
-
   @override
   Future<List<Article>> fetchNews({bool forceRefresh = false}) async {
     try {
-      final cachedArticles = await ArticleCacheService.getCachedArticles();
-      if (!forceRefresh && cachedArticles.isNotEmpty) {
-        return cachedArticles;
-      }
-
       // Get feeds from SharedPreferences
       final feeds = await FeedService.getFeeds();
 
@@ -61,7 +51,7 @@ class RssNewsRepository implements NewsRepository {
       }).toList();
 
       final results = await Future.wait(futures);
-      final allArticles = results.expand((e) => e).toList();
+      var allArticles = results.expand((e) => e).toList();
 
       // Sort by date (newest first)
       allArticles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
@@ -71,21 +61,11 @@ class RssNewsRepository implements NewsRepository {
         allArticles = allArticles.take(50).toList();
       }
 
-      // Cache the results
-      if (allArticles.isNotEmpty) {
-        await ArticleCacheService.cacheArticles(allArticles);
-      }
-
       return allArticles;
     } catch (e) {
       print('Error fetching news: $e');
-      final cached = await ArticleCacheService.getCachedArticles();
-      if (cached.isNotEmpty) {
-        return cached;
-      }
       return [];
     }
-  }
   }
 
   @override

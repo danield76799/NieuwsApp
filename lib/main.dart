@@ -14,7 +14,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final storage = StorageService();
-  final repo = RssNewsRepository(storage);
+  final repo = RssNewsRepository();
   
   // Pre-initialize bookmark service for performance
   await BookmarkService().initialize();

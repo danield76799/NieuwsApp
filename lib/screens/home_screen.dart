@@ -36,7 +36,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _loadViewMode();
     _startAutoRefreshTimer();
     
-    // Preload thumbnails after first frame when cached articles are shown
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _preloadThumbnailsFromProvider();
     });
@@ -52,7 +51,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _startAutoRefreshTimer() {
-    // Refresh news every 5 minutes while app is open
     _autoRefreshTimer = Timer.periodic(const Duration(minutes: 5), (_) {
       _refreshNewsInBackground();
     });
@@ -69,22 +67,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _refreshNewsInBackground() async {
     final provider = context.read<NewsProvider>();
     try {
-      // Don't force refresh — let loadNews() use cache if valid.
-      // Only fetch from network if cache is stale.
       await provider.loadNews();
       if (mounted) {
         setState(() {
           _lastNewsRefresh = DateTime.now();
         });
         
-        // Preload thumbnails for first 7 articles for instant display
         final articles = provider.articles;
         if (articles.isNotEmpty) {
           _preloadThumbnails(articles);
         }
       }
     } catch (_) {
-      // Silent fail — don't bother user with background refresh errors
+      // Silent fail
     }
   }
 
@@ -121,12 +116,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // Refresh news if last refresh was more than 5 minutes ago
       if (_lastNewsRefresh == null ||
           DateTime.now().difference(_lastNewsRefresh!) > const Duration(minutes: 5)) {
         _refreshNewsInBackground();
       }
-      // Only refresh weather if last fetch was more than 10 minutes ago
       if (_lastWeatherFetch == null ||
           DateTime.now().difference(_lastWeatherFetch!) > const Duration(minutes: 10)) {
         _loadWeather();
@@ -137,18 +130,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _detectLocationAndLoadWeather() async {
     final provider = context.read<NewsProvider>();
 
-    // Detect GPS location if auto-location is enabled
     if (provider.useAutoLocation) {
       await provider.detectLocation();
     }
 
     await _loadWeather();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Only load weather once at init, not on every dependency change
   }
 
   Future<void> _loadWeather() async {
@@ -255,13 +241,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         return Scaffold(
           appBar: AppBar(
             backgroundColor: Theme.of(context).colorScheme.primary,
-            leading: Consumer<NewsProvider>(
-              builder: (context, provider, child) => IconButton(
-                icon: const Icon(Icons.menu, color: Colors.white),
-                onPressed: () {
-                  Scaffold.of(context).openDrawer();
-                },
-              ),
+            leading: IconButton(
+              icon: const Icon(Icons.menu, color: Colors.white),
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
             ),
             title: const Text('Nieuws'),
             actions: [
@@ -291,7 +275,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 onPressed: () {
                   provider.toggleFilter(!provider.filterActive);
                 },
-                tooltip: provider.filterActive ? 'Filter uit' : 'Filter aan',
               ),
               if (_weatherData != null)
                 TextButton.icon(
@@ -327,13 +310,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   color: Colors.white,
                 ),
                 onPressed: () async {
+                  final prefs = await SharedPreferences.getInstance();
                   setState(() {
                     _viewMode = _viewMode == ViewMode.list ? ViewMode.swipe : ViewMode.list;
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.setBool('swipe_view', _viewMode == ViewMode.swipe);
                   });
+                  await prefs.setBool('swipe_view', _viewMode == ViewMode.swipe);
                 },
-                tooltip: _viewMode == ViewMode.list ? 'Swipe weergave' : 'Lijst weergave',
               ),
               IconButton(
                 icon: const Icon(Icons.bookmark, color: Colors.white),
@@ -424,7 +406,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           sliver: SliverList(
                             delegate: SliverChildBuilderDelegate(
                               (context, index) {
-                                // Only load the first 10 articles initially
                                 if (index < 10 || provider.hasMoreArticles) {
                                   return RepaintBoundary(
                                     child: index == 0
@@ -460,207 +441,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ListTile(
                   leading: const Icon(Icons.home),
                   title: const Text('Home'),
-                  onPressed: () => Navigator.pop(context),
+                  onTap: () => Navigator.pop(context),
                 ),
                 ListTile(
                   leading: const Icon(Icons.bookmark),
                   title: const Text('Favorieten'),
-                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const BookmarksScreen()))),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const BookmarksScreen())),
+                ),
                 ListTile(
                   leading: const Icon(Icons.settings),
                   title: const Text('Instellingen'),
-                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen()))),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen())),
+                ),
               ],
             ),
           ),
-        );
-      },
-    );
-  }      style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                ),
-              IconButton(
-                icon: const Icon(Icons.settings, color: Colors.white),
-                onPressed: () async {
-                  await Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen()));
-                },
-              ),
-              IconButton(
-                icon: Icon(
-                  _viewMode == ViewMode.list ? Icons.swipe : Icons.list,
-                  color: Colors.white,
-                ),
-                onPressed: () async {
-                  setState(() {
-                    _viewMode = _viewMode == ViewMode.list ? ViewMode.swipe : ViewMode.list;
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.setBool('swipe_view', _viewMode == ViewMode.swipe);
-                  });
-                },
-                tooltip: _viewMode == ViewMode.list ? 'Swipe weergave' : 'Lijst weergave',
-              ),
-              IconButton(
-                icon: const Icon(Icons.bookmark, color: Colors.white),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const BookmarksScreen()),
-                  );
-                },
-              ),
-            ],
-          ),
-          body: _viewMode == ViewMode.swipe
-              ? Column(
-                  children: [
-                    Expanded(
-                      child: SwipeCardView(
-                        articles: filteredArticles,
-                        onRefresh: () async {
-                          await provider.loadNews(forceRefresh: true);
-                          await _loadWeather();
-                        },
-                      ),
-                    ),
-                    if (hasMore)
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Center(
-                          child: ElevatedButton.icon(
-                            onPressed: provider.loadMoreArticles,
-                            icon: const Icon(Icons.expand_more),
-                            label: const Text('Meer laden'),
-                          ),
-                        ),
-                      ),
-                  ],
-                )
-              : RefreshIndicator(
-                  onRefresh: () async {
-                    await provider.loadNews(forceRefresh: true);
-                    await _loadWeather();
-                  },
-                  color: Theme.of(context).colorScheme.primary,
-                  backgroundColor: Theme.of(context).colorScheme.surface,
-                  displacement: 40,
-                  strokeWidth: 3,
-                  child: CustomScrollView(
-                    slivers: [
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-                          child: Row(
-                            children: [
-                              ActionChip(
-                                avatar: Icon(
-                                  provider.filterActive ? Icons.visibility : Icons.visibility_off,
-                                  size: 18,
-                                  color: provider.filterActive ? Colors.green : Colors.grey[400],
-                                ),
-                                label: Text(
-                                  provider.filterActive ? 'Filter: AAN' : 'Filter: UIT',
-                                  style: TextStyle(fontSize: 12, color: provider.filterActive ? Colors.green : Colors.grey[400]),
-                                ),
-                                onPressed: () => provider.toggleFilter(!provider.filterActive),
-                                backgroundColor: provider.filterActive ? Colors.green.withOpacity(0.1) : Colors.grey[700]!.withOpacity(0.2),
-                                side: BorderSide(color: provider.filterActive ? Colors.green.withOpacity(0.3) : Colors.grey[500]!.withOpacity(0.3), width: 1),
-                                padding: EdgeInsets.zero,
-                                visualDensity: VisualDensity.compact,
-                              ),
-                              if (provider.filterActive && provider.keywords.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 8),
-                                  child: Text('${provider.keywords.length} actief', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      if (provider.isLoading && filteredArticles.isEmpty)
-                        const SliverFillRemaining(child: Center(child: CircularProgressIndicator())),
-                      if (provider.error != null && filteredArticles.isEmpty)
-                        SliverFillRemaining(child: EmptyState(icon: Icons.error_outline, title: 'Oeps!', subtitle: provider.error!, action: ElevatedButton.icon(onPressed: () => provider.loadNews(forceRefresh: true), icon: const Icon(Icons.refresh), label: const Text('Opnieuw')))),
-                      if (!provider.isLoading && provider.error == null && filteredArticles.isEmpty)
-                        const SliverFillRemaining(child: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [CircularProgressIndicator(), SizedBox(height: 16), Text('Nieuws laden...')]))),
-                      if (filteredArticles.isNotEmpty)
-                        SliverPadding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          sliver: SliverList(
-                            delegate: SliverChildBuilderDelegate(
-                              (context, index) {
-                                // Only load the first 10 articles initially
-                                if (index < 10 || provider.hasMoreArticles) {
-                                  return RepaintBoundary(
-                                    child: index == 0
-                                        ? ArticleHeroCard(article: filteredArticles[index])
-                                        : ArticleCardV2(article: filteredArticles[index]),
-                                  );
-                                }
-                                return const SizedBox.shrink();
-                              },
-                              childCount: filteredArticles.length,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-          drawer: Drawer(
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                DrawerHeader(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  child: Text(
-                    'NieuwsApp',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                    ),
-                  ),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.home),
-                  title: const Text('Home'),
-                  onPressed: () => Navigator.pop(context),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.bookmark),
-                  title: const Text('Favorieten'),
-                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const BookmarksScreen()))),
-                ListTile(
-                  leading: const Icon(Icons.settings),
-                  title: const Text('Instellingen'),
-                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen()))),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-  }
-                      if (hasMore)
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Center(
-                              child: ElevatedButton.icon(
-                                onPressed: provider.loadMoreArticles,
-                                icon: const Icon(Icons.expand_more),
-                                label: const Text('Meer laden'),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
         );
       },
     );
