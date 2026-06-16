@@ -2,12 +2,11 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [ master, main, debug-fix ]
   pull_request:
-    branches: [ master, main ]
+    branches: [ master, main, debug-fix ]
   workflow_dispatch:
 
-# Permissions needed for creating releases
 permissions:
   contents: write
   actions: read
@@ -50,3 +49,19 @@ jobs:
       with:
         name: release-apk
         path: build/app/outputs/flutter-apk/app-release.apk
+        
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      if: github.ref == 'refs/heads/debug-fix' || github.ref == 'refs/heads/main'
+      with:
+        files: build/app/outputs/flutter-apk/app-release.apk
+        tag_name: v1.0.0-build-${{ github.run_number }}
+        name: NieuwsApp Build ${{ github.run_number }}
+        body: |
+          Automated build from ${{ github.ref_name }} branch
+          - Flutter 3.29.0
+          - Proguard fixes applied
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
