@@ -15,6 +15,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -25,7 +31,12 @@ jobs:
         run: flutter pub get
       
       - name: Build APK
-        run: flutter build apk --release
+        run: flutter build apk --release --no-shrink
+      
+      - name: Verify APK exists
+        run: |
+          ls -la build/app/outputs/flutter-apk/
+          file build/app/outputs/flutter-apk/app-release.apk
       
       - name: Upload APK to Release
         uses: softprops/action-gh-release@v2
