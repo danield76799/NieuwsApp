@@ -1,0 +1,40 @@
+name: Build and Release APK
+
+on:
+  push:
+    branches: [ debug-fix ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9'
+          channel: 'stable'
+      
+      - name: Get dependencies
+        run: flutter pub get
+      
+      - name: Build APK
+        run: flutter build apk --release
+      
+      - name: Upload APK to Release
+        uses: softprops/action-gh-release@v1
+        if: github.ref == 'refs/heads/debug-fix'
+        with:
+          files: build/app/outputs/flutter-apk/app-release.apk
+          tag_name: v1.0.0-build-${{ github.run_number }}
+          name: NieuwsApp Build ${{ github.run_number }}
+          body: |
+            Automated build from debug-fix branch
+            - Flutter 3.41.9
+            - Proguard fixes applied
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
