@@ -144,12 +144,12 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
                     ),
                   const SizedBox(height: 8),
                   
-                  // Title
+                  // Title with dynamic font scaling
                   Text(
                     widget.article.title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white,
-                      fontSize: 20,
+                      fontSize: (20 * MediaQuery.of(context).textScaleFactor).clamp(16.0, 24.0),
                       fontWeight: FontWeight.bold,
                       height: 1.2,
                     ),
@@ -163,9 +163,9 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
                     children: [
                       Text(
                         widget.article.source.toUpperCase(),
-                        style: const TextStyle(
-                          color: Color(0xFFE60000),
-                          fontSize: 12,
+                        style: TextStyle(
+                          color: const Color(0xFFE60000),
+                          fontSize: (12 * MediaQuery.of(context).textScaleFactor).clamp(10.0, 14.0),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
