@@ -2,7 +2,7 @@ name: Build and Release APK
 
 on:
   push:
-    branches: [ debug-fix ]
+    branches: [ debug-fix, main ]
   workflow_dispatch:
 
 permissions:
@@ -24,30 +24,37 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.41.9'
+          flutter-version: '3.24.5'
           channel: 'stable'
+      
+      - name: Verify Flutter
+        run: |
+          flutter --version
+          flutter doctor -v
       
       - name: Get dependencies
         run: flutter pub get
       
       - name: Build APK
         run: flutter build apk --release --no-shrink
+        timeout-minutes: 15
       
       - name: Verify APK exists
         run: |
           ls -la build/app/outputs/flutter-apk/
           file build/app/outputs/flutter-apk/app-release.apk
+          stat build/app/outputs/flutter-apk/app-release.apk
       
       - name: Upload APK to Release
         uses: softprops/action-gh-release@v2
-        if: github.ref == 'refs/heads/debug-fix'
+        if: github.ref == 'refs/heads/debug-fix' || github.ref == 'refs/heads/main'
         with:
           files: build/app/outputs/flutter-apk/app-release.apk
           tag_name: v1.0.0-build-${{ github.run_number }}
           name: NieuwsApp Build ${{ github.run_number }}
           body: |
-            Automated build from debug-fix branch
-            - Flutter 3.41.9
+            Automated build from ${{ github.ref_name }} branch
+            - Flutter 3.24.5
             - Proguard fixes applied
             - Build date: ${{ github.event.head_commit.timestamp }}
           draft: false
