@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:xml/xml.dart';
@@ -62,25 +63,46 @@ class RssParserService {
     }
 
     try {
-      final response = await http.get(
-        Uri.parse(feedUrl),
-        headers: {
-          'User-Agent': 'PlusNews/1.0',
-          'Accept': 'application/rss+xml, application/xml, text/xml',
-        },
-      );
+      // Retry logic voor 503 errors
+      int retries = 2;
+      while (retries >= 0) {
+        try {
+          final response = await http.get(
+            Uri.parse(feedUrl),
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+              'Accept': 'application/rss+xml, application/xml, text/xml, */*',
+              'Accept-Encoding': 'gzip, deflate',
+              'Connection': 'keep-alive',
+            },
+          ).timeout(const Duration(seconds: 5));
 
-      if (response.statusCode != 200) {
-        throw Exception('HTTP ${response.statusCode}');
+          if (response.statusCode == 200) {
+            final body = _decodeBody(response.bodyBytes);
+            final document = XmlDocument.parse(body);
+            final items = document.findAllElements('item');
+            final source = _extractSource(document);
+            final channelImage = _extractChannelImage(document);
+
+            return items.map((item) => _parseItem(item, source, channelImage)).toList();
+          } else if (response.statusCode == 503 && retries > 0) {
+            // Retry bij 503
+            retries--;
+            await Future.delayed(const Duration(seconds: 1));
+            continue;
+          } else {
+            throw Exception('HTTP ${response.statusCode}');
+          }
+        } on TimeoutException {
+          if (retries > 0) {
+            retries--;
+            continue;
+          }
+          throw Exception('Timeout');
+        }
       }
-
-      final body = _decodeBody(response.bodyBytes);
-      final document = XmlDocument.parse(body);
-      final items = document.findAllElements('item');
-      final source = _extractSource(document);
-      final channelImage = _extractChannelImage(document);
-
-      return items.map((item) => _parseItem(item, source, channelImage)).toList();
+      
+      return [];
     } catch (e) {
       throw Exception('RSS parse error: $e');
     }
