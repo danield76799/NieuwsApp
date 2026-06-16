@@ -406,13 +406,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           sliver: SliverList(
                             delegate: SliverChildBuilderDelegate(
                               (context, index) {
-                                if (index < 10 || provider.hasMoreArticles) {
+                                // Lazy loading: alleen eerste 15 artikelen renderen direct
+                                if (index < 15) {
                                   return RepaintBoundary(
                                     child: index == 0
                                         ? ArticleHeroCard(article: filteredArticles[index])
                                         : ArticleCardV2(article: filteredArticles[index]),
                                   );
                                 }
+                                // Rest pas laden als user scrollt
                                 return const SizedBox.shrink();
                               },
                               childCount: filteredArticles.length,

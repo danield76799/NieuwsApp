@@ -81,26 +81,25 @@ class NewsProvider extends ChangeNotifier {
     try {
       final articles = await _repository.fetchNews();
       if (articles.isNotEmpty) {
-        // Check voor breaking news in nieuwe artikelen
-        final notificationService = NotificationService();
-        await notificationService.initialize();
-        
-        for (final article in articles.take(5)) {
-          if (notificationService.isBreakingNews(article)) {
-            // Check of we dit artikel al hebben gezien
-            final prefs = await SharedPreferences.getInstance();
-            final notifiedArticles = prefs.getStringList('notified_articles') ?? [];
-            
-            if (!notifiedArticles.contains(article.id)) {
-              await notificationService.showBreakingNews(article);
+        // Check voor breaking news in nieuwe artikelen (alleen als app open is)
+        if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
+          final notificationService = NotificationService();
+          await notificationService.initialize();
+          
+          for (final article in articles.take(3)) {
+            if (notificationService.isBreakingNews(article)) {
+              final prefs = await SharedPreferences.getInstance();
+              final notifiedArticles = prefs.getStringList('notified_articles') ?? [];
               
-              // Markeer als genotificeerd
-              notifiedArticles.add(article.id);
-              // Houd max 100 IDs bij
-              if (notifiedArticles.length > 100) {
-                notifiedArticles.removeAt(0);
+              if (!notifiedArticles.contains(article.id)) {
+                await notificationService.showBreakingNews(article);
+                
+                notifiedArticles.add(article.id);
+                if (notifiedArticles.length > 100) {
+                  notifiedArticles.removeAt(0);
+                }
+                await prefs.setStringList('notified_articles', notifiedArticles);
               }
-              await prefs.setStringList('notified_articles', notifiedArticles);
             }
           }
         }
@@ -111,11 +110,11 @@ class NewsProvider extends ChangeNotifier {
         resetPagination();
         notifyListeners();
 
-        // Cache the article list (fast, no HTTP)
-        ArticleCacheService.cacheArticles(_articles);
-        
-        // Cache all article content in background (parallel, non-blocking)
-        ArticleCacheService.cacheArticlesContent(_articles);
+        // Cache in background (non-blocking)
+        Future.microtask(() {
+          ArticleCacheService.cacheArticles(_articles);
+          ArticleCacheService.cacheArticlesContent(_articles);
+        });
       }
     } catch (e) {
       print('Background refresh failed: $e');
