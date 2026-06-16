@@ -1,91 +1,37 @@
 import 'dart:async';
-import "../models/article.dart";
-import "../services/rss_parser_service.dart";
-import "../services/storage_service.dart";
-import "../services/feed_service.dart";
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:xml/xml.dart' as xml;
+import 'package:shared_preferences/shared_preferences.dart';
+import '../models/article.dart';
+import '../services/article_cache_service.dart';
+import '../services/rss_parser_service.dart';
 import "news_repository.dart";
 
 class RssNewsRepository implements NewsRepository {
-  final StorageService _storage;
-
-  RssNewsRepository(this._storage);
+  RssNewsRepository();
 
   @override
   Future<List<Article>> fetchNews({bool forceRefresh = false}) async {
     try {
-      final cachedArticles = await ArticleCacheService.getCachedArticles();
-      if (!forceRefresh && cachedArticles.isNotEmpty) {
-        return cachedArticles;
+      final prefs = await SharedPreferences.getInstance();
+      final lastFetchTime = prefs.getInt('last_fetch_time') ?? 0;
+      final now = DateTime.now().millisecondsSinceEpoch;
+
+      if (forceRefresh || (now - lastFetchTime) > 900000) {
+        final articles = await _fetchNewsFromSources();
+        await prefs.setInt('last_fetch_time', now);
+        return articles;
+      } else {
+        final cachedArticles = await ArticleCacheService.getCachedArticles();
+        return cachedArticles ?? [];
       }
-
-      // Get feeds from SharedPreferences
-      final feeds = await FeedService.getFeeds();
-
-      // Fetch all feeds in parallel with timeout
-      final futures = feeds.map((source) async {
-        try {
-          // Add timeout to prevent hanging on slow feeds
-          final completer = Completer<dynamic>();
-          final timer = Timer(const Duration(seconds: 10), () {
-            completer.completeError("Timeout: Feed ${source["name"]} is te traag");
-          });
-
-          try {
-            final articles = await RssParserService.parseRssFeed(source["url"]!);
-            timer.cancel();
-            if (articles.isNotEmpty) {
-              return articles.map((article) => Article(
-                id: article.id,
-                title: article.title,
-                description: article.description,
-                content: article.content,
-                link: article.link,
-                url: article.url,
-                pubDate: article.pubDate,
-                publishedAt: article.publishedAt,
-                thumbnailUrl: article.thumbnailUrl,
-                imageUrl: article.imageUrl,
-                source: source["name"] ?? article.source,
-                category: article.category,
-                author: article.author,
-              )).toList();
-            }
-            return <Article>[];
-          } catch (e) {
-            timer.cancel();
-            return <Article>[];
-          }
-        } catch (e) {
-          return <Article>[];
-        }
-      }).toList();
-
-      final results = await Future.wait(futures);
-      final allArticles = results.expand((e) => e).toList();
-
-      // Sort by date (newest first)
-      allArticles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
-
-      // Limit to 50 articles for faster loading
-      if (allArticles.length > 50) {
-        allArticles = allArticles.take(50).toList();
-      }
-
-      // Cache the results
-      if (allArticles.isNotEmpty) {
-        await ArticleCacheService.cacheArticles(allArticles);
-      }
-
-      return allArticles;
     } catch (e) {
       print('Error fetching news: $e');
-      final cached = await ArticleCacheService.getCachedArticles();
-      if (cached.isNotEmpty) {
-        return cached;
-      }
-      return [];
+      final cachedArticles = await ArticleCacheService.getCachedArticles();
+      return cachedArticles ?? [];
     }
-  }
   }
 
   @override
@@ -102,7 +48,39 @@ class RssNewsRepository implements NewsRepository {
 
   @override
   Future<List<Article>> fetchNewsWithFilter(List<String> keywords) async {
-    final articles = await fetchNews();
+    final articles = await _fetchNewsFromSources();
     return filterByKeywords(articles, keywords);
+  }
+
+  Future<List<Article>> _fetchNewsFromSources() async {
+    final articles = <Article>[];
+    final sources = [
+      'https://www.nrc.nl/nieuws/rss',
+      'https://www.volkskrant.nl/rss/nieuws',
+      'https://www.trouw.nl/rss/nieuws',
+      'https://nos.nl/rss/nieuws',
+      'https://www.ad.nl/rss/nieuws',
+    ];
+
+    await Future.wait(sources.map((source) async {
+      try {
+        final response = await http.get(Uri.parse(source)).timeout(const Duration(seconds: 10));
+        if (response.statusCode == 200) {
+          final parsedArticles = await RssParserService.parseRssFeed(response.body);
+          articles.addAll(parsedArticles);
+        }
+      } catch (e) {
+        print('Error fetching from $source: $e');
+      }
+    }));
+
+    // Remove duplicates
+    final uniqueArticles = <Article>{};
+    for (final article in articles) {
+      uniqueArticles.add(article);
+    }
+
+    // Sort by date (newest first)
+    return uniqueArticles.toList()..sort((a, b) => b.pubDate.compareTo(a.pubDate));
   }
 }

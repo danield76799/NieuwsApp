@@ -1,42 +1,24 @@
 import 'package:flutter/material.dart';
-import '../services/time_helper.dart';
 
-class SearchBar extends StatelessWidget {
+class CustomSearchBar extends StatelessWidget {
   final Function(String) onSearch;
+  final Function() onCancel;
 
-  const SearchBar({super.key, required this.onSearch});
+  const CustomSearchBar({super.key, required this.onSearch, required this.onCancel});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(8.0),
       child: TextField(
-        onChanged: onSearch,
-        style: const TextStyle(
-          color: Colors.black87,
-          fontWeight: FontWeight.w500,
-        ),
         decoration: InputDecoration(
-          hintText: 'Zoek in artikelen...',
-          hintStyle: TextStyle(
-            color: Colors.grey[600],
+          hintText: 'Zoeken...',
+          suffixIcon: IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: onCancel,
           ),
-          prefixIcon: const Icon(Icons.search, color: Colors.black54),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.black26),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.black26),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.black54, width: 2),
-          ),
-          filled: true,
-          fillColor: Colors.grey[100],
         ),
+        onSubmitted: onSearch,
       ),
     );
   }
