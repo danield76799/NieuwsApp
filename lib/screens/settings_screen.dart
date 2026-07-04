@@ -15,7 +15,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _cityController = TextEditingController();
 
   @override
-  @override
   void initState() {
     super.initState();
     // Load data after frame is rendered
@@ -25,6 +24,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _cityController.text = provider.weatherCity;
     });
   }
+
+  @override
   Widget build(BuildContext context) {
     return Consumer<NewsProvider>(
       builder: (context, provider, child) {
@@ -190,9 +191,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         children: [
                           ElevatedButton(
                             onPressed: () {
-                              provider.setKeywords(_keywordsController.text);
+                              final keywords = _keywordsController.text;
+                              provider.setKeywords(keywords);
+                              // Turn the filter ON when keywords are saved.
+                              if (keywords.trim().isNotEmpty) {
+                                provider.toggleFilter(true);
+                              }
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Keywords opgeslagen!')),
+                                const SnackBar(content: Text('Filter opgeslagen!')),
                               );
                             },
                             child: const Text('Opslaan'),
@@ -201,9 +207,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           TextButton(
                             onPressed: () {
                               provider.clearKeywords();
+                              provider.toggleFilter(false);
                               _keywordsController.clear();
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Keywords gewist!')),
+                                const SnackBar(content: Text('Filter gewist!')),
                               );
                             },
                             child: const Text('Wissen'),
