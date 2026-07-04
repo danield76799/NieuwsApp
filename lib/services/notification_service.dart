@@ -43,12 +43,12 @@ class NotificationService {
     _isInitialized = true;
   }
 
-  /// Check of artikel breaking news is
+  /// Check of artikel breaking news is. Only very strong signals should
+  /// interrupt the user with a push notification.
   bool isBreakingNews(Article article) {
     final breakingKeywords = [
-      'breaking', 'urgent', 'spoed', 'alarm', 'alert',
-      'schokkend', 'belangrijk', 'live', 'nieuwsflits',
-      'update', 'nieuws', 'just', 'net binnen'
+      'breaking', 'urgent', 'spoed', 'alarm', 'alert', 'liveblog',
+      'schokkend', 'ramp', 'aanslag', 'evacuatie',
     ];
     
     final text = '${article.title} ${article.description}'.toLowerCase();

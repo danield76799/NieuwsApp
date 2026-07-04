@@ -110,11 +110,10 @@ class NewsProvider extends ChangeNotifier {
         resetPagination();
         notifyListeners();
 
-        // Cache in background (non-blocking)
-        Future.microtask(() {
-          ArticleCacheService.cacheArticles(_articles);
-          ArticleCacheService.cacheArticlesContent(_articles);
-        });
+        // Cache article metadata only. Full content fetching blocks the UI thread
+        // and is unreliable across news sites, so we leave article rendering to
+        // the in-app browser/webview.
+        ArticleCacheService.cacheArticles(_articles);
       }
     } catch (e) {
       print('Background refresh failed: $e');
@@ -148,7 +147,7 @@ class NewsProvider extends ChangeNotifier {
       resetPagination();
       ArticleCacheService.cacheArticles(_articles);
     } catch (e) {
-      _error = e.toString();
+      _error = 'Nieuws laden mislukt. Controleer je internetverbinding.';
       final cachedArticles = await ArticleCacheService.getCachedArticles();
       if (cachedArticles.isNotEmpty) {
         _articles = cachedArticles;
