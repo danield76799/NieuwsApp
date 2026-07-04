@@ -64,10 +64,10 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
                       memCacheHeight: 300,
                       placeholder: (context, url) => Container(
                         color: const Color(0xFF242424),
-                        child: const Center(
+                        child: Center(
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Color(0xFFE60000),
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
                       ),
@@ -123,7 +123,7 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE60000),
+                        color: Theme.of(context).colorScheme.primary,
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: const Row(
@@ -164,7 +164,7 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
                       Text(
                         widget.article.source.toUpperCase(),
                         style: TextStyle(
-                          color: const Color(0xFFE60000),
+                          color: Theme.of(context).colorScheme.primary,
                           fontSize: (12 * MediaQuery.of(context).textScaleFactor).clamp(10.0, 14.0),
                           fontWeight: FontWeight.w600,
                         ),
@@ -332,10 +332,10 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                       children: [
                         Text(
                           widget.article.source.toUpperCase(),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFFE60000),
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
                         const SizedBox(width: 6),
@@ -387,7 +387,7 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                 icon: Icon(
                   _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
                   size: 18,
-                  color: _isBookmarked ? const Color(0xFFE60000) : Colors.grey,
+                  color: _isBookmarked ? Theme.of(context).colorScheme.primary : Colors.grey,
                 ),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),

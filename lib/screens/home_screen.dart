@@ -172,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -184,7 +184,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 16),
             Row(
               children: [
                 Icon(currentIcon, size: 48, color: Colors.orange),
@@ -229,6 +228,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ),
       ),
     );
+  }
+
+  String _formatLastRefresh(DateTime dt) {
+    final now = DateTime.now();
+    final diff = now.difference(dt);
+    if (diff.inMinutes < 1) return 'zojuist';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m geleden';
+    if (diff.inHours < 24) return '${diff.inHours}u geleden';
+    return '${dt.day}-${dt.month.toString().padLeft(2, '0')} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -298,25 +306,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                 ),
-              IconButton(
-                icon: const Icon(Icons.settings, color: Colors.white),
-                onPressed: () async {
-                  await Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen()));
-                },
-              ),
-              IconButton(
-                icon: Icon(
-                  _viewMode == ViewMode.list ? Icons.swipe : Icons.list,
-                  color: Colors.white,
-                ),
-                onPressed: () async {
-                  final prefs = await SharedPreferences.getInstance();
-                  setState(() {
-                    _viewMode = _viewMode == ViewMode.list ? ViewMode.swipe : ViewMode.list;
-                  });
-                  await prefs.setBool('swipe_view', _viewMode == ViewMode.swipe);
-                },
-              ),
               IconButton(
                 icon: const Icon(Icons.bookmark, color: Colors.white),
                 onPressed: () {
@@ -428,12 +417,29 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.primary,
                   ),
-                  child: Text(
-                    'NieuwsApp',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      const Text(
+                        'NieuwsApp',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                        ),
+                      ),
+                      if (_lastNewsRefresh != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            'Laatst vernieuwd: ${_formatLastRefresh(_lastNewsRefresh!)}',
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
                 ListTile(
@@ -447,7 +453,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const BookmarksScreen())),
                 ),
                 ListTile(
-                  leading: const Icon(Icons.settings),
+                  leading: Icon(_viewMode == ViewMode.list ? Icons.swipe : Icons.list),
+                    title: Text(_viewMode == ViewMode.list ? 'Swipe weergave' : 'Lijstweergave'),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      final prefs = await SharedPreferences.getInstance();
+                      setState(() {
+                        _viewMode = _viewMode == ViewMode.list ? ViewMode.swipe : ViewMode.list;
+                      });
+                      await prefs.setBool('swipe_view', _viewMode == ViewMode.swipe);
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.settings),
                   title: const Text('Instellingen'),
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen())),
                 ),
