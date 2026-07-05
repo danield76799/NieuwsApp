@@ -454,18 +454,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ),
                 ListTile(
                   leading: Icon(_viewMode == ViewMode.list ? Icons.swipe : Icons.list),
-                    title: Text(_viewMode == ViewMode.list ? 'Swipe weergave' : 'Lijstweergave'),
-                    onTap: () async {
-                      Navigator.pop(context);
-                      final prefs = await SharedPreferences.getInstance();
-                      setState(() {
-                        _viewMode = _viewMode == ViewMode.list ? ViewMode.swipe : ViewMode.list;
-                      });
-                      await prefs.setBool('swipe_view', _viewMode == ViewMode.swipe);
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.settings),
+                  title: Text(_viewMode == ViewMode.list ? 'Swipe weergave' : 'Lijstweergave'),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    final prefs = await SharedPreferences.getInstance();
+                    setState(() {
+                      _viewMode = _viewMode == ViewMode.list ? ViewMode.swipe : ViewMode.list;
+                    });
+                    await prefs.setBool('swipe_view', _viewMode == ViewMode.swipe);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.settings),
                   title: const Text('Instellingen'),
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen())),
                 ),
