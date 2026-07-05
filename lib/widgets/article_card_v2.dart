@@ -295,14 +295,14 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                         placeholder: (context, url) => Container(
                           width: 100,
                           height: 75,
-                          color: Colors.grey[800],
-                          child: const Center(
+                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                          child: Center(
                             child: SizedBox(
                               width: 16,
                               height: 16,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Color(0xFFE60000),
+                                color: Theme.of(context).colorScheme.primary,
                               ),
                             ),
                           ),
@@ -310,15 +310,15 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                         errorWidget: (context, url, error) => Container(
                           width: 100,
                           height: 75,
-                          color: Colors.grey[800],
-                          child: const Icon(Icons.image, color: Colors.grey),
+                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                          child: Icon(Icons.image, color: Theme.of(context).colorScheme.onSurfaceVariant),
                         ),
                       )
                     : Container(
                         width: 100,
                         height: 75,
-                        color: Colors.grey[800],
-                        child: const Icon(Icons.article, color: Colors.grey),
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                        child: Icon(Icons.article, color: Theme.of(context).colorScheme.onSurfaceVariant),
                       ),
               ),
               const SizedBox(width: 12),
@@ -341,14 +341,14 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                         const SizedBox(width: 6),
                         Text(
                           '•',
-                          style: TextStyle(color: Colors.grey[600], fontSize: 11),
+                          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 11),
                         ),
                         const SizedBox(width: 6),
                         Text(
                           TimeHelper.format(widget.article.pubDate),
                           style: TextStyle(
                             fontSize: 11,
-                            color: Colors.grey[500],
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -357,10 +357,10 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                     // Title
                     Text(
                       widget.article.title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onSurface,
                         height: 1.3,
                       ),
                       maxLines: 2,
@@ -372,7 +372,7 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                       widget.article.description,
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey[500],
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         height: 1.3,
                       ),
                       maxLines: 2,
@@ -387,7 +387,7 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                 icon: Icon(
                   _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
                   size: 18,
-                  color: _isBookmarked ? Theme.of(context).colorScheme.primary : Colors.grey,
+                  color: _isBookmarked ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),

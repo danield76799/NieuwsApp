@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FeedService {
@@ -28,7 +29,7 @@ class FeedService {
         return jsonList.map((e) => Map<String, String>.from(e)).toList();
       }
     } catch (e) {
-      print('Error loading feeds: $e');
+      debugPrint('Error loading feeds: $e');
     }
     
     // Return defaults if nothing saved
@@ -41,7 +42,7 @@ class FeedService {
       feeds.add({'name': name, 'url': url});
       await _saveFeeds(feeds);
     } catch (e) {
-      print('Error adding feed: $e');
+      debugPrint('Error adding feed: $e');
     }
   }
 
@@ -51,7 +52,7 @@ class FeedService {
       feeds.removeWhere((feed) => feed['url'] == url);
       await _saveFeeds(feeds);
     } catch (e) {
-      print('Error removing feed: $e');
+      debugPrint('Error removing feed: $e');
     }
   }
 

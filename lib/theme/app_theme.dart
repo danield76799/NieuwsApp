@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Botanical palette
@@ -27,12 +26,12 @@ class AppTheme {
         onSurface: textPrimary,
       ),
       scaffoldBackgroundColor: backgroundLight,
-      appBarTheme: AppBarTheme(
+      appBarTheme: const AppBarTheme(
         elevation: 0,
         centerTitle: false,
         backgroundColor: backgroundLight,
         foregroundColor: textPrimary,
-        titleTextStyle: GoogleFonts.inter(
+        titleTextStyle: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.w700,
           color: textPrimary,
@@ -45,7 +44,6 @@ class AppTheme {
           borderRadius: BorderRadius.circular(20),
         ),
       ),
-      textTheme: GoogleFonts.interTextTheme(),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: surfaceLight,
         selectedItemColor: primaryColor,
@@ -83,12 +81,12 @@ class AppTheme {
         onSurface: Colors.white,
       ),
       scaffoldBackgroundColor: darkBackground,
-      appBarTheme: AppBarTheme(
+      appBarTheme: const AppBarTheme(
         elevation: 0,
         centerTitle: false,
         backgroundColor: darkBackground,
         foregroundColor: Colors.white,
-        titleTextStyle: GoogleFonts.inter(
+        titleTextStyle: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.w700,
           color: Colors.white,
@@ -101,7 +99,6 @@ class AppTheme {
           borderRadius: BorderRadius.circular(20),
         ),
       ),
-      textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: darkSurface,
         selectedItemColor: darkPrimary,

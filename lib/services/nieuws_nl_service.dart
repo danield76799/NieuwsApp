@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../models/article.dart';
@@ -22,7 +23,7 @@ class NieuwsNlService {
         throw Exception('Failed to load nieuws.nl: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching nieuws.nl: $e');
+      debugPrint('Error fetching nieuws.nl: $e');
       return [];
     }
   }
@@ -176,7 +177,7 @@ class NieuwsNlService {
       }
       return [];
     } catch (e) {
-      print('Error fetching category: $e');
+      debugPrint('Error fetching category: $e');
       return [];
     }
   }

@@ -85,7 +85,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Future<void> _preloadThumbnails(List<Article> articles) async {
     int preloaded = 0;
-    const maxPreload = 7;
+    const maxPreload = 5;
     for (final article in articles) {
       if (preloaded >= maxPreload) break;
       
@@ -151,6 +151,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void _showWeatherPopup() {
     if (_weatherData == null) return;
 
+    final theme = Theme.of(context);
     final currentIcon = WeatherService.getWeatherIcon(_weatherData!['description'] ?? '');
 
     showModalBottomSheet(
@@ -159,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
+          color: theme.scaffoldBackgroundColor,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         padding: const EdgeInsets.all(20),
@@ -172,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                  color: theme.colorScheme.onSurface.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -180,13 +181,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             const SizedBox(height: 16),
             Text(
               'Weer in ${_weatherData!['location'] ?? 'Amsterdam'}',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             Row(
               children: [
-                Icon(currentIcon, size: 48, color: Colors.orange),
+                Icon(currentIcon, size: 48, color: theme.colorScheme.primary),
                 const SizedBox(width: 12),
                 Text(
                   '${_weatherData!['temp']}°',
@@ -197,7 +198,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(_weatherData!['description'], style: const TextStyle(fontSize: 18)),
-                    Text('Voelt als ${_weatherData!['feelsLike']}°', style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+                    Text('Voelt als ${_weatherData!['feelsLike']}°', style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 14)),
                   ],
                 ),
               ],
@@ -205,7 +206,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             const SizedBox(height: 16),
             const Divider(),
             const SizedBox(height: 8),
-            Text('Voorspelling', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+            Text('Voorspelling', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -214,12 +215,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 final dayName = ['Zo', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za'][date.weekday % 7];
                 final dayIcon = day['icon'] as IconData? ?? Icons.wb_sunny;
                 return Column(children: [
-                  Text(dayName, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+                  Text(dayName, style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 14)),
                   const SizedBox(height: 4),
-                  Icon(dayIcon, size: 24, color: Colors.grey[400]),
+                  Icon(dayIcon, size: 24, color: theme.colorScheme.onSurfaceVariant),
                   const SizedBox(height: 4),
                   Text('${day['maxTemp']}°', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  Text('${day['minTemp']}°', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+                  Text('${day['minTemp']}°', style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 14)),
                 ]);
               }).toList(),
             ),
@@ -243,16 +244,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return Consumer<NewsProvider>(
       builder: (context, provider, child) {
+        final theme = Theme.of(context);
         final filteredArticles = provider.visibleArticles;
         final hasMore = provider.hasMoreArticles;
 
         return Scaffold(
           appBar: AppBar(
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            title: const Text('Nieuws'),
+            backgroundColor: theme.colorScheme.surface,
+            title: Text('Nieuws', style: TextStyle(color: theme.colorScheme.onSurface)),
             actions: [
               IconButton(
-                icon: const Icon(Icons.search, color: Colors.white),
+                icon: Icon(Icons.search, color: theme.colorScheme.onSurface),
                 onPressed: () {
                   showModalBottomSheet(
                     context: context,
@@ -272,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               IconButton(
                 icon: Icon(
                   Icons.filter_list,
-                  color: provider.filterActive ? Colors.amber : Colors.white,
+                  color: provider.filterActive ? theme.colorScheme.primary : theme.colorScheme.onSurface,
                 ),
                 onPressed: () {
                   provider.toggleFilter(!provider.filterActive);
@@ -283,13 +285,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   onPressed: _showWeatherPopup,
                   icon: Icon(
                     WeatherService.getWeatherIcon(_weatherData!['description'] ?? ''),
-                    color: Colors.white,
+                    color: theme.colorScheme.onSurface,
                     size: 18,
                   ),
                   label: Text(
                     '${_weatherData!['temp']}°',
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
@@ -301,7 +303,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ),
                 ),
               IconButton(
-                icon: const Icon(Icons.bookmark, color: Colors.white),
+                icon: Icon(Icons.bookmark, color: theme.colorScheme.onSurface),
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -341,8 +343,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     await provider.loadNews(forceRefresh: true);
                     await _loadWeather();
                   },
-                  color: Theme.of(context).colorScheme.primary,
-                  backgroundColor: Theme.of(context).colorScheme.surface,
+                  color: theme.colorScheme.primary,
+                  backgroundColor: theme.colorScheme.surface,
                   displacement: 40,
                   strokeWidth: 3,
                   child: CustomScrollView(
@@ -356,22 +358,22 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 avatar: Icon(
                                   provider.filterActive ? Icons.visibility : Icons.visibility_off,
                                   size: 18,
-                                  color: provider.filterActive ? Colors.green : Colors.grey[400],
+                                  color: provider.filterActive ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
                                 ),
                                 label: Text(
                                   provider.filterActive ? 'Filter: AAN' : 'Filter: UIT',
-                                  style: TextStyle(fontSize: 12, color: provider.filterActive ? Colors.green : Colors.grey[400]),
+                                  style: TextStyle(fontSize: 12, color: provider.filterActive ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant),
                                 ),
                                 onPressed: () => provider.toggleFilter(!provider.filterActive),
-                                backgroundColor: provider.filterActive ? Colors.green.withOpacity(0.1) : Colors.grey[700]!.withOpacity(0.2),
-                                side: BorderSide(color: provider.filterActive ? Colors.green.withOpacity(0.3) : Colors.grey[500]!.withOpacity(0.3), width: 1),
+                                backgroundColor: provider.filterActive ? theme.colorScheme.primary.withOpacity(0.1) : theme.colorScheme.surfaceContainerHighest,
+                                side: BorderSide(color: provider.filterActive ? theme.colorScheme.primary.withOpacity(0.3) : theme.colorScheme.outlineVariant, width: 1),
                                 padding: EdgeInsets.zero,
                                 visualDensity: VisualDensity.compact,
                               ),
                               if (provider.filterActive && provider.keywords.isNotEmpty)
                                 Padding(
                                   padding: const EdgeInsets.only(left: 8),
-                                  child: Text('${provider.keywords.length} actief', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                                  child: Text('${provider.keywords.length} actief', style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant)),
                                 ),
                             ],
                           ),
@@ -382,14 +384,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       if (provider.error != null && filteredArticles.isEmpty)
                         SliverFillRemaining(child: EmptyState(icon: Icons.error_outline, title: 'Oeps!', subtitle: provider.error!, action: ElevatedButton.icon(onPressed: () => provider.loadNews(forceRefresh: true), icon: const Icon(Icons.refresh), label: const Text('Opnieuw')))),
                       if (!provider.isLoading && provider.error == null && filteredArticles.isEmpty)
-                        const SliverFillRemaining(child: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [CircularProgressIndicator(), SizedBox(height: 16), Text('Nieuws laden...')]))),
+                        SliverFillRemaining(child: EmptyState(icon: Icons.article_outlined, title: 'Geen artikelen', subtitle: 'Probeer het filter uit te schakelen of andere keywords te gebruiken')),
                       if (filteredArticles.isNotEmpty)
                         SliverPadding(
                           padding: const EdgeInsets.only(bottom: 16),
                           sliver: SliverList(
                             delegate: SliverChildBuilderDelegate(
                               (context, index) {
-                                // Render all article cards without truncation.
                                 return RepaintBoundary(
                                   child: index == 0
                                       ? ArticleHeroCard(article: filteredArticles[index])
@@ -409,16 +410,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               children: [
                 DrawerHeader(
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
+                    color: theme.colorScheme.primary,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      const Text(
+                      Text(
                         'NieuwsApp',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: theme.colorScheme.onPrimary,
                           fontSize: 24,
                         ),
                       ),
@@ -427,8 +428,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           padding: const EdgeInsets.only(top: 4),
                           child: Text(
                             'Laatst vernieuwd: ${_formatLastRefresh(_lastNewsRefresh!)}',
-                            style: const TextStyle(
-                              color: Colors.white70,
+                            style: TextStyle(
+                              color: theme.colorScheme.onPrimary.withOpacity(0.7),
                               fontSize: 12,
                             ),
                           ),

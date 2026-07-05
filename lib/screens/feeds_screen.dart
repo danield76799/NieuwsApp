@@ -79,20 +79,12 @@ class _FeedsScreenState extends State<FeedsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF007BC7),
-        elevation: 0,
-        title: const Text(
-          'RSS Feeds',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        title: const Text('RSS Feeds'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -107,37 +99,38 @@ class _FeedsScreenState extends State<FeedsScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF5F5F5),
+                      color: theme.colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Nieuwe feed toevoegen',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
+                            color: theme.colorScheme.onSurface,
                           ),
                         ),
                         const SizedBox(height: 12),
                         TextField(
                           controller: _nameController,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             hintText: 'Naam (bijv. Nu.nl)',
                             filled: true,
-                            fillColor: Colors.white,
-                            border: OutlineInputBorder(),
+                            fillColor: theme.colorScheme.surface,
+                            border: const OutlineInputBorder(),
                           ),
                         ),
                         const SizedBox(height: 8),
                         TextField(
                           controller: _urlController,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             hintText: 'RSS URL (bijv. https://nu.nl/rss)',
                             filled: true,
-                            fillColor: Colors.white,
-                            border: OutlineInputBorder(),
+                            fillColor: theme.colorScheme.surface,
+                            border: const OutlineInputBorder(),
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -145,10 +138,6 @@ class _FeedsScreenState extends State<FeedsScreen> {
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: _addFeed,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF007BC7),
-                              foregroundColor: Colors.white,
-                            ),
                             child: const Text('Toevoegen'),
                           ),
                         ),
@@ -157,11 +146,12 @@ class _FeedsScreenState extends State<FeedsScreen> {
                   ),
 
                   const SizedBox(height: 24),
-                  const Text(
+                  Text(
                     'Actieve feeds',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 12),

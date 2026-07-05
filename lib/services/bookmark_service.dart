@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/article.dart';
 
@@ -25,7 +26,7 @@ class BookmarkService {
         _bookmarks = jsonList.map((json) => Article.fromJson(json)).toList();
       }
     } catch (e) {
-      print('Error loading bookmarks: $e');
+      debugPrint('Error loading bookmarks: $e');
       _bookmarks = [];
     }
   }
@@ -36,7 +37,7 @@ class BookmarkService {
       final jsonList = _bookmarks.map((a) => a.toJson()).toList();
       await prefs.setString('bookmarks', jsonEncode(jsonList));
     } catch (e) {
-      print('Error saving bookmarks: $e');
+      debugPrint('Error saving bookmarks: $e');
     }
   }
 

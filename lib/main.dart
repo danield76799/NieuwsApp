@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:animations/animations.dart';
 import 'package:provider/provider.dart';
 import 'package:dynamic_color/dynamic_color.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'providers/news_provider.dart';
 import 'repositories/rss_news_repository.dart';
 import 'screens/home_screen.dart';
@@ -42,9 +41,7 @@ class PlusNewsApp extends StatelessWidget {
         centerTitle: false,
         backgroundColor: colorScheme.surface,
         foregroundColor: colorScheme.onSurface,
-        titleTextStyle: GoogleFonts.interTextTheme(
-          ThemeData(colorScheme: colorScheme).textTheme,
-        ).titleLarge?.copyWith(
+        titleTextStyle: base.textTheme.titleLarge?.copyWith(
           fontSize: 24,
           fontWeight: FontWeight.w700,
           color: colorScheme.onSurface,
@@ -57,9 +54,7 @@ class PlusNewsApp extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
         ),
       ),
-      textTheme: GoogleFonts.interTextTheme(
-        ThemeData(colorScheme: colorScheme).textTheme,
-      ),
+      textTheme: base.textTheme,
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: colorScheme.surface,
         selectedItemColor: colorScheme.primary,

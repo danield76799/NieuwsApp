@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/news_provider.dart';
 import '../services/bookmark_service.dart';
-import '../widgets/article_card.dart';
+import '../widgets/article_card_v2.dart';
 
 class BookmarksScreen extends StatefulWidget {
   const BookmarksScreen({super.key});
@@ -33,8 +33,8 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A1A),
       appBar: AppBar(
         title: const Text('Opgeslagen Artikelen'),
         leading: IconButton(
@@ -45,17 +45,17 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
           if (_bookmarks.isNotEmpty)
             TextButton(
               onPressed: () => _showClearDialog(),
-              child: const Text(
+              child: Text(
                 'Wis alle',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: theme.colorScheme.onSurface),
               ),
             ),
         ],
       ),
       body: _isLoading
-          ? const Center(
+          ? Center(
               child: CircularProgressIndicator(
-                color: Color(0xFF1E88E5),
+                color: theme.colorScheme.primary,
               ),
             )
           : _bookmarks.isEmpty
@@ -65,6 +65,7 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
   }
 
   Widget _buildEmptyState() {
+    final theme = Theme.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -72,7 +73,7 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
           Icon(
             Icons.bookmark_border,
             size: 64,
-            color: Colors.grey[400],
+            color: theme.colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: 16),
           Text(
@@ -80,7 +81,7 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[400],
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 8),
@@ -88,7 +89,7 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
             'Tik op het bookmark icoon om artikelen op te slaan',
             style: TextStyle(
               fontSize: 14,
-              color: Colors.grey[400],
+              color: theme.colorScheme.onSurfaceVariant,
             ),
             textAlign: TextAlign.center,
           ),
@@ -98,23 +99,16 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
   }
 
   Widget _buildBookmarksList() {
+    final theme = Theme.of(context);
     return RefreshIndicator(
       onRefresh: _loadBookmarks,
-      color: const Color(0xFF1E88E5),
+      color: theme.colorScheme.primary,
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(vertical: 8),
         itemCount: _bookmarks.length,
         itemBuilder: (context, index) {
           final article = _bookmarks[index];
-          return ArticleCard(
-            article: article,
-            showBookmarkButton: true,
-            onBookmarkRemoved: () {
-              setState(() {
-                _bookmarks.removeAt(index);
-              });
-            },
-          );
+          return ArticleCardV2(article: article);
         },
       ),
     );

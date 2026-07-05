@@ -1,4 +1,5 @@
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
 import 'package:xml/xml.dart';
 import '../models/article.dart';
 
@@ -51,7 +52,7 @@ class NewsApiService {
         endIndex > allArticles.length ? allArticles.length : endIndex,
       );
     } catch (e) {
-      print('Error fetching news: $e');
+      debugPrint('Error fetching news: $e');
       return [];
     }
   }
@@ -117,11 +118,11 @@ class NewsApiService {
         
         return articles;
       } else {
-        print('Failed to load $source: ${response.statusCode}');
+        debugPrint('Failed to load $source: ${response.statusCode}');
         return [];
       }
     } catch (e) {
-      print('Error fetching $source: $e');
+      debugPrint('Error fetching $source: $e');
       return [];
     }
   }
@@ -206,7 +207,7 @@ class NewsApiService {
         return DateTime(year, month, day, hour, minute, second);
       }
     } catch (e) {
-      print('Error parsing date: $e');
+      debugPrint('Error parsing date: $e');
     }
     
     return DateTime.now();

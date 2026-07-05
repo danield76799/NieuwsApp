@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import "../models/article.dart";
 import "../services/rss_parser_service.dart";
 import "../services/feed_service.dart";
@@ -65,7 +66,7 @@ class RssNewsRepository implements NewsRepository {
 
       return allArticles;
     } catch (e) {
-      print('Error fetching news: $e');
+      debugPrint('Error fetching news: $e');
       return [];
     }
   }

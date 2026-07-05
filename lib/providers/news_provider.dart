@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/article.dart';
@@ -8,6 +9,8 @@ import '../services/notification_service.dart';
 
 class NewsProvider extends ChangeNotifier {
   final NewsRepository _repository;
+  final NotificationService _notificationService = NotificationService();
+  bool _notificationInitialized = false;
 
   List<Article> _articles = [];
   List<Article> _filteredArticles = [];
@@ -83,16 +86,18 @@ class NewsProvider extends ChangeNotifier {
       if (articles.isNotEmpty) {
         // Check voor breaking news in nieuwe artikelen (alleen als app open is)
         if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
-          final notificationService = NotificationService();
-          await notificationService.initialize();
+          if (!_notificationInitialized) {
+            await _notificationService.initialize();
+            _notificationInitialized = true;
+          }
           
           for (final article in articles.take(3)) {
-            if (notificationService.isBreakingNews(article)) {
+            if (_notificationService.isBreakingNews(article)) {
               final prefs = await SharedPreferences.getInstance();
               final notifiedArticles = prefs.getStringList('notified_articles') ?? [];
               
               if (!notifiedArticles.contains(article.id)) {
-                await notificationService.showBreakingNews(article);
+                await _notificationService.showBreakingNews(article);
                 
                 notifiedArticles.add(article.id);
                 if (notifiedArticles.length > 100) {
@@ -116,7 +121,7 @@ class NewsProvider extends ChangeNotifier {
         ArticleCacheService.cacheArticles(_articles);
       }
     } catch (e) {
-      print('Background refresh failed: $e');
+      debugPrint('Background refresh failed: $e');
     }
   }
 

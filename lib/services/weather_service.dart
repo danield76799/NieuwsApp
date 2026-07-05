@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -74,7 +75,7 @@ class WeatherService {
 
   static Future<Map<String, dynamic>?> getWeatherForCity(String city) async {
     try {
-      print('WeatherService: Fetching weather for $city');
+      debugPrint('WeatherService: Fetching weather for $city');
       final response = await http.get(
         Uri.parse('https://wttr.in/$city?format=j1'),
         headers: {'User-Agent': 'PlusNews/1.0'},
@@ -82,7 +83,7 @@ class WeatherService {
       
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print('WeatherService: Got weather for $city');
+        debugPrint('WeatherService: Got weather for $city');
         
         // Haal de echte locatie naam op uit de API response
         final locationName = data['nearest_area']?[0]?['areaName']?[0]?['value'] ?? city;
@@ -105,7 +106,7 @@ class WeatherService {
         };
       }
     } catch (e) {
-      print('WeatherService: Weather error for $city: $e');
+      debugPrint('WeatherService: Weather error for $city: $e');
     }
     return null;
   }

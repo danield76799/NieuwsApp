@@ -1,5 +1,6 @@
 import 'package:geolocator/geolocator.dart';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class LocationService {
@@ -7,7 +8,7 @@ class LocationService {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        print('LocationService: Location services are disabled');
+        debugPrint('LocationService: Location services are disabled');
         return null;
       }
 
@@ -15,13 +16,13 @@ class LocationService {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          print('LocationService: Location permissions are denied');
+          debugPrint('LocationService: Location permissions are denied');
           return null;
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
-        print('LocationService: Location permissions are permanently denied');
+        debugPrint('LocationService: Location permissions are permanently denied');
         return null;
       }
 
@@ -29,7 +30,7 @@ class LocationService {
         desiredAccuracy: LocationAccuracy.medium,
       );
     } catch (e) {
-      print('LocationService: Error getting position: $e');
+      debugPrint('LocationService: Error getting position: $e');
       return null;
     }
   }
@@ -53,7 +54,7 @@ class LocationService {
         return region;
       }
     } catch (e) {
-      print('LocationService: Error getting city name: $e');
+      debugPrint('LocationService: Error getting city name: $e');
     }
     return null;
   }
