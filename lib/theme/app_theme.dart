@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Botanical palette
@@ -38,7 +39,7 @@ class AppTheme {
         ),
       ),
       cardTheme: CardThemeData(
-        elevation: 0,
+        elevation: 2,
         color: surfaceLight,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
@@ -64,6 +65,16 @@ class AppTheme {
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
         ),
+      ),
+      textTheme: GoogleFonts.latoTextTheme(
+        ThemeData(brightness: Brightness.light).textTheme,
+      ).copyWith(
+        displayLarge: GoogleFonts.lato(fontSize: 57, fontWeight: FontWeight.w300, height: 1.12),
+        headlineMedium: GoogleFonts.lato(fontSize: 20, fontWeight: FontWeight.w600),
+        titleLarge: GoogleFonts.lato(fontSize: 22, fontWeight: FontWeight.w600),
+        bodyLarge: GoogleFonts.lato(fontSize: 16),
+        bodyMedium: GoogleFonts.lato(fontSize: 14),
+        labelLarge: GoogleFonts.lato(fontSize: 14, fontWeight: FontWeight.w500, letterSpacing: 0.1),
       ),
     );
   }
@@ -93,7 +104,7 @@ class AppTheme {
         ),
       ),
       cardTheme: CardThemeData(
-        elevation: 0,
+        elevation: 2,
         color: darkSurface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
@@ -119,6 +130,16 @@ class AppTheme {
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
         ),
+      ),
+      textTheme: GoogleFonts.latoTextTheme(
+        ThemeData(brightness: Brightness.dark).textTheme,
+      ).copyWith(
+        displayLarge: GoogleFonts.lato(fontSize: 57, fontWeight: FontWeight.w300, height: 1.12, color: Colors.white),
+        headlineMedium: GoogleFonts.lato(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white),
+        titleLarge: GoogleFonts.lato(fontSize: 22, fontWeight: FontWeight.w600, color: Colors.white),
+        bodyLarge: GoogleFonts.lato(fontSize: 16, color: Colors.white),
+        bodyMedium: GoogleFonts.lato(fontSize: 14, color: Colors.white),
+        labelLarge: GoogleFonts.lato(fontSize: 14, fontWeight: FontWeight.w500, letterSpacing: 0.1, color: Colors.white),
       ),
     );
   }
