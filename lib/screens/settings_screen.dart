@@ -111,7 +111,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Text(
                         'Gebruik je huidige GPS locatie voor het weer',
                         style: TextStyle(
-                          color: Colors.grey[600],
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontSize: 14,
                         ),
                       ),
@@ -121,7 +121,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           child: Text(
                             'Huidige locatie: ${provider.weatherCity}',
                             style: TextStyle(
-                              color: Colors.green[700],
+                              color: Theme.of(context).colorScheme.primary,
                               fontSize: 12,
                             ),
                           ),
@@ -147,7 +147,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   subtitle: Text(
                     'Voeg nieuwsbronnen toe of verwijder ze',
                     style: TextStyle(
-                      color: Colors.grey[600],
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontSize: 14,
                     ),
                   ),

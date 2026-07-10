@@ -113,7 +113,7 @@ class AppTheme {
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: darkSurface,
         selectedItemColor: darkPrimary,
-        unselectedItemColor: Colors.grey,
+        unselectedItemColor: textSecondaryLight,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
       ),
@@ -134,12 +134,12 @@ class AppTheme {
       textTheme: GoogleFonts.latoTextTheme(
         ThemeData(brightness: Brightness.dark).textTheme,
       ).copyWith(
-        displayLarge: GoogleFonts.lato(fontSize: 57, fontWeight: FontWeight.w300, height: 1.12, color: Colors.white),
-        headlineMedium: GoogleFonts.lato(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white),
-        titleLarge: GoogleFonts.lato(fontSize: 22, fontWeight: FontWeight.w600, color: Colors.white),
-        bodyLarge: GoogleFonts.lato(fontSize: 16, color: Colors.white),
-        bodyMedium: GoogleFonts.lato(fontSize: 14, color: Colors.white),
-        labelLarge: GoogleFonts.lato(fontSize: 14, fontWeight: FontWeight.w500, letterSpacing: 0.1, color: Colors.white),
+        displayLarge: GoogleFonts.lato(fontSize: 57, fontWeight: FontWeight.w300, height: 1.12),
+        headlineMedium: GoogleFonts.lato(fontSize: 20, fontWeight: FontWeight.w600),
+        titleLarge: GoogleFonts.lato(fontSize: 22, fontWeight: FontWeight.w600),
+        bodyLarge: GoogleFonts.lato(fontSize: 16),
+        bodyMedium: GoogleFonts.lato(fontSize: 14),
+        labelLarge: GoogleFonts.lato(fontSize: 14, fontWeight: FontWeight.w500, letterSpacing: 0.1),
       ),
     );
   }

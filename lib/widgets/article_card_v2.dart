@@ -63,7 +63,7 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
                       memCacheWidth: 400,
                       memCacheHeight: 300,
                       placeholder: (context, url) => Container(
-                        color: const Color(0xFF242424),
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
                         child: Center(
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
@@ -72,19 +72,19 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
                         ),
                       ),
                       errorWidget: (context, url, error) => Container(
-                        color: const Color(0xFF242424),
-                        child: const Icon(
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                        child: Icon(
                           Icons.article,
-                          color: Colors.grey,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                           size: 48,
                         ),
                       ),
                     )
                   : Container(
-                      color: const Color(0xFF242424),
-                      child: const Icon(
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      child: Icon(
                         Icons.article,
-                        color: Colors.grey,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         size: 48,
                       ),
                     ),
@@ -173,7 +173,7 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
                       Text(
                         '•',
                         style: TextStyle(
-                          color: Colors.grey[400],
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontSize: 12,
                         ),
                       ),
@@ -181,7 +181,7 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
                       Text(
                         TimeHelper.format(widget.article.pubDate),
                         style: TextStyle(
-                          color: Colors.grey[400],
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontSize: 12,
                         ),
                       ),

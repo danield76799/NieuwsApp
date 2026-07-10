@@ -5,16 +5,17 @@ class NewBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: const Color(0xFFE60000),
+        color: theme.colorScheme.error,
         borderRadius: BorderRadius.circular(4),
       ),
-      child: const Text(
+      child: Text(
         'NIEUW',
         style: TextStyle(
-          color: Colors.white,
+          color: theme.colorScheme.onError,
           fontSize: 10,
           fontWeight: FontWeight.w800,
           letterSpacing: 0.5,

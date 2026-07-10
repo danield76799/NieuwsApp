@@ -52,9 +52,10 @@ class _ArticleCardState extends State<ArticleCard> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      color: const Color(0xFF242424), // Dark card surface
+      color: theme.colorScheme.surfaceContainerHigh,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -68,7 +69,7 @@ class _ArticleCardState extends State<ArticleCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Thumbnail
-              _buildThumbnail(),
+              _buildThumbnail(theme),
               const SizedBox(width: 12),
               
               // Content
@@ -81,10 +82,10 @@ class _ArticleCardState extends State<ArticleCard> {
                       children: [
                         Text(
                           widget.article.source,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFFE60000), // NOS red for source
+                            color: theme.colorScheme.primary,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -92,7 +93,7 @@ class _ArticleCardState extends State<ArticleCard> {
                           '•',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[600],
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -100,7 +101,7 @@ class _ArticleCardState extends State<ArticleCard> {
                           widget.article.formattedTime,
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[500],
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                         
@@ -116,10 +117,10 @@ class _ArticleCardState extends State<ArticleCard> {
                     // Title
                     Text(
                       widget.article.title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: theme.colorScheme.onSurface,
                         height: 1.3,
                       ),
                       maxLines: 3,
@@ -133,7 +134,7 @@ class _ArticleCardState extends State<ArticleCard> {
                         widget.article.description,
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.grey[400],
+                          color: theme.colorScheme.onSurfaceVariant,
                           height: 1.4,
                         ),
                         maxLines: 3,
@@ -147,7 +148,7 @@ class _ArticleCardState extends State<ArticleCard> {
                         child: IconButton(
                           icon: Icon(
                             _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                            color: _isBookmarked ? const Color(0xFF1E88E5) : Colors.grey,
+                            color: _isBookmarked ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
                           ),
                           onPressed: _toggleBookmark,
                         ),
@@ -162,18 +163,18 @@ class _ArticleCardState extends State<ArticleCard> {
     );
   }
 
-  Widget _buildThumbnail() {
+  Widget _buildThumbnail(ThemeData theme) {
     if (widget.article.imageUrl == null || widget.article.imageUrl!.isEmpty) {
       return Container(
         width: 120,
         height: 100,
         decoration: BoxDecoration(
-          color: Colors.grey[800],
+          color: theme.colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(
           Icons.image_outlined,
-          color: Colors.grey[600],
+          color: theme.colorScheme.onSurfaceVariant,
           size: 32,
         ),
       );
@@ -193,21 +194,21 @@ class _ArticleCardState extends State<ArticleCard> {
         placeholder: (context, url) => Container(
           width: 120,
           height: 100,
-          color: Colors.grey[800],
-          child: const Center(
+          color: theme.colorScheme.surfaceContainerHighest,
+          child: Center(
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              color: Color(0xFFE60000),
+              color: theme.colorScheme.primary,
             ),
           ),
         ),
         errorWidget: (context, url, error) => Container(
           width: 120,
           height: 100,
-          color: Colors.grey[800],
+          color: theme.colorScheme.surfaceContainerHighest,
           child: Icon(
             Icons.broken_image_outlined,
-            color: Colors.grey[600],
+            color: theme.colorScheme.onSurfaceVariant,
             size: 32,
           ),
         ),

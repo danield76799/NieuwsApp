@@ -12,6 +12,7 @@ class ArticleListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return InkWell(
       onTap: () {
         Navigator.of(context).push(
@@ -37,14 +38,14 @@ class ArticleListItem extends StatelessWidget {
                   placeholder: (context, url) => Container(
                     width: 80,
                     height: 80,
-                    color: Colors.grey[300],
-                    child: const Icon(Icons.image, color: Colors.grey),
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    child: Icon(Icons.image, color: theme.colorScheme.onSurfaceVariant),
                   ),
                   errorWidget: (context, url, error) => Container(
                     width: 80,
                     height: 80,
-                    color: Colors.grey[300],
-                    child: const Icon(Icons.broken_image, color: Colors.grey),
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    child: Icon(Icons.broken_image, color: theme.colorScheme.onSurfaceVariant),
                   ),
                 ),
               )
@@ -53,10 +54,10 @@ class ArticleListItem extends StatelessWidget {
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  color: Colors.grey[200],
+                  color: theme.colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.article, color: Colors.grey),
+                child: Icon(Icons.article, color: theme.colorScheme.onSurfaceVariant),
               ),
             const SizedBox(width: 12),
 
@@ -70,11 +71,11 @@ class ArticleListItem extends StatelessWidget {
                       Expanded(
                         child: Text(
                           article.title,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
                             height: 1.3,
-                            color: Color(0xFF1A1A1A),
+                            color: theme.colorScheme.onSurface,
                           ),
                           maxLines: 3,
                           overflow: TextOverflow.ellipsis,
@@ -93,21 +94,21 @@ class ArticleListItem extends StatelessWidget {
                         TimeHelper.format(article.pubDate),
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey[600],
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF007BC7).withOpacity(0.1),
+                          color: theme.colorScheme.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           article.source,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11,
-                            color: Color(0xFF007BC7),
+                            color: theme.colorScheme.primary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),

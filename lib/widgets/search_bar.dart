@@ -8,34 +8,35 @@ class SearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.all(16),
       child: TextField(
         onChanged: onSearch,
-        style: const TextStyle(
-          color: Colors.black87,
+        style: TextStyle(
+          color: theme.colorScheme.onSurface,
           fontWeight: FontWeight.w500,
         ),
         decoration: InputDecoration(
           hintText: 'Zoek in artikelen...',
           hintStyle: TextStyle(
-            color: Colors.grey[600],
+            color: theme.colorScheme.onSurfaceVariant,
           ),
-          prefixIcon: const Icon(Icons.search, color: Colors.black54),
+          prefixIcon: Icon(Icons.search, color: theme.colorScheme.onSurfaceVariant),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.black26),
+            borderSide: BorderSide(color: theme.colorScheme.outlineVariant),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.black26),
+            borderSide: BorderSide(color: theme.colorScheme.outlineVariant),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.black54, width: 2),
+            borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
           ),
           filled: true,
-          fillColor: Colors.grey[100],
+          fillColor: theme.colorScheme.surfaceContainerHighest,
         ),
       ),
     );
