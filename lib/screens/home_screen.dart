@@ -463,9 +463,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       },
       color: theme.colorScheme.primary,
       backgroundColor: theme.colorScheme.surface,
-      displacement: 40,
+      displacement: 50,
+      edgeOffset: 8,
       strokeWidth: 3,
       child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           SliverToBoxAdapter(
             child: Padding(

@@ -39,27 +39,39 @@ class _SwipeCardViewState extends State<SwipeCardView> {
       return const Center(child: Text('Geen artikelen'));
     }
 
-    return Column(
-      children: [
-        // Filter chip
-        if (widget.articles.length > 10)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Text(
-              '${widget.articles.length} artikelen',
-              style: TextStyle(
-                fontSize: 13,
-                color: Theme.of(context).textTheme.bodyMedium?.color,
+    return RefreshIndicator(
+      onRefresh: widget.onRefresh,
+      color: Theme.of(context).colorScheme.primary,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      displacement: 50,
+      edgeOffset: 8,
+      strokeWidth: 3,
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          // Filter chip
+          if (widget.articles.length > 10)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 12, top: 8),
+                child: Center(
+                  child: Text(
+                    '${widget.articles.length} artikelen',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ),
-        // Swipe cards
-        Expanded(
-          child: RefreshIndicator(
-            onRefresh: widget.onRefresh,
-            color: Theme.of(context).colorScheme.primary,
-            backgroundColor: Theme.of(context).colorScheme.surface,
-            strokeWidth: 3,
+            )
+          else
+            const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
+          // Swipe cards: verticale pull-to-refresh via CustomScrollView,
+          // horizontale swipe via PageView in SliverFillRemaining.
+          SliverFillRemaining(
+            hasScrollBody: false,
             child: PageView.builder(
               controller: _pageController,
               itemCount: widget.articles.length,
@@ -75,30 +87,33 @@ class _SwipeCardViewState extends State<SwipeCardView> {
               },
             ),
           ),
-        ),
-        // Page dots
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(
-              min(widget.articles.length, 10),
-              (index) => AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                width: _currentPage == index ? 24 : 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: _currentPage == index
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(4),
+
+          // Page dots
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  min(widget.articles.length, 10),
+                  (index) => AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    width: _currentPage == index ? 24 : 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: _currentPage == index
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

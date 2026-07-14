@@ -101,7 +101,11 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
     return RefreshIndicator(
       onRefresh: _loadBookmarks,
       color: theme.colorScheme.primary,
+      backgroundColor: theme.colorScheme.surface,
+      displacement: 50,
+      strokeWidth: 3,
       child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.symmetric(vertical: 8),
         itemCount: _bookmarks.length,
         itemBuilder: (context, index) {
