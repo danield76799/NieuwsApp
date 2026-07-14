@@ -10,8 +10,8 @@ class AppTheme {
   static const Color textSecondaryLight = Color(0xFF6B6B6B);
 
   static const Color darkPrimary = Color(0xFF3D6B4C);
-  static const Color darkSurface = Color(0xFF1E1E1E);
-  static const Color darkBackground = Color(0xFF141414);
+  static const Color darkSurface = Color(0xFF1A1A1A);
+  static const Color darkBackground = Color(0xFF000000);
 
   static ThemeData get lightTheme {
     return ThemeData(
