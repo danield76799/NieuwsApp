@@ -57,13 +57,13 @@ class ArticleCacheService {
 
   static Future<String?> getArticleContent(String articleId) async {
     final prefs = await SharedPreferences.getInstance();
-    final content = prefs.getString('${_kArticleContent}$articleId');
+    final content = prefs.getString('$_kArticleContent$articleId');
     return content;
   }
 
   static Future<void> cacheArticleContent(String articleId, String content) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('${_kArticleContent}$articleId', content);
+    await prefs.setString('$_kArticleContent$articleId', content);
   }
 
   /// Cache full article content from URLs in background
@@ -72,7 +72,7 @@ class ArticleCacheService {
     final prefs = await SharedPreferences.getInstance();
     for (final article in articles) {
       if (article.description.isNotEmpty) {
-        await prefs.setString('${_kArticleContent}${article.id}', article.description);
+        await prefs.setString('$_kArticleContent${article.id}', article.description);
       }
     }
     
@@ -142,7 +142,7 @@ class ArticleCacheService {
     
     // Limit length
     if (text.length > 10000) {
-      text = text.substring(0, 10000) + '...';
+      text = '${text.substring(0, 10000)}...';
     }
     
     return text;

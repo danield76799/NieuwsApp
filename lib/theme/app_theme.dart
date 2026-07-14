@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Botanical palette
@@ -11,8 +10,8 @@ class AppTheme {
   static const Color textSecondaryLight = Color(0xFF6B6B6B);
 
   static const Color darkPrimary = Color(0xFF3D6B4C);
-  static const Color darkSurface = Color(0xFF2A2A2A);
-  static const Color darkBackground = Color(0xFF1E1E1E);
+  static const Color darkSurface = Color(0xFF1E1E1E);
+  static const Color darkBackground = Color(0xFF141414);
 
   static ThemeData get lightTheme {
     return ThemeData(
@@ -65,16 +64,6 @@ class AppTheme {
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
         ),
-      ),
-      textTheme: GoogleFonts.latoTextTheme(
-        ThemeData(brightness: Brightness.light).textTheme,
-      ).copyWith(
-        displayLarge: GoogleFonts.lato(fontSize: 57, fontWeight: FontWeight.w300, height: 1.12),
-        headlineMedium: GoogleFonts.lato(fontSize: 20, fontWeight: FontWeight.w600),
-        titleLarge: GoogleFonts.lato(fontSize: 22, fontWeight: FontWeight.w600),
-        bodyLarge: GoogleFonts.lato(fontSize: 16),
-        bodyMedium: GoogleFonts.lato(fontSize: 14),
-        labelLarge: GoogleFonts.lato(fontSize: 14, fontWeight: FontWeight.w500, letterSpacing: 0.1),
       ),
     );
   }
@@ -130,16 +119,6 @@ class AppTheme {
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
         ),
-      ),
-      textTheme: GoogleFonts.latoTextTheme(
-        ThemeData(brightness: Brightness.dark).textTheme,
-      ).copyWith(
-        displayLarge: GoogleFonts.lato(fontSize: 57, fontWeight: FontWeight.w300, height: 1.12),
-        headlineMedium: GoogleFonts.lato(fontSize: 20, fontWeight: FontWeight.w600),
-        titleLarge: GoogleFonts.lato(fontSize: 22, fontWeight: FontWeight.w600),
-        bodyLarge: GoogleFonts.lato(fontSize: 16),
-        bodyMedium: GoogleFonts.lato(fontSize: 14),
-        labelLarge: GoogleFonts.lato(fontSize: 14, fontWeight: FontWeight.w500, letterSpacing: 0.1),
       ),
     );
   }

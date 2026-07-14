@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:animations/animations.dart';
 import 'package:provider/provider.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'providers/news_provider.dart';
 import 'repositories/rss_news_repository.dart';
 import 'screens/home_screen.dart';
-import 'services/storage_service.dart';
 import 'services/bookmark_service.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final storage = StorageService();
   final repo = RssNewsRepository();
   
   // Pre-initialize bookmark service for performance
@@ -42,7 +39,7 @@ class PlusNewsApp extends StatelessWidget {
         backgroundColor: colorScheme.surface,
         foregroundColor: colorScheme.onSurface,
         titleTextStyle: base.textTheme.titleLarge?.copyWith(
-          fontSize: 24,
+          fontSize: 22,
           fontWeight: FontWeight.w700,
           color: colorScheme.onSurface,
         ),

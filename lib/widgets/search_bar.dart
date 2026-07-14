@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../services/time_helper.dart';
 
 class SearchBar extends StatelessWidget {
   final Function(String) onSearch;

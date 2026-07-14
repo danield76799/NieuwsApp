@@ -10,10 +10,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 // We'll create a simple extension for Color to get the hex value as an integer.
 extension ColorExtension on Color {
   int get hexValue =>
-      (alpha * 255).round() << 24 |
-      (red * 255).round() << 16 |
-      (green * 255).round() << 8 |
-      (blue * 255).round();
+      (a * 255).round() << 24 |
+      (r * 255).round() << 16 |
+      (g * 255).round() << 8 |
+      (b * 255).round();
 }
 
 class ThemeBuilder extends StatefulWidget {
@@ -63,9 +63,6 @@ class _ThemeBuilderState extends State<ThemeBuilder> {
   bool get twemoji => _twemoji ?? false;
 
   DynamicSchemeVariant get variant => _variant ?? DynamicSchemeVariant.tonalSpot;
-
-  static _ThemeBuilderState of(BuildContext context) =>
-      Provider.of<_ThemeBuilderState>(context, listen: false);
 
   void _loadData(_) async {
     final preferences = _sharedPreferences ??=

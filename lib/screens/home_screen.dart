@@ -173,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.onSurface.withOpacity(0.3),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -251,7 +251,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         return Scaffold(
           appBar: AppBar(
             backgroundColor: theme.colorScheme.surface,
-            title: Text('Nieuws', style: TextStyle(color: theme.colorScheme.onSurface)),
+            title: const Text('Nieuws'),
             actions: [
               IconButton(
                 icon: Icon(Icons.search, color: theme.colorScheme.onSurface),
@@ -365,8 +365,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                   style: TextStyle(fontSize: 12, color: provider.filterActive ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant),
                                 ),
                                 onPressed: () => provider.toggleFilter(!provider.filterActive),
-                                backgroundColor: provider.filterActive ? theme.colorScheme.primary.withOpacity(0.1) : theme.colorScheme.surfaceContainerHighest,
-                                side: BorderSide(color: provider.filterActive ? theme.colorScheme.primary.withOpacity(0.3) : theme.colorScheme.outlineVariant, width: 1),
+                                backgroundColor: provider.filterActive ? theme.colorScheme.primary.withValues(alpha: 0.1) : theme.colorScheme.surfaceContainerHighest,
+                                side: BorderSide(color: provider.filterActive ? theme.colorScheme.primary.withValues(alpha: 0.3) : theme.colorScheme.outlineVariant, width: 1),
                                 padding: EdgeInsets.zero,
                                 visualDensity: VisualDensity.compact,
                               ),
@@ -429,7 +429,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           child: Text(
                             'Laatst vernieuwd: ${_formatLastRefresh(_lastNewsRefresh!)}',
                             style: TextStyle(
-                              color: theme.colorScheme.onPrimary.withOpacity(0.7),
+                              color: theme.colorScheme.onPrimary.withValues(alpha: 0.7),
                               fontSize: 12,
                             ),
                           ),

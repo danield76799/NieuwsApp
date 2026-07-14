@@ -18,7 +18,6 @@ class ArticleHeroCard extends StatefulWidget {
 
 class _ArticleHeroCardState extends State<ArticleHeroCard> {
   void _openArticle() {
-    // Altijd browser openen voor betrouwbare weergave
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => BrowserReaderScreen(article: widget.article),
@@ -35,6 +34,7 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return GestureDetector(
       onTap: _openArticle,
       child: Container(
@@ -44,7 +44,7 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: theme.colorScheme.shadow.withValues(alpha: 0.2),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -63,33 +63,33 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
                       memCacheWidth: 400,
                       memCacheHeight: 300,
                       placeholder: (context, url) => Container(
-                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                        color: theme.colorScheme.surfaceContainerHighest,
                         child: Center(
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Theme.of(context).colorScheme.primary,
+                            color: theme.colorScheme.primary,
                           ),
                         ),
                       ),
                       errorWidget: (context, url, error) => Container(
-                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                        color: theme.colorScheme.surfaceContainerHighest,
                         child: Icon(
                           Icons.article,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          color: theme.colorScheme.onSurfaceVariant,
                           size: 48,
                         ),
                       ),
                     )
                   : Container(
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      color: theme.colorScheme.surfaceContainerHighest,
                       child: Icon(
                         Icons.article,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        color: theme.colorScheme.onSurfaceVariant,
                         size: 48,
                       ),
                     ),
             ),
-            
+
             // Gradient overlay - dark at bottom
             Positioned.fill(
               child: DecoratedBox(
@@ -100,16 +100,16 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      Colors.black.withOpacity(0.1),
-                      Colors.black.withOpacity(0.7),
-                      Colors.black.withOpacity(0.85),
+                      theme.colorScheme.shadow.withValues(alpha: 0.08),
+                      theme.colorScheme.shadow.withValues(alpha: 0.6),
+                      theme.colorScheme.shadow.withValues(alpha: 0.75),
                     ],
                     stops: const [0.3, 0.5, 0.75, 1.0],
                   ),
                 ),
               ),
             ),
-            
+
             // Content overlay
             Positioned(
               left: 16,
@@ -123,7 +123,7 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
+                        color: theme.colorScheme.primary,
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: const Row(
@@ -143,13 +143,13 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
                       ),
                     ),
                   const SizedBox(height: 8),
-                  
+
                   // Title with dynamic font scaling
                   Text(
                     widget.article.title,
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: (20 * MediaQuery.of(context).textScaleFactor).clamp(16.0, 24.0),
+                      fontSize: (20 * MediaQuery.textScalerOf(context).scale(1.0)).clamp(16.0, 24.0),
                       fontWeight: FontWeight.bold,
                       height: 1.2,
                     ),
@@ -157,15 +157,15 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 8),
-                  
+
                   // Source + time
                   Row(
                     children: [
                       Text(
                         widget.article.source.toUpperCase(),
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontSize: (12 * MediaQuery.of(context).textScaleFactor).clamp(10.0, 14.0),
+                          color: theme.colorScheme.primary,
+                          fontSize: (12 * MediaQuery.textScalerOf(context).scale(1.0)).clamp(10.0, 14.0),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -173,7 +173,7 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
                       Text(
                         '•',
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          color: theme.colorScheme.onSurfaceVariant,
                           fontSize: 12,
                         ),
                       ),
@@ -181,7 +181,7 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
                       Text(
                         TimeHelper.format(widget.article.pubDate),
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          color: theme.colorScheme.onSurfaceVariant,
                           fontSize: 12,
                         ),
                       ),
@@ -193,8 +193,8 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
                           color: Colors.white,
                           size: 20,
                         ),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                        padding: const EdgeInsets.all(8),
+                        constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                       ),
                     ],
                   ),
@@ -242,8 +242,6 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
   }
 
   void _openArticle() {
-    // Altijd browser openen voor betrouwbare weergave
-    // Content wordt in achtergrond gecached voor volgende keer
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => BrowserReaderScreen(article: widget.article),
@@ -251,15 +249,9 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
     );
   }
 
-  Future<void> _shareArticle() async {
-    await Share.share(
-      '${widget.article.title}\n\n${widget.article.link}',
-      subject: widget.article.title,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -269,11 +261,11 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceVariant,
+            color: theme.colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: theme.colorScheme.shadow.withValues(alpha: 0.08),
                 blurRadius: 6,
                 offset: const Offset(0, 3),
               ),
@@ -295,14 +287,14 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                         placeholder: (context, url) => Container(
                           width: 100,
                           height: 75,
-                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                          color: theme.colorScheme.surfaceContainerHighest,
                           child: Center(
                             child: SizedBox(
                               width: 16,
                               height: 16,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Theme.of(context).colorScheme.primary,
+                                color: theme.colorScheme.primary,
                               ),
                             ),
                           ),
@@ -310,15 +302,15 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                         errorWidget: (context, url, error) => Container(
                           width: 100,
                           height: 75,
-                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                          child: Icon(Icons.image, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                          color: theme.colorScheme.surfaceContainerHighest,
+                          child: Icon(Icons.image, color: theme.colorScheme.onSurfaceVariant),
                         ),
                       )
                     : Container(
                         width: 100,
                         height: 75,
-                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                        child: Icon(Icons.article, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        child: Icon(Icons.article, color: theme.colorScheme.onSurfaceVariant),
                       ),
               ),
               const SizedBox(width: 12),
@@ -335,20 +327,20 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: Theme.of(context).colorScheme.primary,
+                            color: theme.colorScheme.primary,
                           ),
                         ),
                         const SizedBox(width: 6),
                         Text(
                           '•',
-                          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 11),
+                          style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 11),
                         ),
                         const SizedBox(width: 6),
                         Text(
                           TimeHelper.format(widget.article.pubDate),
                           style: TextStyle(
                             fontSize: 11,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -360,7 +352,7 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.onSurface,
+                        color: theme.colorScheme.onSurface,
                         height: 1.3,
                       ),
                       maxLines: 2,
@@ -372,7 +364,7 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                       widget.article.description,
                       style: TextStyle(
                         fontSize: 12,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        color: theme.colorScheme.onSurfaceVariant,
                         height: 1.3,
                       ),
                       maxLines: 2,
@@ -387,10 +379,10 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                 icon: Icon(
                   _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
                   size: 18,
-                  color: _isBookmarked ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: _isBookmarked ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
                 ),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                padding: const EdgeInsets.all(8),
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
               ),
             ],
           ),

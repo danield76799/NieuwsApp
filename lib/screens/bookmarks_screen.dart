@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../providers/news_provider.dart';
 import '../services/bookmark_service.dart';
 import '../widgets/article_card_v2.dart';
 
@@ -130,6 +128,7 @@ class _BookmarksScreenState extends State<BookmarksScreen> {
           ElevatedButton(
             onPressed: () async {
               await _bookmarkService.clearAll();
+              if (!context.mounted) return;
               Navigator.pop(context);
               _loadBookmarks();
             },

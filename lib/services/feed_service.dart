@@ -13,12 +13,6 @@ class FeedService {
     {'name': 'AD.nl', 'url': 'https://www.ad.nl/nieuws/rss.xml'},
   ];
 
-  // Fallback feeds als alle primaire falen
-  static final List<Map<String, String>> _fallbackFeeds = [
-    {'name': 'Telegraaf', 'url': 'https://www.telegraaf.nl/rss'},
-    {'name': 'RTL Nieuws', 'url': 'https://www.rtlnieuws.nl/rss'},
-  ];
-
   static Future<List<Map<String, String>>> getFeeds() async {
     try {
       final prefs = await SharedPreferences.getInstance();

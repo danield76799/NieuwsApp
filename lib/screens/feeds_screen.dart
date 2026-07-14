@@ -50,31 +50,31 @@ class _FeedsScreenState extends State<FeedsScreen> {
     _nameController.clear();
     _urlController.clear();
     await _loadFeeds();
-    
+
     // Reload news in provider
-    if (mounted) {
-      final provider = context.read<NewsProvider>();
-      await provider.loadNews(forceRefresh: true);
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Feed toegevoegd - artikelen herladen...')),
-      );
-    }
+    if (!mounted) return;
+    final provider = context.read<NewsProvider>();
+    await provider.loadNews(forceRefresh: true);
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Feed toegevoegd - artikelen herladen...')),
+    );
   }
 
   Future<void> _removeFeed(String url) async {
     await FeedService.removeFeed(url);
     await _loadFeeds();
-    
+
     // Reload news in provider
-    if (mounted) {
-      final provider = context.read<NewsProvider>();
-      await provider.loadNews(forceRefresh: true);
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Feed verwijderd - artikelen herladen...')),
-      );
-    }
+    if (!mounted) return;
+    final provider = context.read<NewsProvider>();
+    await provider.loadNews(forceRefresh: true);
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Feed verwijderd - artikelen herladen...')),
+    );
   }
 
   @override
@@ -173,7 +173,7 @@ class _FeedsScreenState extends State<FeedsScreen> {
                         ),
                       ),
                     );
-                  }).toList(),
+                  }),
                 ],
               ),
             ),

@@ -75,11 +75,11 @@ class NewsApiService {
         List<Article> articles = [];
         
         for (var item in items) {
-          final title = item.findElements('title').firstOrNull?.text ?? '';
-          final link = item.findElements('link').firstOrNull?.text ?? '';
-          final description = item.findElements('description').firstOrNull?.text ?? '';
-          final pubDate = item.findElements('pubDate').firstOrNull?.text ?? '';
-          final author = item.findElements('author').firstOrNull?.text;
+          final title = item.findElements('title').firstOrNull?.value ?? '';
+          final link = item.findElements('link').firstOrNull?.value ?? '';
+          final description = item.findElements('description').firstOrNull?.value ?? '';
+          final pubDate = item.findElements('pubDate').firstOrNull?.value ?? '';
+          final author = item.findElements('author').firstOrNull?.value;
           final categoryElement = item.findElements('category').firstOrNull;
           
           // Extract image URL - try enclosure first
@@ -92,7 +92,7 @@ class NewsApiService {
           // Extract category from link or category element
           String articleCategory = 'algemeen';
           if (categoryElement != null) {
-            articleCategory = categoryElement.text.split('/').first.trim().toLowerCase();
+            articleCategory = (categoryElement.value ?? '').split('/').first.trim().toLowerCase();
           } else {
             final categoryMatch = RegExp(r'https?://[^/]+/([^/]+)/').firstMatch(link);
             if (categoryMatch != null) {
@@ -179,7 +179,7 @@ class NewsApiService {
     
     // Limit length
     if (text.length > 300) {
-      text = text.substring(0, 300) + '...';
+      text = '${text.substring(0, 300)}...';
     }
     
     return text;

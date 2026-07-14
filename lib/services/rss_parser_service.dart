@@ -120,7 +120,7 @@ class RssParserService {
     // Try to get channel title first (usually the site name)
     final channelElement = document.findAllElements('channel').firstOrNull;
     if (channelElement != null) {
-      final channelTitle = channelElement.findElements('title').firstOrNull?.text;
+      final channelTitle = channelElement.findElements('title').firstOrNull?.value;
       if (channelTitle != null && channelTitle.isNotEmpty) {
         return _cleanSourceName(channelTitle);
       }
@@ -129,7 +129,7 @@ class RssParserService {
     // Fallback to first title element
     final titleElement = document.findAllElements('title').firstOrNull;
     if (titleElement != null) {
-      return _cleanSourceName(titleElement.text);
+      return _cleanSourceName(titleElement.value);
     }
     
     return 'Onbekende bron';
@@ -152,7 +152,7 @@ class RssParserService {
   static String? _extractChannelImage(XmlDocument document) {
     final imageElement = document.findAllElements('image').firstOrNull;
     if (imageElement != null) {
-      final url = imageElement.findElements('url').firstOrNull?.text;
+      final url = imageElement.findElements('url').firstOrNull?.value;
       if (_isValidUrl(url)) return url;
     }
     return null;
@@ -183,7 +183,7 @@ class RssParserService {
 
   static String _getElementText(XmlElement parent, String name) {
     final element = parent.findElements(name).firstOrNull;
-    return element?.text ?? '';
+    return element?.value ?? '';
   }
 
   static String? _extractThumbnail(XmlElement item) {
@@ -244,7 +244,7 @@ class RssParserService {
     // Try image tag inside item
     final imageTag = item.findElements('image').firstOrNull;
     if (imageTag != null) {
-      final url = imageTag.findElements('url').firstOrNull?.text;
+      final url = imageTag.findElements('url').firstOrNull?.value;
       if (_isValidUrl(url)) return url;
     }
 

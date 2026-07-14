@@ -31,7 +31,7 @@ class EmptyState extends StatelessWidget {
                 child: Icon(
                   icon,
                   size: 80,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
                 ),
               ),
             if (icon != null) const SizedBox(height: 24),
@@ -67,7 +67,7 @@ class EmptyState extends StatelessWidget {
                   opacity: 1.0,
                   duration: const Duration(milliseconds: 500),
                   child: Text(
-                    'Geen artikelen gevonden voor: \"$filterText\"',
+                    'Geen artikelen gevonden voor: "$filterText"',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
