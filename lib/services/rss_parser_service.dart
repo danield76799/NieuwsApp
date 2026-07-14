@@ -183,7 +183,11 @@ class RssParserService {
 
   static String _getElementText(XmlElement parent, String name) {
     final element = parent.findElements(name).firstOrNull;
-    return element?.value ?? '';
+    if (element == null) return '';
+
+    // .value geeft directe tekst, .innerText pakt alle tekst inclusief CDATA
+    final text = element.value ?? element.innerText;
+    return text?.trim() ?? '';
   }
 
   static String? _extractThumbnail(XmlElement item) {

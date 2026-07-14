@@ -59,6 +59,12 @@ class NewsApiService {
   
   /// Fetch RSS feed from URL
   Future<List<Article>> _fetchRssFeed(String url, String source) async {
+    String _getElementText(XmlElement parent, String name) {
+      final element = parent.findElements(name).firstOrNull;
+      if (element == null) return '';
+      return element.value?.trim() ?? element.innerText?.trim() ?? '';
+    }
+
     try {
       final response = await http.get(
         Uri.parse(url),
@@ -75,11 +81,11 @@ class NewsApiService {
         List<Article> articles = [];
         
         for (var item in items) {
-          final title = item.findElements('title').firstOrNull?.value ?? '';
-          final link = item.findElements('link').firstOrNull?.value ?? '';
-          final description = item.findElements('description').firstOrNull?.value ?? '';
-          final pubDate = item.findElements('pubDate').firstOrNull?.value ?? '';
-          final author = item.findElements('author').firstOrNull?.value;
+          final title = _getElementText(item, 'title');
+          final link = _getElementText(item, 'link');
+          final description = _getElementText(item, 'description');
+          final pubDate = _getElementText(item, 'pubDate');
+          final author = _getElementText(item, 'author');
           final categoryElement = item.findElements('category').firstOrNull;
           
           // Extract image URL - try enclosure first
