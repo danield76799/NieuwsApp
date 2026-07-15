@@ -187,7 +187,7 @@ class RssParserService {
 
     // .value geeft directe tekst, .innerText pakt alle tekst inclusief CDATA
     final text = element.value ?? element.innerText;
-    return text?.trim() ?? '';
+    return text.trim();
   }
 
   static String? _extractThumbnail(XmlElement item) {
