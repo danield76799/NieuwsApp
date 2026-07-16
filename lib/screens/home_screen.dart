@@ -273,6 +273,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         return Scaffold(
           appBar: AppBar(
             backgroundColor: theme.colorScheme.surface,
+            titleSpacing: 16,
             title: _searchActive
                 ? TextField(
                     controller: _searchController,
@@ -290,16 +291,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   )
                 : Row(
                     children: [
-                      const Text('Nieuws'),
+                      Text('Nieuws', style: theme.textTheme.titleLarge),
                       const SizedBox(width: 8),
                       if (_lastNewsRefresh != null)
                         Flexible(
                           child: Text(
                             _formatLastRefresh(_lastNewsRefresh!),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: theme.colorScheme.onSurfaceVariant,
-                              fontWeight: FontWeight.w400,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontWeight: FontWeight.w500,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -309,12 +308,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             actions: [
               if (!_searchActive) ...[
                 IconButton(
-                  icon: Icon(Icons.search, color: theme.colorScheme.onSurface),
+                  icon: Icon(Icons.search_outlined),
                   onPressed: _toggleSearch,
                 ),
                 IconButton(
                   icon: Icon(
-                    Icons.filter_list,
+                    provider.filterActive ? Icons.filter_list : Icons.filter_list_off,
                     color: provider.filterActive ? theme.colorScheme.primary : theme.colorScheme.onSurface,
                   ),
                   onPressed: () {
@@ -331,10 +330,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     ),
                     label: Text(
                       '${_weatherData!['temp']}°',
-                      style: TextStyle(
+                      style: theme.textTheme.labelLarge?.copyWith(
                         color: theme.colorScheme.onSurface,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     style: TextButton.styleFrom(
