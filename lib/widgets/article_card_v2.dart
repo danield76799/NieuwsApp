@@ -29,7 +29,7 @@ class ArticleHeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scale = MediaQuery.textScalerOf(context).scale(1.0);
+    // scale removed; using explicit TextStyles
     return GestureDetector(
       onTap: () => _openArticle(context),
       onLongPress: _shareArticle,
@@ -139,7 +139,7 @@ class ArticleHeroCard extends StatelessWidget {
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
                       height: 1.2,
-                      fontSize: (20 * scale).clamp(16, 24),
+                      fontSize: 20,
                     ),
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
@@ -241,7 +241,7 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scale = MediaQuery.textScalerOf(context).scale(1.0);
+    // scale removed; using explicit TextStyles
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -337,11 +337,11 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                     const SizedBox(height: 6),
                     Text(
                       widget.article.title,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        color: theme.colorScheme.onSurface,
+                      style: const TextStyle(
+                        fontSize: 14,
                         fontWeight: FontWeight.w700,
                         height: 1.25,
-                      )!.apply(fontSizeFactor: scale),
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -350,10 +350,11 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                       padding: const EdgeInsets.only(top: 6.0),
                       child: Text(
                         widget.article.description,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF6B6B6B),
                           height: 1.3,
-                        )!.apply(fontSizeFactor: scale),
+                        ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
