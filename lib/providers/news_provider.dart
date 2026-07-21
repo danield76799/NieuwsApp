@@ -20,6 +20,7 @@ class NewsProvider extends ChangeNotifier {
   String _searchQuery = '';
   String _weatherCity = 'Amsterdam';
   bool _useAutoLocation = true;
+  bool _isRefreshing = false;
   String? _currentPosition;
 
   NewsProvider(this._repository) {
@@ -80,6 +81,8 @@ class NewsProvider extends ChangeNotifier {
   }
 
   Future<void> _refreshInBackground() async {
+    if (_isRefreshing) return;
+    _isRefreshing = true;
     try {
       final articles = await _repository.fetchNews();
       if (articles.isNotEmpty) {
@@ -114,13 +117,12 @@ class NewsProvider extends ChangeNotifier {
         resetPagination();
         notifyListeners();
 
-        // Cache article metadata only. Full content fetching blocks the UI thread
-        // and is unreliable across news sites, so we leave article rendering to
-        // the in-app browser/webview.
         ArticleCacheService.cacheArticles(_articles);
       }
     } catch (e) {
       debugPrint('Background refresh failed: $e');
+    } finally {
+      _isRefreshing = false;
     }
   }
 

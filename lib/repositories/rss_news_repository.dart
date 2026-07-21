@@ -56,6 +56,13 @@ class RssNewsRepository implements NewsRepository {
       
       var allArticles = results.expand((e) => e).toList();
 
+      // Deduplicate by link/id to reduce list size and UI rebuilds.
+      final seen = <String>{};
+      allArticles = allArticles.where((article) {
+        final key = article.link.isEmpty ? article.id : article.link;
+        return seen.add(key);
+      }).toList();
+
       // Sort by date (newest first)
       allArticles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
 
