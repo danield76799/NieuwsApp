@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'providers/news_provider.dart';
+import 'providers/theme_mode_provider.dart';
 import 'repositories/rss_news_repository.dart';
 import 'screens/home_screen.dart';
 import 'services/bookmark_service.dart';
@@ -11,17 +12,22 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final repo = RssNewsRepository();
-  
+
   // Pre-initialize bookmark service for performance
   await BookmarkService().initialize();
 
   runApp(
-    ChangeNotifierProvider(
-      create: (_) {
-        final provider = NewsProvider(repo);
-        provider.loadNews();
-        return provider;
-      },
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) {
+            final provider = NewsProvider(repo);
+            provider.loadNews();
+            return provider;
+          },
+        ),
+        ChangeNotifierProvider(create: (_) => ThemeModeProvider()),
+      ],
       child: const PlusNewsApp(),
     ),
   );
@@ -87,13 +93,17 @@ class PlusNewsApp extends StatelessWidget {
             ? _buildThemeData(darkDynamic, true)
             : AppTheme.darkTheme;
 
-        return MaterialApp(
-          title: 'PlusNews',
-          debugShowCheckedModeBanner: false,
-          theme: lightTheme,
-          darkTheme: darkTheme,
-          themeMode: ThemeMode.system,
-          home: const HomeScreen(),
+        return Consumer<ThemeModeProvider>(
+          builder: (context, themeProvider, _) {
+            return MaterialApp(
+              title: 'PlusNews',
+              debugShowCheckedModeBanner: false,
+              theme: lightTheme,
+              darkTheme: darkTheme,
+              themeMode: themeProvider.themeMode,
+              home: const HomeScreen(),
+            );
+          },
         );
       },
     );

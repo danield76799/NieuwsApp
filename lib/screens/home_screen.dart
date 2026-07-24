@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/article.dart';
 import '../providers/news_provider.dart';
+import '../providers/theme_mode_provider.dart';
 import '../services/weather_service.dart';
 import '../widgets/article_card_v2.dart';
 import '../widgets/swipe_card_view.dart';
@@ -306,6 +307,28 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     ],
                   ),
             actions: [
+              if (!_searchActive)
+                Consumer<ThemeModeProvider>(
+                  builder: (context, themeModeProvider, _) {
+                    final isDark = themeModeProvider.themeMode == ThemeMode.dark;
+                    final isLight = themeModeProvider.themeMode == ThemeMode.light;
+                    final icon = isDark
+                        ? Icons.dark_mode
+                        : isLight
+                            ? Icons.light_mode
+                            : Icons.brightness_auto;
+                    final tooltip = isDark
+                        ? 'Donkere modus (tap voor systeem)'
+                        : isLight
+                            ? 'Lichte modus (tap voor donker)'
+                            : 'Systeemmodus (tap voor licht)';
+                    return IconButton(
+                      icon: Icon(icon),
+                      tooltip: tooltip,
+                      onPressed: themeModeProvider.cycle,
+                    );
+                  },
+                ),
               if (!_searchActive) ...[
                 IconButton(
                   icon: Icon(Icons.search_outlined),
@@ -471,19 +494,29 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
               child: Row(
                 children: [
-                  ActionChip(
+                  FilterChip(
+                    selected: provider.filterActive,
+                    showCheckmark: false,
                     avatar: Icon(
                       provider.filterActive ? Icons.visibility : Icons.visibility_off,
                       size: 18,
-                      color: provider.filterActive ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                      color: provider.filterActive ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant,
                     ),
                     label: Text(
                       provider.filterActive ? 'Filter: AAN' : 'Filter: UIT',
-                      style: TextStyle(fontSize: 12, color: provider.filterActive ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: provider.filterActive ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                    onPressed: () => provider.toggleFilter(!provider.filterActive),
-                    backgroundColor: provider.filterActive ? theme.colorScheme.primary.withValues(alpha: 0.1) : theme.colorScheme.surfaceContainerHighest,
-                    side: BorderSide(color: provider.filterActive ? theme.colorScheme.primary.withValues(alpha: 0.3) : theme.colorScheme.outlineVariant, width: 1),
+                    onSelected: (_) => provider.toggleFilter(!provider.filterActive),
+                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                    selectedColor: theme.colorScheme.primary,
+                    side: BorderSide(
+                      color: provider.filterActive ? theme.colorScheme.primary : theme.colorScheme.outlineVariant,
+                      width: 1,
+                    ),
                     padding: EdgeInsets.zero,
                     visualDensity: VisualDensity.compact,
                   ),

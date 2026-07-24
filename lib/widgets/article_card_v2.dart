@@ -6,23 +6,57 @@ import '../services/bookmark_service.dart';
 import '../services/time_helper.dart';
 import '../screens/browser_reader_screen.dart';
 
-class ArticleHeroCard extends StatelessWidget {
+class ArticleHeroCard extends StatefulWidget {
   final Article article;
+  final double height;
 
-  const ArticleHeroCard({super.key, required this.article});
+  const ArticleHeroCard({
+    super.key,
+    required this.article,
+    this.height = 220,
+  });
 
-  void _openArticle(BuildContext context) {
+  @override
+  State<ArticleHeroCard> createState() => _ArticleHeroCardState();
+}
+
+class _ArticleHeroCardState extends State<ArticleHeroCard> {
+  final _bookmarkService = BookmarkService();
+  bool _isBookmarked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBookmark();
+  }
+
+  void _checkBookmark() {
+    setState(() {
+      _isBookmarked = _bookmarkService.isBookmarked(widget.article.id);
+    });
+  }
+
+  Future<void> _toggleBookmark() async {
+    await _bookmarkService.toggleBookmark(widget.article);
+    if (mounted) {
+      setState(() {
+        _isBookmarked = !_isBookmarked;
+      });
+    }
+  }
+
+  void _openArticle() {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => BrowserReaderScreen(article: article),
+        builder: (_) => BrowserReaderScreen(article: widget.article),
       ),
     );
   }
 
   Future<void> _shareArticle() async {
     await Share.share(
-      '${article.title}\n\n${article.link}',
-      subject: article.title,
+      '${widget.article.title}\n\n${widget.article.link}',
+      subject: widget.article.title,
     );
   }
 
@@ -31,11 +65,11 @@ class ArticleHeroCard extends StatelessWidget {
     final theme = Theme.of(context);
     // scale removed; using explicit TextStyles
     return GestureDetector(
-      onTap: () => _openArticle(context),
+      onTap: _openArticle,
       onLongPress: _shareArticle,
       child: Container(
         margin: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-        height: 220,
+        height: widget.height,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
@@ -51,9 +85,9 @@ class ArticleHeroCard extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(20),
-              child: article.imageUrl != null
+              child: widget.article.imageUrl != null
                   ? CachedNetworkImage(
-                      imageUrl: article.imageUrl!,
+                      imageUrl: widget.article.imageUrl!,
                       fit: BoxFit.cover,
                       memCacheWidth: 400,
                       memCacheHeight: 300,
@@ -109,7 +143,7 @@ class ArticleHeroCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (article.isNew)
+                  if (widget.article.isNew)
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
@@ -134,7 +168,7 @@ class ArticleHeroCard extends StatelessWidget {
                     ),
                   const SizedBox(height: 10),
                   Text(
-                    article.title,
+                    widget.article.title,
                     style: theme.textTheme.titleLarge?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
@@ -148,7 +182,7 @@ class ArticleHeroCard extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        article.source.toUpperCase(),
+                        widget.article.source.toUpperCase(),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.primary,
                           fontWeight: FontWeight.w700,
@@ -163,12 +197,22 @@ class ArticleHeroCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        TimeHelper.format(article.pubDate),
+                        TimeHelper.format(widget.article.pubDate),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                       const Spacer(),
+                      IconButton(
+                        onPressed: _toggleBookmark,
+                        icon: Icon(
+                          _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                          color: theme.colorScheme.onPrimary,
+                          size: 20,
+                        ),
+                        padding: const EdgeInsets.all(8),
+                        constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                      ),
                       IconButton(
                         onPressed: _shareArticle,
                         icon: Icon(
@@ -350,9 +394,8 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                       padding: const EdgeInsets.only(top: 6.0),
                       child: Text(
                         widget.article.description,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF6B6B6B),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
                           height: 1.3,
                         ),
                         maxLines: 2,

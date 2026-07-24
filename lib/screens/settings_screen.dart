@@ -53,9 +53,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       const SizedBox(height: 8),
                       TextField(
                         controller: _cityController,
-                        decoration: const InputDecoration(
+                        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                        decoration: InputDecoration(
                           hintText: 'Bijv. Amsterdam, Almere',
-                          border: OutlineInputBorder(),
+                          hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                          filled: true,
+                          fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -136,7 +151,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               // RSS Feeds
               Card(
                 child: ListTile(
-                  leading: const Icon(Icons.rss_feed, color: Color(0xFF007BC7)),
+                  leading: Icon(Icons.rss_feed, color: Theme.of(context).colorScheme.primary),
                   title: const Text(
                     'RSS Feeds beheren',
                     style: TextStyle(
@@ -180,10 +195,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       const SizedBox(height: 8),
                       TextField(
                         controller: _keywordsController,
-                        decoration: const InputDecoration(
+                        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                        decoration: InputDecoration(
                           hintText: 'Bijv. Trump, Tech, Sport',
-                          border: OutlineInputBorder(),
+                          hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                           helperText: 'Scheid met komma\'s',
+                          helperStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                          filled: true,
+                          fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 8),

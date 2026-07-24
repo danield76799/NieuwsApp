@@ -72,17 +72,23 @@ class _SwipeCardViewState extends State<SwipeCardView> {
           // horizontale swipe via PageView in SliverFillRemaining.
           SliverFillRemaining(
             hasScrollBody: false,
-            child: PageView.builder(
-              controller: _pageController,
-              itemCount: widget.articles.length,
-              onPageChanged: (index) => setState(() => _currentPage = index),
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              itemBuilder: (context, index) {
-                final article = widget.articles[index];
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: ArticleHeroCard(article: article),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final cardHeight = (constraints.maxHeight - 24)
+                    .clamp(240.0, double.infinity);
+                return PageView.builder(
+                  controller: _pageController,
+                  itemCount: widget.articles.length,
+                  onPageChanged: (index) => setState(() => _currentPage = index),
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  itemBuilder: (context, index) {
+                    final article = widget.articles[index];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: ArticleHeroCard(article: article, height: cardHeight),
+                    );
+                  },
                 );
               },
             ),

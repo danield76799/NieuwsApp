@@ -84,10 +84,8 @@ class ArticleListItem extends StatelessWidget {
                       Expanded(
                         child: Text(
                           article.title,
-                          style: const TextStyle(
-                            fontSize: 14,
+                          style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF2D2D2D),
                             height: 1.25,
                           ),
                           maxLines: 2,
