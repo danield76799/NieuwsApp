@@ -1,32 +1,54 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/article.dart';
 
-const _kCachedArticles = 'cached_articles';
-const _kCacheTimestamp = 'cache_timestamp';
 const _kCacheTtlDays = 1;
-const _kArticleContent = 'article_content_';
 
 class ArticleCacheService {
+  static String? _cacheDir;
+
+  static Future<String> get _dir async {
+    if (_cacheDir != null) return _cacheDir!;
+    final appDir = await getTemporaryDirectory();
+    _cacheDir = '${appDir.path}/article_cache';
+    final dir = Directory(_cacheDir!);
+    if (!await dir.exists()) {
+      await dir.create(recursive: true);
+    }
+    return _cacheDir!;
+  }
+
   static Future<void> cacheArticles(List<Article> articles) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final dir = await _dir;
       final payload = articles.map((a) => a.toJson()).toList();
-      final encoded = await compute(jsonEncode, payload);
-      await prefs.setString(_kCachedArticles, encoded);
-      await prefs.setInt(_kCacheTimestamp, DateTime.now().millisecondsSinceEpoch);
-    } catch (_) {
-      await _cacheFallback(articles);
+      final encoded = jsonEncode(payload);
+      await File('$dir/articles.json').writeAsString(encoded);
+      await File('$dir/timestamp').writeAsString(
+        DateTime.now().millisecondsSinceEpoch.toString(),
+      );
+    } catch (e) {
+      debugPrint('Cache write failed: $e');
     }
   }
 
   static Future<List<Article>> getCachedArticles() async {
-    final jsonString = await _read(key: _kCachedArticles, fallback: '');
-    if (jsonString == null || jsonString.isEmpty) return <Article>[];
-    
-    return compute(_decodeArticles, jsonString);
+    try {
+      final dir = await _dir;
+      final file = File('$dir/articles.json');
+      if (!await file.exists()) return [];
+
+      final jsonString = await file.readAsString();
+      if (jsonString.isEmpty) return [];
+
+      return compute(_decodeArticles, jsonString);
+    } catch (e) {
+      debugPrint('Cache read failed: $e');
+      return [];
+    }
   }
 
   static List<Article> _decodeArticles(String jsonString) {
@@ -37,147 +59,123 @@ class ArticleCacheService {
   }
 
   static Future<bool> isCacheValid() async {
-    final ts = await _read(key: _kCacheTimestamp, fallback: null);
-    if (ts == null) return false;
-    final age = DateTime.now().difference(
-      DateTime.fromMillisecondsSinceEpoch(ts),
-    );
-    return age.inDays < _kCacheTtlDays;
+    try {
+      final dir = await _dir;
+      final file = File('$dir/timestamp');
+      if (!await file.exists()) return false;
+      final ts = int.tryParse(await file.readAsString());
+      if (ts == null) return false;
+      final age = DateTime.now().difference(
+        DateTime.fromMillisecondsSinceEpoch(ts),
+      );
+      return age.inDays < _kCacheTtlDays;
+    } catch (_) {
+      return false;
+    }
   }
 
   static Future<void> clearCache() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_kCachedArticles);
-      await prefs.remove(_kCacheTimestamp);
-    } catch (_) {
-      await _fallbackClear();
-    }
-  }
-
-  static Future<String?> getArticleContent(String articleId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final content = prefs.getString('$_kArticleContent$articleId');
-    return content;
-  }
-
-  static Future<void> cacheArticleContent(String articleId, String content) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('$_kArticleContent$articleId', content);
-  }
-
-  /// Cache full article content from URLs in background
-  static Future<void> cacheArticlesContent(List<Article> articles) async {
-    // Eerst description cachen als snelle fallback voor alle artikelen
-    final prefs = await SharedPreferences.getInstance();
-    for (final article in articles) {
-      if (article.description.isNotEmpty) {
-        await prefs.setString('$_kArticleContent${article.id}', article.description);
-      }
-    }
-    
-    // Daarna volledige content fetchen in achtergrond (alle artikelen, parallel)
-    final futures = <Future>[];
-    for (final article in articles) {
-      final url = article.url ?? article.link;
-      if (url.isNotEmpty) {
-        futures.add(
-          fetchAndCacheArticleContent(article.id, url).catchError((e) {
-            // silent fail - description is al gecached als fallback
-            return null;
-          }),
-        );
-      }
-    }
-    // Parallel uitvoeren, max 10 tegelijk
-    await Future.wait(futures, eagerError: false);
-  }
-
-  /// Fetch and cache full article content from URL
-  static Future<String?> fetchAndCacheArticleContent(String articleId, String url) async {
-    try {
-      final response = await http.get(Uri.parse(url), headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      });
-      
-      if (response.statusCode == 200) {
-        // Extract article text from HTML
-        final content = _extractArticleText(response.body);
-        if (content.isNotEmpty) {
-          await cacheArticleContent(articleId, content);
-          return content;
-        }
+      final dir = await _dir;
+      final d = Directory(dir);
+      if (await d.exists()) {
+        await d.delete(recursive: true);
       }
     } catch (e) {
-      debugPrint('Error fetching article content: $e');
+      debugPrint('Cache clear failed: $e');
     }
-    return null;
+  }
+
+  // ── Article content cache (full text) ──
+
+  static Future<String?> getArticleContent(String articleId) async {
+    try {
+      final dir = await _dir;
+      final file = File('$dir/content_$articleId.txt');
+      if (!await file.exists()) return null;
+      return await file.readAsString();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<void> cacheArticleContent(
+      String articleId, String content) async {
+    try {
+      final dir = await _dir;
+      await File('$dir/content_$articleId.txt').writeAsString(content);
+    } catch (_) {}
+  }
+
+  /// Cache full article content from URLs in background.
+  /// First caches descriptions as fast fallback, then fetches full HTML.
+  static Future<void> cacheArticlesContent(List<Article> articles) async {
+    // First: cache descriptions for all articles (instant, no network)
+    for (final article in articles) {
+      if (article.description.isNotEmpty) {
+        await cacheArticleContent(article.id, article.description);
+      }
+    }
+
+    // Then: fetch full content from URLs in parallel (max 5 at a time)
+    final batches = <List<Article>>[];
+    for (var i = 0; i < articles.length; i += 5) {
+      batches.add(articles.sublist(
+        i,
+        i + 5 > articles.length ? articles.length : i + 5,
+      ));
+    }
+    for (final batch in batches) {
+      await Future.wait(
+        batch.map((article) async {
+          final url = article.url ?? article.link;
+          if (url.isEmpty) return;
+          try {
+            final response = await http
+                .get(
+                  Uri.parse(url),
+                  headers: {
+                    'User-Agent':
+                        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                  },
+                )
+                .timeout(const Duration(seconds: 5));
+            if (response.statusCode == 200) {
+              final content = _extractArticleText(response.body);
+              if (content.isNotEmpty) {
+                await cacheArticleContent(article.id, content);
+              }
+            }
+          } catch (_) {}
+        }),
+        eagerError: false,
+      );
+    }
   }
 
   /// Extract readable text from HTML
   static String _extractArticleText(String html) {
-    // Remove script and style tags
-    var text = html.replaceAll(RegExp(r'<script[^>]*>[\s\S]*?</script>', caseSensitive: false), '');
-    text = text.replaceAll(RegExp(r'<style[^>]*>[\s\S]*?</style>', caseSensitive: false), '');
-    
-    // Remove all HTML tags
+    var text = html.replaceAll(
+        RegExp(r'<script[^>]*>[\s\S]*?</script>', caseSensitive: false), '');
+    text = text.replaceAll(
+        RegExp(r'<style[^>]*>[\s\S]*?</style>', caseSensitive: false), '');
     text = text.replaceAll(RegExp(r'<[^>]+>', caseSensitive: false), '');
-    
-    // Decode HTML entities
     text = text
-      .replaceAll('&amp;', '&')
-      .replaceAll('&lt;', '<')
-      .replaceAll('&gt;', '>')
-      .replaceAll('&quot;', '"')
-      .replaceAll('&#39;', "'")
-      .replaceAll('&nbsp;', ' ')
-      .replaceAll('&#x27;', "'")
-      .replaceAll('&#x2F;', '/')
-      .replaceAll('&#x3C;', '<')
-      .replaceAll('&#x3E;', '>')
-      .replaceAll('&#x22;', '"');
-    
-    // Clean up whitespace
+        .replaceAll('&amp;', '&')
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>')
+        .replaceAll('&quot;', '"')
+        .replaceAll('&#39;', "'")
+        .replaceAll('&nbsp;', ' ')
+        .replaceAll('&#x27;', "'")
+        .replaceAll('&#x2F;', '/')
+        .replaceAll('&#x3C;', '<')
+        .replaceAll('&#x3E;', '>')
+        .replaceAll('&#x22;', '"');
     text = text.replaceAll(RegExp(r'\s+'), ' ').trim();
-    
-    // Limit length
     if (text.length > 10000) {
       text = '${text.substring(0, 10000)}...';
     }
-    
     return text;
-  }
-
-  static Future<T?> _read<T>({required String key, required T fallback}) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final value = prefs.get(key);
-      return value == null ? fallback : value as T;
-    } catch (_) {
-      return fallback;
-    }
-  }
-
-  static Future<void> _cacheFallback(List<Article> articles) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      for (final a in articles) {
-        await prefs.setString('article_${a.id}', jsonEncode(a.toJson()));
-      }
-    } catch (_) {
-      // no-op
-    }
-  }
-
-  static Future<void> _fallbackClear() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final keys = prefs.getKeys();
-      await Future.wait(
-        keys.where((k) => k.startsWith('article_')).map(prefs.remove),
-      );
-    } catch (_) {
-      // no-op
-    }
   }
 }

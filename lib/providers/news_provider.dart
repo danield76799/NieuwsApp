@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/article.dart';
@@ -92,6 +93,11 @@ class NewsProvider extends ChangeNotifier {
       _feedNames = cachedArticles.map((a) => a.source).toSet().toList()..sort();
       _applyFilter();
       notifyListeners();
+    }
+    
+    // Pre-cache article content in background (beschrijvingen + full text)
+    if (cachedArticles.isNotEmpty) {
+      unawaited(ArticleCacheService.cacheArticlesContent(cachedArticles));
     }
     
     // Altijd background refresh voor verse data
