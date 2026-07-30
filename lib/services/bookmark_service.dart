@@ -81,6 +81,55 @@ class BookmarkService {
 
   int get bookmarkCount => _bookmarks.length;
 
+  // ── Read tracking ──
+
+  List<String> getReadArticleIds() {
+    // Synchronous read from in-memory cache; falls back to prefs on first call.
+    if (_readIds == null) {
+      _readIds = _loadReadIdsSync();
+    }
+    return List.from(_readIds!);
+  }
+
+  void markAsRead(String articleId) {
+    getReadArticleIds(); // ensure loaded
+    if (_readIds!.contains(articleId)) return;
+    _readIds!.add(articleId);
+    _saveReadIds();
+  }
+
+  List<String>? _readIds;
+
+  List<String> _loadReadIdsSync() {
+    // SharedPreferences is normally async, but we use a cached approach.
+    // On first call we schedule an async load; until then return empty.
+    _scheduleReadIdsLoad();
+    return [];
+  }
+
+  bool _readIdsLoadScheduled = false;
+
+  void _scheduleReadIdsLoad() {
+    if (_readIdsLoadScheduled) return;
+    _readIdsLoadScheduled = true;
+    Future(() async {
+      final prefs = await SharedPreferences.getInstance();
+      final data = prefs.getStringList('read_article_ids');
+      if (data != null) {
+        _readIds = data;
+      } else {
+        _readIds = [];
+      }
+    });
+  }
+
+  void _saveReadIds() {
+    Future(() async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList('read_article_ids', _readIds ?? []);
+    });
+  }
+
   Future<void> _ensureInitialized() async {
     if (!_isInitialized) {
       await initialize();

@@ -9,6 +9,7 @@ import '../services/weather_service.dart';
 import '../widgets/article_card_v2.dart';
 import '../widgets/swipe_card_view.dart';
 import '../widgets/empty_state.dart';
+import '../widgets/skeleton_loading.dart';
 import 'bookmarks_screen.dart';
 import 'settings_screen.dart';
 
@@ -30,6 +31,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int _currentIndex = 0;
   bool _searchActive = false;
   final _searchController = TextEditingController();
+  final _feedScrollController = ScrollController();
 
   @override
   void initState() {
@@ -113,6 +115,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void dispose() {
     _autoRefreshTimer?.cancel();
     _searchController.dispose();
+    _feedScrollController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -423,7 +426,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     ThemeData theme,
   ) {
     if (provider.isLoading && filteredArticles.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const SkeletonLoading();
     }
 
     if (provider.error != null && filteredArticles.isEmpty) {
@@ -489,6 +492,47 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
+          // Feed tabs
+          if (provider.feedNames.length > 1)
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: 48,
+                child: ListView.builder(
+                  controller: _feedScrollController,
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  itemCount: provider.feedNames.length + 1,
+                  itemBuilder: (context, index) {
+                    final isSelected = index == 0
+                        ? provider.selectedFeed == null
+                        : provider.feedNames[index - 1] == provider.selectedFeed;
+                    final label = index == 0 ? 'Alles' : provider.feedNames[index - 1];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: FilterChip(
+                        selected: isSelected,
+                        showCheckmark: false,
+                        label: Text(label, style: const TextStyle(fontSize: 13)),
+                        onSelected: (_) {
+                          provider.setSelectedFeed(
+                            index == 0 ? null : provider.feedNames[index - 1],
+                          );
+                        },
+                        backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                        selectedColor: theme.colorScheme.primaryContainer,
+                        side: BorderSide(
+                          color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outlineVariant,
+                        ),
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+
+          // Filter row
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),

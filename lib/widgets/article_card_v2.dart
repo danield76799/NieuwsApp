@@ -247,16 +247,25 @@ class ArticleCardV2 extends StatefulWidget {
 class _ArticleCardV2State extends State<ArticleCardV2> {
   final _bookmarkService = BookmarkService();
   bool _isBookmarked = false;
+  bool _isRead = false;
 
   @override
   void initState() {
     super.initState();
     _checkBookmark();
+    _checkRead();
   }
 
   void _checkBookmark() {
     setState(() {
       _isBookmarked = _bookmarkService.isBookmarked(widget.article.id);
+    });
+  }
+
+  void _checkRead() {
+    final readIds = BookmarkService().getReadArticleIds();
+    setState(() {
+      _isRead = readIds.contains(widget.article.id);
     });
   }
 
@@ -268,6 +277,10 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
   }
 
   void _openArticle() {
+    // Mark as read
+    BookmarkService().markAsRead(widget.article.id);
+    setState(() => _isRead = true);
+
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => BrowserReaderScreen(article: widget.article),
@@ -282,10 +295,15 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
     );
   }
 
+  String _readingTime() {
+    final wordCount = '${widget.article.title} ${widget.article.description} ${widget.article.content ?? ''}'.split(' ').length;
+    final minutes = (wordCount / 200).ceil();
+    return '${minutes} min';
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // scale removed; using explicit TextStyles
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -296,7 +314,9 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest,
+            color: _isRead
+                ? theme.colorScheme.surfaceContainerLow
+                : theme.colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
@@ -354,6 +374,11 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                   children: [
                     Row(
                       children: [
+                        if (_isRead)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 6),
+                            child: Icon(Icons.check_circle, size: 14, color: theme.colorScheme.primary),
+                          ),
                         Text(
                           widget.article.source.toUpperCase(),
                           style: theme.textTheme.labelMedium?.copyWith(
@@ -381,39 +406,52 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                     const SizedBox(height: 6),
                     Text(
                       widget.article.title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: _isRead ? FontWeight.w500 : FontWeight.w700,
                         height: 1.25,
+                        color: _isRead ? theme.colorScheme.onSurfaceVariant : theme.colorScheme.onSurface,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 6),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 6.0),
-                      child: Text(
-                        widget.article.description,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          height: 1.3,
+                    Row(
+                      children: [
+                        Icon(Icons.schedule, size: 12, color: theme.colorScheme.onSurfaceVariant),
+                        const SizedBox(width: 4),
+                        Text(
+                          _readingTime(),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                        const Spacer(),
+                        IconButton(
+                          onPressed: _shareArticle,
+                          icon: Icon(
+                            Icons.share,
+                            size: 18,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          padding: const EdgeInsets.all(4),
+                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                        ),
+                        const SizedBox(width: 4),
+                        IconButton(
+                          onPressed: _toggleBookmark,
+                          icon: Icon(
+                            _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                            size: 18,
+                            color: _isBookmarked ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                          ),
+                          padding: const EdgeInsets.all(4),
+                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ),
-              IconButton(
-                onPressed: _toggleBookmark,
-                icon: Icon(
-                  _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                  size: 18,
-                  color: _isBookmarked ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
-                ),
-                padding: const EdgeInsets.all(8),
-                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
               ),
             ],
           ),

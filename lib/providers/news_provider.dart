@@ -22,6 +22,8 @@ class NewsProvider extends ChangeNotifier {
   bool _useAutoLocation = true;
   bool _isRefreshing = false;
   String? _currentPosition;
+  String? _selectedFeed;
+  List<String> _feedNames = [];
 
   NewsProvider(this._repository) {
     _loadSavedData();
@@ -29,12 +31,27 @@ class NewsProvider extends ChangeNotifier {
 
   List<Article> get articles => (_filterActive || _searchQuery.isNotEmpty) ? _filteredArticles : _articles;
   String get searchQuery => _searchQuery;
+  String? get selectedFeed => _selectedFeed;
+  List<String> get feedNames => _feedNames;
+
+  void setSelectedFeed(String? feed) {
+    _selectedFeed = feed;
+    _applyFilter();
+    notifyListeners();
+  }
+
+  List<Article> get visibleArticles {
+    var source = articles;
+    if (_selectedFeed != null) {
+      source = source.where((a) => a.source == _selectedFeed).toList();
+    }
+    return source.take(_visibleCount).toList();
+  }
 
   // Pagination
   static const int _pageSize = 20;
   int _visibleCount = _pageSize;
 
-  List<Article> get visibleArticles => articles.take(_visibleCount).toList();
   bool get hasMoreArticles => articles.length > _visibleCount;
 
   void loadMoreArticles() {
@@ -72,6 +89,7 @@ class NewsProvider extends ChangeNotifier {
     final cachedArticles = await ArticleCacheService.getCachedArticles();
     if (cachedArticles.isNotEmpty) {
       _articles = cachedArticles;
+      _feedNames = cachedArticles.map((a) => a.source).toSet().toList()..sort();
       _applyFilter();
       notifyListeners();
     }
@@ -113,6 +131,7 @@ class NewsProvider extends ChangeNotifier {
         
         _articles = articles.take(50).toList();
         _articles.sort((a, b) => b.pubDate.compareTo(a.pubDate));
+        _feedNames = _articles.map((a) => a.source).toSet().toList()..sort();
         _applyFilter();
         resetPagination();
         notifyListeners();
