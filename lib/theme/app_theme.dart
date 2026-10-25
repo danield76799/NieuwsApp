@@ -27,7 +27,7 @@ class AppTheme {
         onSurface: textPrimary,
       ),
       scaffoldBackgroundColor: backgroundLight,
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         elevation: 0,
         centerTitle: false,
         backgroundColor: backgroundLight,
@@ -52,14 +52,14 @@ class AppTheme {
           borderRadius: BorderRadius.circular(20),
         ),
       ),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: surfaceLight,
         selectedItemColor: primaryColor,
         unselectedItemColor: textSecondaryLight,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
       ),
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
       ),
@@ -89,7 +89,7 @@ class AppTheme {
         onSurface: Colors.white,
       ),
       scaffoldBackgroundColor: darkBackground,
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         elevation: 0,
         centerTitle: false,
         backgroundColor: darkBackground,
@@ -114,14 +114,14 @@ class AppTheme {
           borderRadius: BorderRadius.circular(20),
         ),
       ),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: darkSurface,
         selectedItemColor: darkPrimary,
         unselectedItemColor: textSecondaryLight,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
       ),
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: darkPrimary,
         foregroundColor: Colors.white,
       ),
