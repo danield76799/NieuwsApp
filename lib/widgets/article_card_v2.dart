@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
@@ -38,6 +39,7 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
   }
 
   Future<void> _toggleBookmark() async {
+    HapticFeedback.mediumImpact();
     await _bookmarkService.toggleBookmark(widget.article);
     if (mounted) {
       setState(() {
@@ -47,6 +49,9 @@ class _ArticleHeroCardState extends State<ArticleHeroCard> {
   }
 
   void _openArticle() {
+    HapticFeedback.lightImpact();
+    // Mark as read, consistent with the list card.
+    BookmarkService().markAsRead(widget.article.id);
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => BrowserReaderScreen(article: widget.article),

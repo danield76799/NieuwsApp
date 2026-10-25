@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:dynamic_color/dynamic_color.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'providers/news_provider.dart';
 import 'providers/theme_mode_provider.dart';
 import 'repositories/rss_news_repository.dart';
@@ -38,13 +39,26 @@ class PlusNewsApp extends StatelessWidget {
 
   ThemeData _buildThemeData(ColorScheme colorScheme, bool isDark) {
     final ThemeData base = ThemeData.from(colorScheme: colorScheme);
+
+    // Consistent botanical typography (Lora headings + Inter body),
+    // applied whether or not dynamic color is active.
+    final onSurface = colorScheme.onSurface;
+    final textTheme = GoogleFonts.interTextTheme(
+      base.textTheme.copyWith(
+        displayLarge: GoogleFonts.lora(fontSize: 32, fontWeight: FontWeight.bold, color: onSurface),
+        headlineMedium: GoogleFonts.lora(fontSize: 24, fontWeight: FontWeight.bold, color: onSurface),
+        titleLarge: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.bold, color: onSurface),
+      ),
+    );
+
     return base.copyWith(
+      scaffoldBackgroundColor: isDark ? const Color(0xFF121212) : null,
       appBarTheme: AppBarTheme(
         elevation: 0,
         centerTitle: false,
         backgroundColor: colorScheme.surface,
         foregroundColor: colorScheme.onSurface,
-        titleTextStyle: base.textTheme.titleLarge?.copyWith(
+        titleTextStyle: GoogleFonts.lora(
           fontSize: 22,
           fontWeight: FontWeight.w700,
           color: colorScheme.onSurface,
@@ -57,7 +71,7 @@ class PlusNewsApp extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
         ),
       ),
-      textTheme: base.textTheme,
+      textTheme: textTheme,
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: colorScheme.surface,
         selectedItemColor: colorScheme.primary,
