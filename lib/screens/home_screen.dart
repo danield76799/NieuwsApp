@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/article.dart';
@@ -278,96 +279,74 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           appBar: AppBar(
             backgroundColor: theme.colorScheme.surface,
             titleSpacing: 16,
-            title: _searchActive
-                ? TextField(
-                    controller: _searchController,
-                    autofocus: true,
-                    decoration: InputDecoration(
-                      hintText: 'Zoek in nieuws...',
-                      border: InputBorder.none,
-                      prefixIcon: Icon(Icons.search, color: theme.colorScheme.onSurfaceVariant),
-                      suffixIcon: IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: _toggleSearch,
+            title: Row(
+              children: [
+                Text('Nieuws', style: theme.textTheme.titleLarge),
+                const SizedBox(width: 8),
+                if (_lastNewsRefresh != null)
+                  Flexible(
+                    child: Text(
+                      _formatLastRefresh(_lastNewsRefresh!),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w500,
                       ),
-                    ),
-                    onChanged: (query) => provider.updateSearchQuery(query),
-                  )
-                : Row(
-                    children: [
-                      Text('Nieuws', style: theme.textTheme.titleLarge),
-                      const SizedBox(width: 8),
-                      if (_lastNewsRefresh != null)
-                        Flexible(
-                          child: Text(
-                            _formatLastRefresh(_lastNewsRefresh!),
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontWeight: FontWeight.w500,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                    ],
-                  ),
-            actions: [
-              if (!_searchActive)
-                Consumer<ThemeModeProvider>(
-                  builder: (context, themeModeProvider, _) {
-                    final isDark = themeModeProvider.themeMode == ThemeMode.dark;
-                    final isLight = themeModeProvider.themeMode == ThemeMode.light;
-                    final icon = isDark
-                        ? Icons.dark_mode
-                        : isLight
-                            ? Icons.light_mode
-                            : Icons.brightness_auto;
-                    final tooltip = isDark
-                        ? 'Donkere modus (tap voor systeem)'
-                        : isLight
-                            ? 'Lichte modus (tap voor donker)'
-                            : 'Systeemmodus (tap voor licht)';
-                    return IconButton(
-                      icon: Icon(icon),
-                      tooltip: tooltip,
-                      onPressed: themeModeProvider.cycle,
-                    );
-                  },
-                ),
-              if (!_searchActive) ...[
-                IconButton(
-                  icon: Icon(Icons.search_outlined),
-                  onPressed: _toggleSearch,
-                ),
-                IconButton(
-                  icon: Icon(
-                    provider.filterActive ? Icons.filter_list : Icons.filter_list_off,
-                    color: provider.filterActive ? theme.colorScheme.primary : theme.colorScheme.onSurface,
-                  ),
-                  onPressed: () {
-                    provider.toggleFilter(!provider.filterActive);
-                  },
-                ),
-                if (_weatherData != null)
-                  TextButton.icon(
-                    onPressed: _showWeatherPopup,
-                    icon: Icon(
-                      WeatherService.getWeatherIcon(_weatherData!['description'] ?? ''),
-                      color: theme.colorScheme.onSurface,
-                      size: 18,
-                    ),
-                    label: Text(
-                      '${_weatherData!['temp']}°',
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: theme.colorScheme.onSurface,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
               ],
+            ),
+            actions: [
+              Consumer<ThemeModeProvider>(
+                builder: (context, themeModeProvider, _) {
+                  final isDark = themeModeProvider.themeMode == ThemeMode.dark;
+                  final isLight = themeModeProvider.themeMode == ThemeMode.light;
+                  final icon = isDark
+                      ? Icons.dark_mode
+                      : isLight
+                          ? Icons.light_mode
+                          : Icons.brightness_auto;
+                  final tooltip = isDark
+                      ? 'Donkere modus (tap voor systeem)'
+                      : isLight
+                          ? 'Lichte modus (tap voor donker)'
+                          : 'Systeemmodus (tap voor licht)';
+                  return IconButton(
+                    icon: Icon(icon),
+                    tooltip: tooltip,
+                    onPressed: themeModeProvider.cycle,
+                  );
+                },
+              ),
+              IconButton(
+                icon: Icon(
+                  provider.filterActive ? Icons.filter_list : Icons.filter_list_off,
+                  color: provider.filterActive ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+                ),
+                onPressed: () {
+                  provider.toggleFilter(!provider.filterActive);
+                },
+              ),
+              if (_weatherData != null)
+                TextButton.icon(
+                  onPressed: _showWeatherPopup,
+                  icon: Icon(
+                    WeatherService.getWeatherIcon(_weatherData!['description'] ?? ''),
+                    color: theme.colorScheme.onSurface,
+                    size: 18,
+                  ),
+                  label: Text(
+                    '${_weatherData!['temp']}°',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: theme.colorScheme.onSurface,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
             ],
           ),
           body: _buildBody(context, provider, filteredArticles, hasMore, theme),
@@ -492,6 +471,26 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Zoek in nieuws...',
+                  prefixIcon: Icon(Icons.search, color: theme.colorScheme.onSurfaceVariant),
+                  filled: true,
+                  fillColor: theme.colorScheme.surfaceContainerHighest,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                ),
+                onChanged: (query) => provider.updateSearchQuery(query),
+              ),
+            ),
+          ),
           // Feed tabs
           if (provider.feedNames.length > 1)
             SliverToBoxAdapter(

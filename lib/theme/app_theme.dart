@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Botanical palette
@@ -11,7 +12,7 @@ class AppTheme {
 
   static const Color darkPrimary = Color(0xFF3D6B4C);
   static const Color darkSurface = Color(0xFF1A1A1A);
-  static const Color darkBackground = Color(0xFF000000);
+  static const Color darkBackground = Color(0xFF121212);
 
   static ThemeData get lightTheme {
     return ThemeData(
@@ -35,6 +36,13 @@ class AppTheme {
           fontSize: 24,
           fontWeight: FontWeight.w700,
           color: textPrimary,
+        ),
+      ),
+      textTheme: GoogleFonts.interTextTheme(
+        ThemeData.light().textTheme.copyWith(
+          displayLarge: GoogleFonts.lora(fontSize: 32, fontWeight: FontWeight.bold, color: textPrimary),
+          headlineMedium: GoogleFonts.lora(fontSize: 24, fontWeight: FontWeight.bold, color: textPrimary),
+          titleLarge: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.bold, color: textPrimary),
         ),
       ),
       cardTheme: CardThemeData(
@@ -90,6 +98,13 @@ class AppTheme {
           fontSize: 24,
           fontWeight: FontWeight.w700,
           color: Colors.white,
+        ),
+      ),
+      textTheme: GoogleFonts.interTextTheme(
+        ThemeData.dark().textTheme.copyWith(
+          displayLarge: GoogleFonts.lora(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+          headlineMedium: GoogleFonts.lora(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+          titleLarge: GoogleFonts.lora(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
         ),
       ),
       cardTheme: CardThemeData(

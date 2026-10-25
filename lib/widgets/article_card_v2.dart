@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
 import '../models/article.dart';
@@ -270,6 +271,7 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
   }
 
   Future<void> _toggleBookmark() async {
+    HapticFeedback.mediumImpact();
     await _bookmarkService.toggleBookmark(widget.article);
     setState(() {
       _isBookmarked = !_isBookmarked;
@@ -277,6 +279,7 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
   }
 
   void _openArticle() {
+    HapticFeedback.lightImpact();
     // Mark as read
     BookmarkService().markAsRead(widget.article.id);
     setState(() => _isRead = true);
@@ -406,7 +409,7 @@ class _ArticleCardV2State extends State<ArticleCardV2> {
                     const SizedBox(height: 6),
                     Text(
                       widget.article.title,
-                      style: TextStyle(
+                      style: GoogleFonts.lora(
                         fontSize: 14,
                         fontWeight: _isRead ? FontWeight.w500 : FontWeight.w700,
                         height: 1.25,
